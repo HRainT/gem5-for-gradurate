@@ -1,0 +1,142 @@
+import sys
+
+Import('*')
+
+if env['CONF']['BUILD_ISA']:
+    SimObject('RxuFUPool.py', sim_objects=['RxuFUPool'])
+    SimObject('RxuFuncUnitConfig.py', sim_objects=[])
+    SimObject('BaseRxuO3CPU.py', sim_objects=['BaseRxuO3CPU'], 
+        enums=['RxuSMTFetchPolicy', 'RxuSMTQueuePolicy', 'RxuCommitPolicy']
+        )
+
+    Source('commit.cc')
+    Source('cpu.cc')
+    Source('bpu0.cc')
+    Source('bpu1.cc')
+    Source('IBandLB.cc')
+    Source('decode.cc')
+    # -- add by hongfei.liu -------------
+    Source('predisq.cc')
+    Source('dispipe0.cc')
+    Source('dispipe1.cc')
+    Source('dispipe2.cc')
+    Source('dispipe3.cc')
+    Source('wtb.cc')
+    Source('RMU.cc')
+    # -----------------------------------
+    Source('dyn_inst.cc')
+    Source('fetch.cc')
+    Source('rxu_free_list.cc')
+    Source('free_list.cc')
+    Source('rxu_fu_pool.cc')
+    Source('ew.cc')
+    # Source('inst_queue.cc')
+    Source('lsq.cc')
+    Source('lsq_unit.cc')
+    Source('mem_dep_unit.cc')
+    Source('regfile.cc')
+    Source('rename_unit.cc')
+    Source('rename_map.cc')
+    Source('rename.cc')
+    Source('rob.cc')
+    Source('scoreboard.cc')
+    Source('store_set.cc')
+    Source('thread_context.cc')
+    Source('thread_state.cc')
+    Source('uop_cache.cc')
+    Source('frm.cc')
+    Source('veccsr.cc')
+
+    DebugFlag('RxuLDSTQ')
+    DebugFlag('CommitInst')
+    DebugFlag('RxuVector')
+    DebugFlag('RxuCommitRate')
+    DebugFlag('RxuCommit')
+    DebugFlag('RxuFetch')
+    DebugFlag('RxuBpu0')
+    DebugFlag('RxuBpu1')
+    DebugFlag('RxuIBandLB')
+    DebugFlag('RxuDecode')
+    # -- add by hongfei.liu ---------------
+    DebugFlag('RxuPredisq')
+    DebugFlag('RxuDispipe0')
+    DebugFlag('RxuDispipe1')
+    DebugFlag('RxuDispipe2')
+    DebugFlag('RxuDispipe3')
+    # -------------------------------------
+    DebugFlag('RxuEW')
+    DebugFlag('RxuRMU')
+    DebugFlag('RxuWTB')
+    DebugFlag('RxuLSQ')
+    DebugFlag('RxuLSQUnit')
+    DebugFlag('RxuMemDepUnit')
+    DebugFlag('RxuO3CPU')
+    DebugFlag('RxuROB')
+    DebugFlag('RxuRename')
+    DebugFlag('RxuScoreboard')
+    DebugFlag('RxuStoreSet')
+    DebugFlag('RxuWriteback')
+    DebugFlag('RxuFreeList')
+    DebugFlag('RxuDynInst')
+    DebugFlag('RxuActivity')
+    DebugFlag('RxuUC')
+    DebugFlag('RxuLDST')
+    DebugFlag('Rxucun')
+    DebugFlag('RxuDebug')
+    DebugFlag('RxuBPU')
+
+    DebugFlag('CommitTrace')
+    DebugFlag('FetchFault')
+    DebugFlag('Counters')
+    DebugFlag('RxuRBK')
+    DebugFlag('RxuLSQerror')
+    DebugFlag('RxuMisPredPC')
+    DebugFlag('Rxuewload')
+    DebugFlag('RxuLSQUnitload')
+    DebugFlag('RxuUopCacheConflict')
+    DebugFlag('RxuAcc')
+    DebugFlag('RxuCAM')
+
+    DebugFlag('Spike')
+
+    CompoundFlag('RxuO3CPUAll', [ 'RxuFetch', 'RxuDecode',
+        # -- add by hongfei.liu ----------------
+        'RxuBpu0',
+        'RxuBpu1',
+        'Indirect',
+        'RxuIBandLB',
+        'RxuPredisq',
+        'RxuDispipe0',
+        'RxuDispipe1',
+        'RxuDispipe2',
+        'RxuDispipe3',
+        'RxuRMU',
+        'RxuBPU',
+        'Branch',
+        # --------------------------------------
+        'RxuUC','RxuCAM', 
+        'RxuRename', 'RxuEW', 'RxuCommit',
+        'RxuWTB', 'RxuROB', 'RxuFreeList', 'RxuLSQ', 'RxuLSQUnit', 'RxuStoreSet', 'RxuMemDepUnit',
+        'RxuDynInst', 'RxuO3CPU', 'RxuActivity', 'RxuScoreboard', 'RxuWriteback' ])
+
+    CompoundFlag('RxuO3End', [
+        'RxuPredisq',
+        'RxuDispipe0',
+        'RxuDispipe1',
+        'RxuDispipe2',
+        'RxuDispipe3',
+        'RxuRMU',
+        'RxuRename', 'RxuEW', 'RxuCommit',
+        'RxuWTB', 'RxuROB', 'RxuFreeList', 'RxuLSQ', 'RxuLSQUnit', 'RxuStoreSet', 'RxuMemDepUnit',
+        'RxuDynInst', 'RxuO3CPU', 'RxuActivity', 'RxuScoreboard', 'RxuWriteback' ])
+    
+    CompoundFlag('RxuFront', [
+        'RxuO3CPU', 'RxuBpu0', 'RxuBpu1', 'RxuUC', 'RxuFetch'
+    ])
+
+    SimObject('BaseRxuO3Checker.py', sim_objects=['BaseRxuO3Checker'])
+    Source('checker.cc')
+
+    # For backwards compatibility
+    SimObject('RxuO3CPU.py', sim_objects=[])
+    SimObject('RxuO3Checker.py', sim_objects=[])
