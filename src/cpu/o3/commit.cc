@@ -63,6 +63,7 @@
 #include "debug/ExecFaulting.hh"
 #include "debug/HtmCpu.hh"
 #include "debug/O3PipeView.hh"
+#include "debug/CommitInsts.hh"
 #include "params/BaseO3CPU.hh"
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
@@ -972,6 +973,25 @@ Commit::commitInsts()
             bool commit_success = commitHead(head_inst, num_committed);
 
             if (commit_success) {
+
+                volatile __uint128_t dest_val = 0;
+                if (head_inst->numDestRegs() > 0 && !head_inst->destRegIdx(0).isZeroReg()) {
+                    PhysRegIdPtr phys_reg = head_inst->renamedDestIdx(0);
+                    RegClassType type = phys_reg->classValue();
+                    RegIndex idx = phys_reg->index();
+                    dest_val = cpu->getReg(phys_reg, tid);
+
+                }
+                volatile uint64_t high = (uint64_t)(dest_val >> 64);
+                volatile uint64_t low = (uint64_t)dest_val;
+                DPRINTF(CommitInsts,
+                        "[sn:%d], 0x%.8x, 0x%.16lx_%.16lx,  %s\n",
+                        head_inst->seqNum,
+                        head_inst->pcState().instAddr(),
+                        high,
+                        low,
+                        head_inst->staticInst->disassemble(head_inst->pcState().instAddr()));
+
                 ++num_committed;
                 cpu->commitStats[tid]
                     ->committedInstType[head_inst->opClass()]++;

@@ -164,6 +164,18 @@ class BaseCPU(ClockedObject):
     _uncached_interrupt_response_ports = []
     _uncached_interrupt_request_ports = []
 
+    warmupInstCount = Param.Counter(0,
+        "reset stats when any thread has reached this inst count")
+
+    enable_difftest = Param.Bool(False,"use NEMU as ref to difftest")
+    dump_commit = Param.Bool(False,"dump commit log")
+    dump_start = Param.Int(0,"dump start num")
+    difftest_ref_so = Param.String("", "The reference so for online difftest")
+    nemuSDimg = Param.String("", "Nemu MMC img path for diff")
+    nemuSDCptBin = Param.String("", "Nemu MMC cpt bin path for diff")
+
+    arch_db = Param.ArchDBer(Parent.any, "Arch DB")
+
     def createInterruptController(self):
         self.interrupts = [
             self.ArchInterrupts() for i in range(self.numThreads)

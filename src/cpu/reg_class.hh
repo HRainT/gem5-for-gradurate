@@ -143,6 +143,11 @@ class RegId
         return classValue() != MiscRegClass && classValue() != InvalidRegClass;
     }
 
+    inline bool isZeroReg() const
+    {
+        return classValue() == InvalidRegClass;
+    }
+
     /** @return true if it is of the specified class. */
     inline constexpr bool is(RegClassType reg_class) const;
 

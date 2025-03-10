@@ -240,6 +240,43 @@ def addNoISAOptions(parser):
         "only parameters of its children.",
     )
 
+    # Difftest option
+    parser.add_argument("--enable-difftest",
+                        action="store_true",
+                        help="use NEMU as ref to do difftest")
+
+    parser.add_argument("--difftest-ref-so",
+                        action="store",
+                        default="{}/build/riscv64-nemu-interpreter-so".format(
+                            os.environ.get('NEMU_HOME')),
+                        help="The shared lib file used to do difftest")
+
+    # Dump Commit option
+    parser.add_argument("--dump-commit",
+                        action="store_true",
+                        help="dump commit instructions")
+
+    parser.add_argument("--dump-start",
+                        action="store",
+                        type=int,
+                        default=0,
+                        help="dump commit instructions from this committed number")
+
+    # ArchDB option
+    parser.add_argument("--enable-arch-db",
+                        action="store_true",
+                        help="enable arch database")
+    parser.add_argument("--arch-db-file",
+                        action="store",
+                        help="Where to save database")
+    parser.add_argument("--arch-db-fromstart",
+                        default=True,
+                        help="start arch database from "
+                        "the beginning of the simulation")
+    parser.add_argument("--enable-rolling",
+                        default=False,
+                        help="enable rolling perfcnt "
+                        "(note that rolling is dependent on archdb)")
 
 # Add common options that assume a non-NULL ISA.
 
@@ -619,6 +656,11 @@ def addCommonOptions(parser, default_isa: Optional[ISA] = None):
         "-p", "--prog-interval", type=str, help="CPU Progress Interval"
     )
 
+    # for warmup without switching cpu
+    parser.add_argument("--warmup-insts-no-switch", action="store", type=int,
+        default=None,
+        help="Warmup period in total instructions, reset stats without switch")
+
     # Fastforwarding and simpoint related materials
     parser.add_argument(
         "-W",
@@ -913,3 +955,22 @@ def addFSOptions(parser):
         help="the instruction number of a loop",
         default=0x70001e68,
     )
+
+    # Xiangshan related options
+    parser.add_argument("--xiangshan-system", action= "store_true",
+                        help="Use memory layout of Xiangshan system")
+
+    parser.add_argument("--generic-rv-cpt", action= "store", type = str,
+                        default=None,
+                        help="The path of Xiangshan risc-v checkpoint")
+    parser.add_argument("--gcpt-restorer", action="store", type = str,
+                      default="",
+                      help="The path of generic risc-v checkpoint restorer")
+    parser.add_argument("--raw-cpt", action= "store_true",
+                        help = "The checkpoint file is not gz but binary")
+
+    parser.add_argument("--mmc-img", action="store", type=str,
+                        default=None, help="The path of mmc img")
+    parser.add_argument("--mmc-cptbin", action="store",
+                        type=str, default=None, help="The path of mmc cptbin")
+

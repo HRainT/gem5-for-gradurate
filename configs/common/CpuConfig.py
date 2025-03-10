@@ -75,3 +75,11 @@ def config_etrace(cpu_cls, cpu_list, options):
             " type or inherited from DerivO3CPU.",
             cpu_cls,
         )
+
+def config_difftest(cpu_cls, cpu_list, options):
+    if not options.enable_difftest:
+        return
+    else:
+        assert len(cpu_list) == 1
+        cpu_list[0].enable_difftest = True
+        cpu_list[0].difftest_ref_so = options.difftest_ref_so

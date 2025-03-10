@@ -70,6 +70,9 @@
 #endif
 #endif
 
+uint8_t *pmemStart;
+uint64_t pmemSize;
+
 namespace gem5
 {
 
@@ -80,10 +83,17 @@ PhysicalMemory::PhysicalMemory(const std::string& _name,
                                const std::vector<AbstractMemory*>& _memories,
                                bool mmap_using_noreserve,
                                const std::string& shared_backstore,
+                               bool restore_from_gcpt,
+                               const std::string& gcpt_restorer_path,
+                               const std::string& gcpt_path,
+                               bool map_to_raw_cpt,
                                bool auto_unlink_shared_backstore) :
     _name(_name), size(0), mmapUsingNoReserve(mmap_using_noreserve),
     sharedBackstore(shared_backstore), sharedBackstoreSize(0),
-    pageSize(sysconf(_SC_PAGE_SIZE))
+    pageSize(sysconf(_SC_PAGE_SIZE)),
+    restoreFromXiangshanCpt(restore_from_gcpt),
+    gCptRestorerPath(gcpt_restorer_path),
+    xsCptPath(gcpt_path), mapToRawCpt(map_to_raw_cpt)
 {
     // Register cleanup callback if requested.
     if (auto_unlink_shared_backstore && !sharedBackstore.empty()) {
@@ -489,6 +499,174 @@ PhysicalMemory::unserializeStore(CheckpointIn &cp)
     if (gzclose(compressed_mem))
         fatal("Close failed on physical memory checkpoint file '%s'\n",
               filename);
+}
+
+void
+PhysicalMemory::unserializeStoreFromFile(std::string filepath)
+{
+    unserializeStoreFrom(filepath, 0, 0);
+}
+
+static bool
+hasGzipMagic(int fd)
+{
+    uint8_t buf[2] = {0};
+    size_t sz = pread(fd, buf, 2, 0);
+    panic_if(sz != 2, "Couldn't read magic bytes from object file");
+    return ((buf[0] == 0x1f) && (buf[1] == 0x8b));
+}
+
+void
+PhysicalMemory::unserializeStoreFrom(std::string filepath,
+        unsigned store_id, long range_size)
+{
+    const uint32_t chunk_size = 16384;
+
+    int fd = open(filepath.c_str(), O_RDONLY);
+    fatal_if(fd < 0,
+                "Failed to open file %s.\n"
+                "This error typically occurs when the file path specified is "
+                "incorrect.\n",
+                filepath);
+    // mmap memoryfile
+    if (!hasGzipMagic(fd)) {
+        close(fd);
+        fd = open(filepath.c_str(), O_RDONLY);
+
+/*         assert(mapToRawCpt &&
+               "When using raw checkpoint, the memory must be directly mapped "
+               "to it to speed up init\n");  */
+        DPRINTF(Checkpoint,
+                "Checkpoint file is not gz,"
+                "treate it as raw bin, using mmap\n");
+
+        assert(store_id == 0);
+        fatal_if(fd < 0,
+                 "Failed to open file %s.\n"
+                 "This error typically occurs when the file path specified is "
+                 "incorrect.\n",
+                 filepath);
+        // Find the length of the file by seeking to the end.
+        off_t off = lseek(fd, 0, SEEK_END);
+        fatal_if(off < 0, "Failed to determine size of file %s.\n", filepath);
+        auto file_len = static_cast<size_t>(off);
+
+        if (file_len < size) {
+            // small file -> anonymous map + file copy
+            backingStore[store_id].pmem = (uint8_t *)mmap(
+                NULL, size, PROT_READ | PROT_WRITE,
+                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+            assert(backingStore[store_id].pmem != MAP_FAILED);
+            // copy file into pmem
+            inform("copying %s to pmem %#lx",
+                   filepath, (uint64_t)backingStore[store_id].pmem);
+            lseek(fd, 0, SEEK_SET);
+            auto bytes = read(fd, backingStore[store_id].pmem, file_len);
+            // assert(bytes == file_len);
+        } else {
+            // large file -> file map
+            backingStore[store_id].pmem =(uint8_t*)mmap(
+                backingStore[store_id].pmem, file_len,
+                PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+            assert(backingStore[store_id].pmem != MAP_FAILED);
+            inform("mmap %s to %#lx, setting backing store pointer to it",
+                   filepath, (uint64_t)backingStore[store_id].pmem);
+        }
+
+        // For Difftest copy memory
+        pmemStart = backingStore[store_id].pmem;
+        pmemSize = std::max(file_len, size);
+
+        inform("First 4 bytes are 0x%x 0x%x 0x%x 0x%x\n",
+            pmemStart[0], pmemStart[1], pmemStart[2], pmemStart[3]);
+
+        close(fd);
+        // point the memories to their backing store
+        for (const auto& m : memories) {
+            DPRINTF(AddrRanges, "Mapping memory %s to backing store %#lx\n",
+                    m->name(), (uint64_t)backingStore[store_id].pmem);
+            inform("Mapping memory %s to backing store %#lx\n",
+                    m->name(), (uint64_t)backingStore[store_id].pmem);
+            m->setBackingStore(backingStore[store_id].pmem);
+        }
+
+        return;
+    }
+
+    gzFile compressed_mem = gzopen(filepath.c_str(), "rb");
+
+    if (compressed_mem == nullptr)
+        fatal("Can't open checkpoint file '%s'", filepath.c_str());
+
+    // we've already got the actual backing store mapped
+    uint8_t* pmem = backingStore[store_id].pmem;
+    AddrRange range = backingStore[store_id].range;
+    assert(pmem);
+
+    if (range_size != 0) {
+        DPRINTF(Checkpoint, "Unserializing physical memory %s with size %d\n",
+                filepath.c_str(), range_size);
+
+        if (range_size != (long)range.size()) {
+            fatal("Memory range size has changed! Saw %lld, expected %lld\n",
+                  range_size, range.size());
+        }
+    }
+
+    uint64_t curr_size = 0;
+    long* temp_page = new long[chunk_size];
+    assert(temp_page);
+    long* pmem_current;
+    uint32_t bytes_read;
+    while (curr_size < range.size()) {
+        bytes_read = gzread(compressed_mem, temp_page, chunk_size);
+        if (bytes_read == 0)
+            break;
+
+        assert(bytes_read % sizeof(long) == 0);
+
+        for (uint32_t x = 0; x < bytes_read / sizeof(long); x++) {
+            // Only copy bytes that are non-zero, so we don't give
+            // the VM system hell
+            if (*(temp_page + x) != 0) {
+                pmem_current = (long*)(pmem + curr_size + x * sizeof(long));
+                *pmem_current = *(temp_page + x);
+            }
+        }
+        curr_size += bytes_read;
+    }
+
+    delete[] temp_page;
+
+    if (restoreFromXiangshanCpt && !gCptRestorerPath.empty()) {
+        warn("Overriding Gcpt restorer\n");
+        warn("gCptRestorerPath: %s\n", gCptRestorerPath.c_str());
+
+        FILE *fp = fopen(gCptRestorerPath.c_str(), "rb");
+        if (!fp) {
+            panic("Can not open '%s'", gCptRestorerPath);
+        }
+
+        uint32_t restorer_size = 0x1000;
+        fseek(fp, 0, SEEK_SET);
+        assert(restorer_size == fread(pmem, 1, restorer_size, fp));
+        fclose(fp);
+    }
+
+
+    if (gzclose(compressed_mem))
+        fatal("Close failed on physical memory checkpoint file '%s'\n",
+              filepath.c_str());
+}
+
+bool
+PhysicalMemory::tryRestoreFromXSCpt()
+{
+    if (!restoreFromXiangshanCpt) {
+        return false;
+    }
+    unserializeStoreFromFile(xsCptPath);
+    return true;
 }
 
 } // namespace memory

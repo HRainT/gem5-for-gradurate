@@ -411,6 +411,10 @@ class System : public SimObject, public PCEventScope
 
     const Addr _loopPC;
 
+    void initState() override;
+
+    const bool xiangshanSystem;
+
     uint64_t workItemsBegin = 0;
     uint64_t workItemsEnd = 0;
     uint32_t numWorkIds;

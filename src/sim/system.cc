@@ -171,7 +171,8 @@ System::System(const Params &p)
       physProxy(_systemPort, p.cache_line_size),
       workload(p.workload),
       physmem(name() + ".physmem", p.memories, p.mmap_using_noreserve,
-              p.shared_backstore, p.auto_unlink_shared_backstore),
+            p.shared_backstore, p.restore_from_gcpt, p.gcpt_restorer_file,
+            p.gcpt_file, p.map_to_raw_cpt, p.auto_unlink_shared_backstore),
       ShadowRomRanges(p.shadow_rom_ranges.begin(),
                       p.shadow_rom_ranges.end()),
       memoryMode(p.mem_mode),
@@ -182,7 +183,8 @@ System::System(const Params &p)
       _m5opRange(p.m5ops_base ?
                  RangeSize(p.m5ops_base, 0x10000) :
                  AddrRange(1, 0)), // Create an empty range if disabled
-      redirectPaths(p.redirect_paths)
+      redirectPaths(p.redirect_paths),
+      xiangshanSystem(p.xiangshan_system)
 {
     panic_if(!workload, "No workload set for system %s "
             "(could use StubWorkload?).", name());
@@ -531,6 +533,16 @@ System::getRequestorName(RequestorID requestor_id)
 
     const auto& requestor_info = requestors[requestor_id];
     return requestor_info.req_name;
+}
+
+void System::initState()
+{
+    // it does nothing
+    SimObject::initState();
+
+    if (physmem.tryRestoreFromXSCpt()) {
+        inform("Restoring from Xiangshan RISC-V Checkpoint\n");
+    }
 }
 
 } // namespace gem5

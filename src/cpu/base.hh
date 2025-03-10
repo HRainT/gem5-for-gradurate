@@ -145,6 +145,14 @@ class BaseCPU : public ClockedObject
     /** Cache the cache line size that we get from the system */
     const Addr _cacheLineSize;
 
+    uint64_t warmupInstCount;
+
+    uint64_t nextDumpInstCount{0};
+
+    bool enableDifftest;
+    bool dumpCommitFlag;
+    int dumpStartNum;
+
     /** Global CPU statistics that are merged into the Root object. */
     struct GlobalStats : public statistics::Group
     {

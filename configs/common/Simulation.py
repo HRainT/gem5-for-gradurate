@@ -287,6 +287,13 @@ def benchCheckpoints(options, maxtick, cptdir):
     exit_event = m5.simulate(maxtick - m5.curTick())
     exit_cause = exit_event.getCause()
 
+    while exit_cause == "Will trigger stat dump and reset":
+        if options.enable_arch_db:
+            print("into start_recording")
+            testsys.arch_db.start_recording()
+        exit_event = m5.simulate(maxtick - m5.curTick())
+        exit_cause = exit_event.getCause()
+
     num_checkpoints = 0
     max_checkpoints = options.max_checkpoints
 
@@ -610,6 +617,25 @@ def run(options, root, testsys, cpu_class):
             switch_cpus[i].isa = testsys.cpu[i].isa
             switch_cpus_1[i].isa = testsys.cpu[i].isa
 
+            if options.bp_type:
+                bpClass = ObjectList.bp_list.get(options.bp_type)
+                switch_cpus_1[i].branchPred = bpClass()
+            if options.indirect_bp_type:
+                IndirectBPClass = ObjectList.indirect_bp_list.get(
+                    options.indirect_bp_type)
+                switch_cpus_1[i].branchPred.indirectBranchPred = \
+                    IndirectBPClass()
+
+            if hasattr(options, "xiangshan_system") and options.xiangshan_system:
+                print("Attach decoder for xiangshan full system with standard switch")
+                switch_cpus[i].decoder = testsys.cpu[i].decoder
+                switch_cpus_1[i].decoder = testsys.cpu[i].decoder
+                switch_cpus[i].warmupInstCount = options.warmup_insts_no_switch
+                switch_cpus_1[i].warmupInstCount = options.warmup_insts_no_switch
+                switch_cpus[i].branchPred = testsys.cpu[i].branchPred
+                switch_cpus_1[i].branchPred = testsys.cpu[i].branchPred
+
+
             # if restoring, make atomic cpu simulate only a few instructions
             if options.checkpoint_restore != None:
                 testsys.cpu[i].max_insts_any_thread = 1
@@ -649,6 +675,9 @@ def run(options, root, testsys, cpu_class):
         switch_cpu_list1 = [
             (switch_cpus[i], switch_cpus_1[i]) for i in range(np)
         ]
+
+    if options.warmup_insts_no_switch:
+        testsys.cpu[0].warmupInstCount = options.warmup_insts_no_switch
 
     # set the checkpoint in the cpu before m5.instantiate is called
     if options.take_checkpoints != None and (

@@ -1229,8 +1229,25 @@ CPU::instDone(ThreadID tid, const DynInstPtr &inst)
         thread[tid]->threadStats.numInsts++;
         commitStats[tid]->numInstsNotNOP++;
 
+        if (this->nextDumpInstCount
+            && totalInsts() == this->nextDumpInstCount) {
+        fprintf(stderr, "Will trigger stat dump and reset\n");
+        statistics::schedStatEvent(true, true, curTick(), 0);
+        scheduleInstStop(tid,0,"Will trigger stat dump and reset");
+
+        /*if (this->repeatDumpInstCount) {
+            this->nextDumpInstCount += this->repeatDumpInstCount;
+        };*/
+        }
+
         // Check for instruction-count-based events.
         thread[tid]->comInstEventQueue.serviceEvents(thread[tid]->numInst);
+
+        if (this->warmupInstCount && totalInsts() == this->warmupInstCount) {
+            fprintf(stderr, "Will trigger stat dump and reset\n");
+            statistics::schedStatEvent(true, true, curTick(), 0);
+            scheduleInstStop(tid,0,"Will trigger stat dump and reset");
+        }
     }
     thread[tid]->numOp++;
     thread[tid]->threadStats.numOps++;

@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2017 ARM Limited
+# Copyright (c) 2013-2014 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -11,9 +9,6 @@
 # terms below provided that you ensure that this notice is replicated
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2006 The Regents of The University of Michigan
-# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -38,19 +33,31 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from m5.SimObject import *
 
-SimObject('Serial.py', sim_objects=['SerialDevice', 'SerialNullDevice'])
-SimObject('Terminal.py', sim_objects=['Terminal'], enums=['TerminalDump'])
-SimObject('Uart.py', sim_objects=['Uart', 'SimpleUart', 'Uart8250', 'UartLite'])
+class ArchDBer(SimObject):
+    type = 'ArchDBer'
+    cxx_header = "sim/arch_db.hh"
+    cxx_class = 'gem5::ArchDBer'
 
-Source('serial.cc')
-Source('simple.cc')
-Source('terminal.cc')
-Source('uart.cc')
-Source('uart8250.cc')
-Source('uartlite.cc')
+    cxx_exports = [
+        PyBindMethod("start_recording"),
+    ]
 
-DebugFlag('Terminal')
-DebugFlag('TerminalVerbose')
-DebugFlag('Uart')
+    arch_db_file = Param.String("", "Where to save arch db")
+    dump_from_start = Param.Bool(True, "Dump arch db from start")
+    enable_rolling = Param.Bool(False, "Dump rolling perfcnt")
+
+    table_cmds = VectorParam.String([], "Tables to create")
+    dump_mem_trace = Param.Bool(False, "Dump memory trace")
+    dump_l1_pf_trace = Param.Bool(False, "Dump prefetch trace")
+    dump_l1_evict_trace = Param.Bool(False, "Dump l1 evict trace")
+    dump_l2_evict_trace = Param.Bool(False, "Dump l2 evict trace")
+    dump_l3_evict_trace = Param.Bool(False, "Dump l3 evict trace")
+    dump_l1_miss_trace = Param.Bool(False, "Dump l1 miss trace")
+    dump_bop_train_trace = Param.Bool(False, "Dump bop train trace")
+    dump_sms_train_trace = Param.Bool(False, "Dump sms train trace")
+    dump_l1d_way_pre_trace = Param.Bool(False, "Dump l1d way predction trace")
+

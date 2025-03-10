@@ -168,6 +168,15 @@ class PhysicalMemory : public Serializable
     // Prevent assignment
     PhysicalMemory& operator=(const PhysicalMemory&);
 
+    // Restore from Xiangshan checkpoint image
+    bool restoreFromXiangshanCpt;
+
+    std::string gCptRestorerPath;
+
+    std::string xsCptPath;
+
+    bool mapToRawCpt{false};
+
     /**
      * Create the memory region providing the backing store for a
      * given address range that corresponds to a set of memories in
@@ -191,6 +200,10 @@ class PhysicalMemory : public Serializable
                    const std::vector<AbstractMemory*>& _memories,
                    bool mmap_using_noreserve,
                    const std::string& shared_backstore,
+                   bool restore_from_gcpt,
+                   const std::string& gcpt_restorer_path,
+                   const std::string&gcpt_path,
+                   bool map_to_raw_cpt,
                    bool auto_unlink_shared_backstore);
 
     /**
@@ -295,6 +308,16 @@ class PhysicalMemory : public Serializable
      * Unserialize a specific backing store, identified by a section.
      */
     void unserializeStore(CheckpointIn &cp);
+
+    void unserializeStoreFrom(std::string filepath,
+      unsigned store_id, long range_size);
+
+    void unserializeStoreFromFile(std::string filepath);
+
+    /**
+    * Try to restore from xiangshan cpt file, return true if succeed
+    */
+    bool tryRestoreFromXSCpt();
 
 };
 

@@ -191,3 +191,5 @@ class BaseO3CPU(BaseCPU):
         TournamentBP(numThreads=Parent.numThreads), "Branch Predictor"
     )
     needsTSO = Param.Bool(False, "Enable TSO Memory model")
+
+    arch_db = Param.ArchDBer(Parent.any, "Arch DB")
