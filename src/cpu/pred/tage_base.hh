@@ -80,7 +80,33 @@ class TAGEBase : public SimObject
         uint8_t u;
         TageEntry() : vld(false), ctr(0), tag(0), u(0) { }
     };
-
+    struct FoldedHistory
+     {
+         unsigned comp;
+         int compLength;
+         int origLength;
+         int outpoint;
+         int bufferSize;
+ 
+         FoldedHistory()
+         {
+             comp = 0;
+         }
+ 
+         void init(int original_length, int compressed_length)
+         {
+             origLength = original_length;
+             compLength = compressed_length;
+             outpoint = original_length % compressed_length;
+         }
+         void update(uint8_t * h)
+         {
+             comp = (comp << 1) | h[0];
+             comp ^= h[origLength] << outpoint;
+             comp ^= (comp >> compLength);
+             comp &= (1ULL << compLength) - 1;
+         }
+     };
   public:
 
     // provider type
@@ -423,6 +449,9 @@ class TAGEBase : public SimObject
 
         // Index to most recent branch outcome
         int ptGhist;
+        // Speculative folded histories.
+        FoldedHistory *computeIndices;
+        FoldedHistory *computeTags[2];
     };
 
     std::vector<ThreadHistory> threadHistory;

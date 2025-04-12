@@ -42,7 +42,7 @@
 #include "cpu/pred/loop_predictor.hh"
 #include "cpu/pred/multiperspective_perceptron.hh"
 #include "cpu/pred/statistical_corrector.hh"
-#include "cpu/pred/tage_base.hh"
+#include "cpu/pred/tage_base_O3.hh"
 #include "params/MPP_LoopPredictor.hh"
 #include "params/MPP_StatisticalCorrector.hh"
 #include "params/MPP_TAGE.hh"

@@ -54,7 +54,7 @@
 
 #include "base/types.hh"
 #include "cpu/pred/loop_predictor.hh"
-#include "cpu/pred/tage.hh"
+#include "cpu/pred/tage_O3.hh"
 #include "params/LTAGE.hh"
 
 namespace gem5

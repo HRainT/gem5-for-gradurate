@@ -1283,7 +1283,9 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
                 "[tid:%i] [sn:%llu] Return Instruction Committed PC %s \n",
                 tid, head_inst->seqNum, head_inst->pcState());
     }
-
+    if (head_inst->isControl() && head_inst->mispredicted()) {
+        cpu->baseStats.bpuMissCommitCount++;
+    }
     // Update the commit rename map
     for (int i = 0; i < head_inst->numDestRegs(); i++) {
         renameMap[tid]->setEntry(head_inst->flattenedDestIdx(i),
@@ -1375,7 +1377,9 @@ Commit::updateComInstStats(const DynInstPtr &inst)
         cpu->baseStats.numInsts++;
     }
     cpu->commitStats[tid]->numOps++;
-
+    if(inst->isControl()){
+        cpu->baseStats.retiredBranchInsts++;
+    }
     // To match the old model, don't count nops and instruction
     // prefetches towards the total commit count.
     if (!inst->isNop() && !inst->isInstPrefetch()) {

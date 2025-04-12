@@ -201,13 +201,13 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     void *bp_history = NULL;
     void *indirect_history = NULL;
 
-    if (inst->isUncondCtrl()) {
+    if (inst->isUncondCtrl()) {    //无条件跳转
         DPRINTF(Branch, "[tid:%i] [sn:%llu] Unconditional control\n",
             tid,seqNum);
         pred_taken = true;
         // Tell the BP there was an unconditional branch.
         uncondBranch(tid, pc.instAddr(), bp_history);
-    } else {
+    } else {                       //条件跳转
         ++stats.condPredicted;
         pred_taken = lookup(tid, pc.instAddr(), bp_history);
 

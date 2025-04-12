@@ -284,7 +284,7 @@ Decode::squash(const DynInstPtr &inst, ThreadID tid)
 {
     DPRINTF(Decode, "[tid:%i] [sn:%llu] Squashing due to incorrect branch "
             "prediction detected at decode.\n", tid, inst->seqNum);
-
+    cpu->baseStats.bpuMissDecodeCount++;
     // Send back mispredict information.
     toFetch->decodeInfo[tid].branchMispredict = true;
     toFetch->decodeInfo[tid].predIncorrect = true;

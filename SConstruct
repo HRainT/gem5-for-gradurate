@@ -796,10 +796,7 @@ for variant_path in variant_paths:
                 [None, 'socket'], 'sys/socket.h', 'C++', 'accept(0,0,0);'):
            error("Can't find library with socket calls (e.g. accept()).")
 
-        if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++','zlibVersion();'):
-            error('Did not find needed zlib compression library '
-                  'and/or zlib.h header file.\n'
-                  'Please install zlib and try again.')
+        env.Append(LIBS=['z'])
 
     if not GetOption('without_tcmalloc'):
         with gem5_scons.Configure(env) as conf:

@@ -337,7 +337,8 @@ TAGE_SC_L_TAGE::getBimodePred(Addr pc, TAGEBase::BranchInfo* tage_bi) const
     TAGE_SC_L_TAGE::BranchInfo *bi =
         static_cast<TAGE_SC_L_TAGE::BranchInfo *>(tage_bi);
 
-    int bim = btableCtr[bi->bimodalIndex];
+    int bim = (btablePrediction[bi->bimodalIndex] << 1)
+    + btableHysteresis[bi->bimodalIndex >> logRatioBiModalHystEntries]; //此处bim的计算为O3算法
 
     bi->highConf = (bim == 0) || (bim == (1<<3)-1);
     bi->lowConf = ! bi->highConf;

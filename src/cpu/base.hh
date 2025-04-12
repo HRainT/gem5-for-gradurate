@@ -795,7 +795,8 @@ class BaseCPU : public ClockedObject
 
         statistics::Scalar bpu0MissDecodeCount;
         statistics::Scalar bpu1MissDecodeCount;
-
+        statistics::Scalar bpuMissDecodeCount;
+        statistics::Scalar bpuMissCommitCount;
         statistics::Scalar retiredBranchInsts1_100loop;
         statistics::Scalar retiredBranchInsts101_200loop;
         statistics::Scalar retiredBranchInsts201_300loop;
@@ -817,7 +818,7 @@ class BaseCPU : public ClockedObject
 
         statistics::Formula bpu0MissRate;
         statistics::Formula bpu1MissRate;
-
+        statistics::Formula bpuMissRate;
         // statistics::Formula ipc1;                 //0 - 6000000
         // statistics::Formula ipc2;                 // 6000000 - 12000000
         // ---------------------------------------------------------

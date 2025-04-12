@@ -135,29 +135,32 @@ class BiModeBP(BranchPredictor):
     choicePredictorSize = Param.Unsigned(8192, "Size of choice predictor")
     choiceCtrBits = Param.Unsigned(2, "Bits of choice counters")
 
-
+USE_O3 = True
 class TAGEBase(SimObject):
     type = "TAGEBase"
     cxx_class = "gem5::branch_prediction::TAGEBase"
-    cxx_header = "cpu/pred/tage_base.hh"
+    if USE_O3:
+         cxx_header = "cpu/pred/tage_base_O3.hh"
+    else:
+         cxx_header = "cpu/pred/tage_base.hh"
 
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
     instShiftAmt = Param.Unsigned(
         Parent.instShiftAmt, "Number of bits to shift instructions by"
     )
 
-    nHistoryTables = Param.Unsigned(4, "Number of history tables")
-    minHist = Param.Unsigned(14, "Minimum history size of TAGE")
-    maxHist = Param.Unsigned(149, "Maximum history size of TAGE")
+    nHistoryTables = Param.Unsigned(7, "Number of history tables")
+    minHist = Param.Unsigned(5, "Minimum history size of TAGE")
+    maxHist = Param.Unsigned(130, "Maximum history size of TAGE")
 
     tagTableTagWidths = VectorParam.Unsigned(
-        [0, 9, 9, 9, 9], "Tag size in TAGE tag tables"
+        [0, 9, 9, 10, 10, 11, 11, 12], "Tag size in TAGE tag tables"
     )
     logTagTableSizes = VectorParam.Int(
-        [12, 13, 13, 12, 12], "Log2 of TAGE table sizes"
+        [13, 9, 9, 9, 9, 9, 9, 9], "Log2 of TAGE table sizes"
     )
     logRatioBiModalHystEntries = Param.Unsigned(
-        0,
+        2,
         "Log num of prediction entries for a shared hysteresis bit "
         "for the Bimodal",
     )
@@ -175,7 +178,7 @@ class TAGEBase(SimObject):
         18, "Log period in number of branches to reset TAGE useful counters"
     )
     numUseAltOnNa = Param.Unsigned(1, "Number of USE_ALT_ON_NA counters")
-    initialTCounterValue = Param.Int(0, "Initial value of tCounter")
+    initialTCounterValue = Param.Int(1 << 17, "Initial value of tCounter")
     useAltOnNaBits = Param.Unsigned(4, "Size of the USE_ALT_ON_NA counter(s)")
 
     maxNumAlloc = Param.Unsigned(
@@ -194,8 +197,12 @@ class TAGEBase(SimObject):
 # The default sizes below are for the 8C-TAGE configuration (63.5 Kbits)
 class TAGE(BranchPredictor):
     type = "TAGE"
-    cxx_class = "gem5::branch_prediction::TAGE"
-    cxx_header = "cpu/pred/tage.hh"
+    if USE_O3:
+         cxx_class = "gem5::branch_prediction::TAGE"
+         cxx_header = "cpu/pred/tage_O3.hh"
+    else:
+         cxx_class = "gem5::branch_prediction::TAGE"
+         cxx_header = "cpu/pred/tage.hh"
 
     tage = Param.TAGEBase(TAGEBase(), "Tage object")
 

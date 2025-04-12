@@ -234,10 +234,11 @@ MPP_TAGE::isHighConfidence(TAGEBase::BranchInfo *bi) const
     if (bi->hitBank > 0) {
         return (abs(2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1)) >=
                ((1 << tagTableCounterBits) - 1);
-    } else {
-        int bim = btableCtr[bi->bimodalIndex];
-        return (bim == 0) || (bim == (1<<3)-1);
-    }
+        } else {
+            int bim = (btablePrediction[bi->bimodalIndex] << 1)
+                + btableHysteresis[bi->bimodalIndex >> logRatioBiModalHystEntries];
+            return (bim == 0) || (bim == 3); //此处为O3算法
+        }
 
 }
 

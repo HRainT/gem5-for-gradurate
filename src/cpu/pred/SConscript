@@ -53,8 +53,13 @@ Source('indirect.cc')
 Source('ras.cc')
 Source('tournament.cc')
 Source ('bi_mode.cc')
-Source('tage_base.cc')
-Source('tage.cc')
+USE_O3 = True
+if USE_O3:
+     Source('tage_O3.cc')
+     Source('tage_base_O3.cc')
+else:
+     Source('tage.cc')
+     Source('tage_base.cc')
 Source('loop_predictor.cc')
 Source('ltage.cc')
 Source('multiperspective_perceptron.cc')

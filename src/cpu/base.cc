@@ -738,7 +738,10 @@ BaseCPUStats::BaseCPUStats(statistics::Group *parent)
                "Number of mispredicted times due to BPU0_miss in decode"),
       ADD_STAT(bpu1MissDecodeCount, statistics::units::Count::get(),
                "Number of mispredicted times due to BPU1_miss in decode"),
-
+      ADD_STAT(bpuMissDecodeCount, statistics::units::Count::get(),
+               "Number of mispredicted times due to BPU_miss in decode"),
+      ADD_STAT(bpuMissCommitCount, statistics::units::Count::get(),
+               "Number of mispredicted times due to BPU_miss in commit"),
       ADD_STAT(retiredBranchInsts1_100loop, statistics::units::Count::get(),
                "Number of retired branch insts processed by commit in 1 - 100 loop"),
       ADD_STAT(retiredBranchInsts101_200loop, statistics::units::Count::get(),
@@ -790,7 +793,9 @@ BaseCPUStats::BaseCPUStats(statistics::Group *parent)
     ADD_STAT(bpu1MissRate, statistics::units::Rate<
                 statistics::units::Count, statistics::units::Count>::get(),
                "bpu1MissRate"),
-
+    ADD_STAT(bpuMissRate, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Count>::get(),
+               "bpuMissRate"),
     //   ADD_STAT(ipc1, statistics::units::Rate<
     //             statistics::units::Count, statistics::units::Cycle>::get(),
     //            "IPC1: instructions per cycle (core level) 0 - 6000000"),
@@ -1247,7 +1252,8 @@ BaseCPUStats::BaseCPUStats(statistics::Group *parent)
 
     bpu0MissDecodeCount.prereq(bpu0MissDecodeCount);
     bpu1MissDecodeCount.prereq(bpu1MissDecodeCount);
-
+    bpuMissDecodeCount.prereq(bpuMissDecodeCount);
+    bpuMissCommitCount.prereq(bpuMissCommitCount);
     retiredBranchInsts1_100loop.prereq(retiredBranchInsts1_100loop);
     retiredBranchInsts101_200loop.prereq(retiredBranchInsts101_200loop);
     retiredBranchInsts201_300loop.prereq(retiredBranchInsts201_300loop);
@@ -1281,7 +1287,8 @@ BaseCPUStats::BaseCPUStats(statistics::Group *parent)
     bpu0MissRate = (bpu0MissCommitCount + bpu0MissDecodeCount) / retiredBranchInsts;
     bpu1MissRate.precision(6);
     bpu1MissRate = (bpu1MissCommitCount + bpu1MissDecodeCount) / retiredBranchInsts;
-    
+    bpuMissRate.precision(6);
+    bpuMissRate = (bpuMissDecodeCount + bpuMissCommitCount) / retiredBranchInsts;
     // ipc1.precision(6);
     // ipc1 = numInsts1 / numCycles1;
 
