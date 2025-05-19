@@ -1,0 +1,323 @@
+#ifndef __CPU_RxuO3_ROB_HH__
+#define __CPU_RxuO3_ROB_HH__
+
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "base/statistics.hh"
+#include "base/types.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/rxuo3/dyn_inst_ptr.hh"
+#include "cpu/rxuo3/limits.hh"
+#include "cpu/reg_class.hh"
+#include "enums/RxuSMTQueuePolicy.hh"
+
+namespace gem5
+{
+
+struct BaseRxuO3CPUParams;
+
+namespace rxuo3
+{
+
+class CPU;
+
+struct DerivO3CPUParams;
+
+/**
+ * ROB class.  The ROB is largely what drives squashing.
+ */
+class ROB
+{
+  public:
+    typedef std::pair<RegIndex, RegIndex> UnmapInfo;
+    typedef typename std::list<DynInstPtr>::iterator InstIt;
+
+    /** Possible ROB statuses. */
+    enum Status
+    {
+        Running,
+        Idle,
+        ROBSquashing
+    };
+
+  private:
+    /** Per-thread ROB status. */
+    Status robStatus[MaxThreads];
+
+    /** ROB resource sharing policy for SMT mode. */
+    RxuSMTQueuePolicy robPolicy;
+
+  public:
+    /** ROB constructor.
+     *  @param _cpu   The cpu object pointer.
+     *  @param params The cpu params including several ROB-specific parameters.
+     */
+    ROB(CPU *_cpu, const BaseRxuO3CPUParams &params);
+
+    std::string name() const;
+
+    /** Sets pointer to the list of active threads.
+     *  @param at_ptr Pointer to the list of active threads.
+     */
+    void setActiveThreads(std::list<ThreadID> *at_ptr);
+
+    /** Perform sanity checks after a drain. */
+    void drainSanityCheck() const;
+
+    /** Takes over another CPU's thread. */
+    void takeOverFrom();
+
+    /** Function to insert an instruction into the ROB. Note that whatever
+     *  calls this function must ensure that there is enough space within the
+     *  ROB for the new instruction.
+     *  @param inst The instruction being inserted into the ROB.
+     */
+    void insertInst(const DynInstPtr &inst);
+
+    // insert uop to rob
+
+    void insertUopInst(std::list<DynInstPtr> &uopList);
+
+    /** Returns pointer to the head instruction within the ROB.  There is
+     *  no guarantee as to the return value if the ROB is empty.
+     *  @retval Pointer to the DynInst that is at the head of the ROB.
+     */
+//    DynInstPtr readHeadInst();
+
+    /** Returns a pointer to the head instruction of a specific thread within
+     *  the ROB.
+     *  @return Pointer to the DynInst that is at the head of the ROB.
+     */
+    const DynInstPtr &readHeadInst(ThreadID tid);
+
+    /** Returns a pointer to the instruction with the given sequence if it is
+     *  in the ROB.
+     */
+    DynInstPtr findInst(ThreadID tid, InstSeqNum squash_inst);
+
+    /** Returns pointer to the tail instruction within the ROB.  There is
+     *  no guarantee as to the return value if the ROB is empty.
+     *  @retval Pointer to the DynInst that is at the tail of the ROB.
+     */
+//    DynInstPtr readTailInst();
+
+    /** Returns a pointer to the tail instruction of a specific thread within
+     *  the ROB.
+     *  @return Pointer to the DynInst that is at the tail of the ROB.
+     */
+    DynInstPtr readTailInst(ThreadID tid);
+
+    /** Retires the head instruction, removing it from the ROB. */
+//    void retireHead();
+
+    /** Retires the head instruction of a specific thread, removing it from the
+     *  ROB.
+     */
+    void retireHead(ThreadID tid);
+
+    /** Is the oldest instruction across all threads ready. */
+//    bool isHeadReady();
+
+    /** Is the oldest instruction across a particular thread ready. */
+    bool isHeadReady(ThreadID tid);
+
+    /** Is there any commitable head instruction across all threads ready. */
+    bool canCommit();
+
+    /** Re-adjust ROB partitioning. */
+    void resetEntries();
+
+    /** Number of entries needed For 'num_threads' amount of threads. */
+    int entryAmount(ThreadID num_threads);
+
+    /** Returns the number of total free entries in the ROB. */
+    unsigned numFreeEntries();
+
+    /** Returns the number of free entries in a specific ROB paritition. */
+    unsigned numFreeEntries(ThreadID tid);
+
+    /** Returns the number of free vector entries in a specific ROB paritition. */
+    unsigned numFreeVecEntries(ThreadID tid);
+
+    /** Returns the maximum number of entries for a specific thread. */
+    unsigned getMaxEntries(ThreadID tid)
+    { return maxEntries[tid]; }
+
+    /** Returns the number of entries being used by a specific thread. */
+    unsigned getThreadEntries(ThreadID tid)
+    { return threadEntries[tid]; }
+
+    /** Returns if the ROB is full. */
+    bool isFull()
+    { return numInstsInROB == numEntries; }
+
+    /** Returns if a specific thread's partition is full. */
+    bool isFull(ThreadID tid)
+    { return threadEntries[tid] == numEntries; }
+
+    /** Returns if the ROB is empty. */
+    bool isEmpty() const
+    { return numInstsInROB == 0; }
+
+    /** Returns if a specific thread's partition is empty. */
+    bool isEmpty(ThreadID tid) const
+    { return threadEntries[tid] == 0; }
+
+    /** Executes the squash, marking squashed instructions. */
+    void doSquash(ThreadID tid);
+
+    /** Squashes all instructions younger than the given sequence number for
+     *  the specific thread.
+     */
+    void squash(InstSeqNum squash_num, ThreadID tid);
+
+    /** Updates the head instruction with the new oldest instruction. */
+    void updateHead();
+
+    /** Updates the tail instruction with the new youngest instruction. */
+    void updateTail();
+
+    /** Reads the PC of the oldest head instruction. */
+//    uint64_t readHeadPC();
+
+    /** Reads the PC of the head instruction of a specific thread. */
+//    uint64_t readHeadPC(ThreadID tid);
+
+    /** Reads the next PC of the oldest head instruction. */
+//    uint64_t readHeadNextPC();
+
+    /** Reads the next PC of the head instruction of a specific thread. */
+//    uint64_t readHeadNextPC(ThreadID tid);
+
+    /** Reads the sequence number of the oldest head instruction. */
+//    InstSeqNum readHeadSeqNum();
+
+    /** Reads the sequence number of the head instruction of a specific thread.
+     */
+//    InstSeqNum readHeadSeqNum(ThreadID tid);
+
+    /** Reads the PC of the youngest tail instruction. */
+//    uint64_t readTailPC();
+
+    /** Reads the PC of the tail instruction of a specific thread. */
+//    uint64_t readTailPC(ThreadID tid);
+
+    /** Reads the sequence number of the youngest tail instruction. */
+//    InstSeqNum readTailSeqNum();
+
+    /** Reads the sequence number of tail instruction of a specific thread. */
+//    InstSeqNum readTailSeqNum(ThreadID tid);
+
+    /** Checks if the ROB is still in the process of squashing instructions.
+     *  @retval Whether or not the ROB is done squashing.
+     */
+    bool isDoneSquashing(ThreadID tid) const
+    { return doneSquashing[tid]; }
+
+    /** Checks if the ROB is still in the process of squashing instructions for
+     *  any thread.
+     */
+    bool isDoneSquashing();
+
+    /** This is more of a debugging function than anything.  Use
+     *  numInstsInROB to get the instructions in the ROB unless you are
+     *  double checking that variable.
+     */
+    int countInsts();
+
+    /** This is more of a debugging function than anything.  Use
+     *  threadEntries to get the instructions in the ROB unless you are
+     *  double checking that variable.
+     */
+    size_t countInsts(ThreadID tid);
+
+    /** ROB List of Instructions */
+    std::list<DynInstPtr> instList[MaxThreads];
+
+    /** Number of instructions in the ROB. */
+    unsigned numEntries;
+
+    /** Number of instructions in the vector ROB. */
+    unsigned numVecEntries;
+
+    /** Entries Per Thread */
+    unsigned threadEntries[MaxThreads];
+
+    /** Entries Per Thread for vector*/
+    unsigned threadVecEntries[MaxThreads];
+
+    /** Max Insts a Thread Can Have in the ROB */
+    unsigned maxEntries[MaxThreads];
+
+    /** Max Insts a Thread Can Have in the vector ROB */
+    unsigned maxVecEntries[MaxThreads];
+
+  private:
+    /** Reset the ROB state */
+    void resetState();
+
+    /** Pointer to the CPU. */
+    CPU *cpu;
+
+    /** Active Threads in CPU */
+    std::list<ThreadID> *activeThreads;
+
+    /** Number of instructions that can be squashed in a single cycle. */
+    unsigned squashWidth;
+
+  public:
+    /** Iterator pointing to the instruction which is the last instruction
+     *  in the ROB.  This may at times be invalid (ie when the ROB is empty),
+     *  however it should never be incorrect.
+     */
+    InstIt tail;
+
+    /** Iterator pointing to the instruction which is the first instruction in
+     *  in the ROB*/
+    InstIt head;
+
+  private:
+    /** Iterator used for walking through the list of instructions when
+     *  squashing.  Used so that there is persistent state between cycles;
+     *  when squashing, the instructions are marked as squashed but not
+     *  immediately removed, meaning the tail iterator remains the same before
+     *  and after a squash.
+     *  This will always be set to cpu->instList.end() if it is invalid.
+     */
+    InstIt squashIt[MaxThreads];
+
+  public:
+    /** Number of instructions in the ROB. */
+    int numInstsInROB;
+
+    /** Dummy instruction returned if there are no insts left. */
+    DynInstPtr dummyInst;
+
+  private:
+    /** The sequence number of the squashed instruction. */
+    InstSeqNum squashedSeqNum[MaxThreads];
+
+    /** Is the ROB done squashing. */
+    bool doneSquashing[MaxThreads];
+
+    /** Number of active threads. */
+    ThreadID numThreads;
+
+
+    struct ROBStats : public statistics::Group
+    {
+        ROBStats(statistics::Group *parent);
+
+        // The number of rob_reads
+        statistics::Scalar reads;
+        // The number of rob_writes
+        statistics::Scalar writes;
+    } stats;
+};
+
+} // namespace rxuo3
+} // namespace gem5
+
+#endif //__CPU_RxuO3_ROB_HH__

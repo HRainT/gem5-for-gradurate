@@ -1,0 +1,321 @@
+In file included from build/RISCV/arch/riscv/generated/decoder.hh:12,
+                 from build/RISCV/arch/riscv/generated/decoder.cc:7:
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc:28204:1: error: expected class-name before ‘{’ token
+28204 | {
+      | ^
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc:28214:11: error: ‘SpecialVectorArithMicroInst’ has not been declared
+28214 |     using SpecialVectorArithMicroInst::generateDisassembly;
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from build/RISCV/arch/riscv/generated/decoder.hh:12,
+                 from build/RISCV/arch/riscv/generated/inst-constrs.cc:6:
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc:28204:1: error: expected class-name before ‘{’ token
+28204 | {
+      | ^
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc:28214:11: error: ‘SpecialVectorArithMicroInst’ has not been declared
+28214 |     using SpecialVectorArithMicroInst::generateDisassembly;
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from build/RISCV/arch/riscv/generated/decoder.hh:12,
+                 from build/RISCV/arch/riscv/generated/generic_cpu_exec.cc:7:
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc:28204:1: error: expected class-name before ‘{’ token
+28204 | {
+      | ^
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc:28214:11: error: ‘SpecialVectorArithMicroInst’ has not been declared
+28214 |     using SpecialVectorArithMicroInst::generateDisassembly;
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+scons: *** [build/RISCV/arch/riscv/generated/decoder.o] Error 1
+In file included from build/RISCV/arch/riscv/generated/generic_cpu_exec.cc:12:
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc: In instantiation of ‘class gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<unsigned char, short unsigned int>’:
+build/RISCV/arch/riscv/generated/exec-ns.cc.inc:75713:16:   required from here
+build/RISCV/arch/riscv/generated/exec-ns.cc.inc:75707:1: error: ‘gem5::Fault gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<ElemType, IndexType>::execute(gem5::ExecContext*, gem5::trace::InstRecord*) const [with ElemType = unsigned char; IndexType = short unsigned int; gem5::Fault = std::shared_ptr<gem5::FaultBase>]’ marked ‘override’, but does not override
+75707 | Vrgatherei16_vv_rxuMicro<ElemType, IndexType>::execute(ExecContext* xc,
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc: In instantiation of ‘class gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<short unsigned int, short unsigned int>’:
+build/RISCV/arch/riscv/generated/exec-ns.cc.inc:75714:16:   required from here
+build/RISCV/arch/riscv/generated/exec-ns.cc.inc:75707:1: error: ‘gem5::Fault gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<ElemType, IndexType>::execute(gem5::ExecContext*, gem5::trace::InstRecord*) const [with ElemType = short unsigned int; IndexType = short unsigned int; gem5::Fault = std::shared_ptr<gem5::FaultBase>]’ marked ‘override’, but does not override
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc: In instantiation of ‘class gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<unsigned int, short unsigned int>’:
+build/RISCV/arch/riscv/generated/exec-ns.cc.inc:75715:16:   required from here
+build/RISCV/arch/riscv/generated/exec-ns.cc.inc:75707:1: error: ‘gem5::Fault gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<ElemType, IndexType>::execute(gem5::ExecContext*, gem5::trace::InstRecord*) const [with ElemType = unsigned int; IndexType = short unsigned int; gem5::Fault = std::shared_ptr<gem5::FaultBase>]’ marked ‘override’, but does not override
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc: In instantiation of ‘class gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<long unsigned int, short unsigned int>’:
+build/RISCV/arch/riscv/generated/exec-ns.cc.inc:75716:16:   required from here
+build/RISCV/arch/riscv/generated/exec-ns.cc.inc:75707:1: error: ‘gem5::Fault gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<ElemType, IndexType>::execute(gem5::ExecContext*, gem5::trace::InstRecord*) const [with ElemType = long unsigned int; IndexType = short unsigned int; gem5::Fault = std::shared_ptr<gem5::FaultBase>]’ marked ‘override’, but does not override
+In file included from build/RISCV/arch/riscv/generated/inst-constrs.cc:11:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc: In constructor ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<ElemType, IndexType>::Vrgatherei16_vv_rxuMicro(gem5::RiscvISA::ExtMachInst, uint32_t, uint32_t, uint32_t)’:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64138:17: error: ‘IsSpecialVector’ was not declared in this scope
+64138 |     this->flags[IsSpecialVector] = true;
+      |                 ^~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64142:26: error: ‘RegIdArrayPtr’ does not name a type
+64142 |         reinterpret_cast<RegIdArrayPtr>(
+      |                          ^~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64144:26: error: ‘RegIdArrayPtr’ does not name a type
+64144 |         reinterpret_cast<RegIdArrayPtr>(
+      |                          ^~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64141:5: error: there are no arguments to ‘setRegIdxArrays’ that depend on a template parameter, so a declaration of ‘setRegIdxArrays’ must be available [-fpermissive]
+64141 |     setRegIdxArrays(
+      |     ^~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64141:5: note: (if you use ‘-fpermissive’, G++ will accept your code, but allowing the use of an undeclared name is deprecated)
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64147:5: error: ‘_numSrcRegs’ was not declared in this scope
+64147 |     _numSrcRegs = 0;
+      |     ^~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64148:5: error: ‘_numDestRegs’ was not declared in this scope
+64148 |     _numDestRegs = 0;
+      |     ^~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64152:5: error: there are no arguments to ‘setDestRegIdx’ that depend on a template parameter, so a declaration of ‘setDestRegIdx’ must be available [-fpermissive]
+64152 |     setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + vd_idx]);
+      |     ^~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64153:1: error: ‘_numTypedDestRegs’ was not declared in this scope
+64153 | _numTypedDestRegs[VecRegClass]++;
+      | ^~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64155:5: error: there are no arguments to ‘setSrcRegIdx’ that depend on a template parameter, so a declaration of ‘setSrcRegIdx’ must be available [-fpermissive]
+64155 |     setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs1 + vs1_idx]);
+      |     ^~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64156:1: error: there are no arguments to ‘setSrcRegIdx’ that depend on a template parameter, so a declaration of ‘setSrcRegIdx’ must be available [-fpermissive]
+64156 | setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + vs2_idx]);
+      | ^~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64157:1: error: there are no arguments to ‘setSrcRegIdx’ that depend on a template parameter, so a declaration of ‘setSrcRegIdx’ must be available [-fpermissive]
+64157 | setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + vd_idx]);
+      | ^~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64159:5: error: there are no arguments to ‘setSrcRegIdx’ that depend on a template parameter, so a declaration of ‘setSrcRegIdx’ must be available [-fpermissive]
+64159 |     setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);;
+      |     ^~~~~~~~~~~~
+In file included from build/RISCV/arch/riscv/generated/decoder.hh:12,
+                 from build/RISCV/arch/riscv/generated/inst-constrs.cc:6:
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc: In instantiation of ‘class gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<unsigned char, short unsigned int>’:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64162:16:   required from here
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc:28213:11: error: ‘gem5::Fault gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<ElemType, IndexType>::execute(gem5::ExecContext*, gem5::trace::InstRecord*) const [with ElemType = unsigned char; IndexType = short unsigned int; gem5::Fault = std::shared_ptr<gem5::FaultBase>]’ marked ‘override’, but does not override
+28213 |     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
+      |           ^~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc: In instantiation of ‘class gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<short unsigned int, short unsigned int>’:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64163:16:   required from here
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc:28213:11: error: ‘gem5::Fault gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<ElemType, IndexType>::execute(gem5::ExecContext*, gem5::trace::InstRecord*) const [with ElemType = short unsigned int; IndexType = short unsigned int; gem5::Fault = std::shared_ptr<gem5::FaultBase>]’ marked ‘override’, but does not override
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc: In instantiation of ‘class gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<unsigned int, short unsigned int>’:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64164:16:   required from here
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc:28213:11: error: ‘gem5::Fault gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<ElemType, IndexType>::execute(gem5::ExecContext*, gem5::trace::InstRecord*) const [with ElemType = unsigned int; IndexType = short unsigned int; gem5::Fault = std::shared_ptr<gem5::FaultBase>]’ marked ‘override’, but does not override
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc: In instantiation of ‘class gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<long unsigned int, short unsigned int>’:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64165:16:   required from here
+build/RISCV/arch/riscv/generated/decoder-ns.hh.inc:28213:11: error: ‘gem5::Fault gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<ElemType, IndexType>::execute(gem5::ExecContext*, gem5::trace::InstRecord*) const [with ElemType = long unsigned int; IndexType = short unsigned int; gem5::Fault = std::shared_ptr<gem5::FaultBase>]’ marked ‘override’, but does not override
+In file included from build/RISCV/arch/riscv/generated/inst-constrs.cc:11:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc: In instantiation of ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<ElemType, IndexType>::Vrgatherei16_vv_rxuMicro(gem5::RiscvISA::ExtMachInst, uint32_t, uint32_t, uint32_t) [with ElemType = unsigned char; IndexType = short unsigned int; gem5::RiscvISA::ExtMachInst = gem5::bitfield_backend::BitUnionOperators<gem5::RiscvISA::BitfieldUnderlyingClassesExtMachInst>; uint32_t = unsigned int]’:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64162:16:   required from here
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64136:52: error: type ‘gem5::RiscvISA::VectorArithMicroInst’ is not a direct base of ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<unsigned char, short unsigned int>’
+64136 |                     SimdMiscOp, _microVl, _microIdx)
+      |                                                    ^
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64145:67: error: ‘setRegIdxArrays’ was not declared in this scope; did you mean ‘srcRegIdxArr’?
+64145 |             &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
+      |                                                                   ^
+      |                                                                   srcRegIdxArr
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64152:18: error: ‘setDestRegIdx’ was not declared in this scope
+64152 |     setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + vd_idx]);
+      |     ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64155:17: error: ‘setSrcRegIdx’ was not declared in this scope
+64155 |     setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs1 + vs1_idx]);
+      |     ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64156:13: error: ‘setSrcRegIdx’ was not declared in this scope, and no declarations were found by argument-dependent lookup at the point of instantiation [-fpermissive]
+64156 | setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + vs2_idx]);
+      | ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64157:13: error: ‘setSrcRegIdx’ was not declared in this scope, and no declarations were found by argument-dependent lookup at the point of instantiation [-fpermissive]
+64157 | setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + vd_idx]);
+      | ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64159:17: error: ‘setSrcRegIdx’ was not declared in this scope, and no declarations were found by argument-dependent lookup at the point of instantiation [-fpermissive]
+64159 |     setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);;
+      |     ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc: In instantiation of ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<ElemType, IndexType>::Vrgatherei16_vv_rxuMicro(gem5::RiscvISA::ExtMachInst, uint32_t, uint32_t, uint32_t) [with ElemType = short unsigned int; IndexType = short unsigned int; gem5::RiscvISA::ExtMachInst = gem5::bitfield_backend::BitUnionOperators<gem5::RiscvISA::BitfieldUnderlyingClassesExtMachInst>; uint32_t = unsigned int]’:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64163:16:   required from here
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64136:52: error: type ‘gem5::RiscvISA::VectorArithMicroInst’ is not a direct base of ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<short unsigned int, short unsigned int>’
+64136 |                     SimdMiscOp, _microVl, _microIdx)
+      |                                                    ^
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64145:67: error: ‘setRegIdxArrays’ was not declared in this scope; did you mean ‘srcRegIdxArr’?
+64145 |             &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
+      |                                                                   ^
+      |                                                                   srcRegIdxArr
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64152:18: error: ‘setDestRegIdx’ was not declared in this scope
+64152 |     setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + vd_idx]);
+      |     ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64155:17: error: ‘setSrcRegIdx’ was not declared in this scope
+64155 |     setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs1 + vs1_idx]);
+      |     ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64156:13: error: ‘setSrcRegIdx’ was not declared in this scope, and no declarations were found by argument-dependent lookup at the point of instantiation [-fpermissive]
+64156 | setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + vs2_idx]);
+      | ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64157:13: error: ‘setSrcRegIdx’ was not declared in this scope, and no declarations were found by argument-dependent lookup at the point of instantiation [-fpermissive]
+64157 | setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + vd_idx]);
+      | ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64159:17: error: ‘setSrcRegIdx’ was not declared in this scope, and no declarations were found by argument-dependent lookup at the point of instantiation [-fpermissive]
+64159 |     setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);;
+      |     ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc: In instantiation of ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<ElemType, IndexType>::Vrgatherei16_vv_rxuMicro(gem5::RiscvISA::ExtMachInst, uint32_t, uint32_t, uint32_t) [with ElemType = unsigned int; IndexType = short unsigned int; gem5::RiscvISA::ExtMachInst = gem5::bitfield_backend::BitUnionOperators<gem5::RiscvISA::BitfieldUnderlyingClassesExtMachInst>; uint32_t = unsigned int]’:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64164:16:   required from here
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64136:52: error: type ‘gem5::RiscvISA::VectorArithMicroInst’ is not a direct base of ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<unsigned int, short unsigned int>’
+64136 |                     SimdMiscOp, _microVl, _microIdx)
+      |                                                    ^
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64145:67: error: ‘setRegIdxArrays’ was not declared in this scope; did you mean ‘srcRegIdxArr’?
+64145 |             &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
+      |                                                                   ^
+      |                                                                   srcRegIdxArr
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64152:18: error: ‘setDestRegIdx’ was not declared in this scope
+64152 |     setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + vd_idx]);
+      |     ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64155:17: error: ‘setSrcRegIdx’ was not declared in this scope
+64155 |     setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs1 + vs1_idx]);
+      |     ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64156:13: error: ‘setSrcRegIdx’ was not declared in this scope, and no declarations were found by argument-dependent lookup at the point of instantiation [-fpermissive]
+64156 | setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + vs2_idx]);
+      | ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64157:13: error: ‘setSrcRegIdx’ was not declared in this scope, and no declarations were found by argument-dependent lookup at the point of instantiation [-fpermissive]
+64157 | setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + vd_idx]);
+      | ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64159:17: error: ‘setSrcRegIdx’ was not declared in this scope, and no declarations were found by argument-dependent lookup at the point of instantiation [-fpermissive]
+64159 |     setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);;
+      |     ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc: In instantiation of ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<ElemType, IndexType>::Vrgatherei16_vv_rxuMicro(gem5::RiscvISA::ExtMachInst, uint32_t, uint32_t, uint32_t) [with ElemType = long unsigned int; IndexType = short unsigned int; gem5::RiscvISA::ExtMachInst = gem5::bitfield_backend::BitUnionOperators<gem5::RiscvISA::BitfieldUnderlyingClassesExtMachInst>; uint32_t = unsigned int]’:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64165:16:   required from here
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64136:52: error: type ‘gem5::RiscvISA::VectorArithMicroInst’ is not a direct base of ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<long unsigned int, short unsigned int>’
+64136 |                     SimdMiscOp, _microVl, _microIdx)
+      |                                                    ^
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64145:67: error: ‘setRegIdxArrays’ was not declared in this scope; did you mean ‘srcRegIdxArr’?
+64145 |             &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
+      |                                                                   ^
+      |                                                                   srcRegIdxArr
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64152:18: error: ‘setDestRegIdx’ was not declared in this scope
+64152 |     setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + vd_idx]);
+      |     ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64155:17: error: ‘setSrcRegIdx’ was not declared in this scope
+64155 |     setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs1 + vs1_idx]);
+      |     ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64156:13: error: ‘setSrcRegIdx’ was not declared in this scope, and no declarations were found by argument-dependent lookup at the point of instantiation [-fpermissive]
+64156 | setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + vs2_idx]);
+      | ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64157:13: error: ‘setSrcRegIdx’ was not declared in this scope, and no declarations were found by argument-dependent lookup at the point of instantiation [-fpermissive]
+64157 | setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + vd_idx]);
+      | ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64159:17: error: ‘setSrcRegIdx’ was not declared in this scope, and no declarations were found by argument-dependent lookup at the point of instantiation [-fpermissive]
+64159 |     setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);;
+      |     ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc: In instantiation of ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxu<ElemType, IndexType>::Vrgatherei16_vv_rxu(gem5::RiscvISA::ExtMachInst, uint32_t) [with ElemType = unsigned char; IndexType = short unsigned int; gem5::RiscvISA::ExtMachInst = gem5::bitfield_backend::BitUnionOperators<gem5::RiscvISA::BitfieldUnderlyingClassesExtMachInst>; uint32_t = unsigned int]’:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64221:16:   required from here
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64208:17: error: no match for ‘operator=’ (operand types are ‘gem5::StaticInstPtr’ {aka ‘gem5::RefCountingPtr<gem5::StaticInst>’} and ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<unsigned char, short unsigned int>*’)
+64208 |         microop = new Vrgatherei16_vv_rxuMicro<ElemType, IndexType>(
+      |         ~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+64209 |             _machInst, micro_vl, i, micro_idx_vs1);
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from src/cpu/static_inst_fwd.hh:32,
+                 from src/cpu/decode_cache.hh:36,
+                 from src/arch/generic/decode_cache.hh:33,
+                 from src/arch/riscv/decoder.hh:33,
+                 from build/RISCV/arch/riscv/generated/decoder-g.cc.inc:16,
+                 from build/RISCV/arch/riscv/generated/inst-constrs.cc:5:
+src/base/refcnt.hh:236:27: note: candidate: ‘const gem5::RefCountingPtr<T>& gem5::RefCountingPtr<T>::operator=(T*) [with T = gem5::StaticInst]’
+  236 |     const RefCountingPtr &operator=(T *p) { set(p); return *this; }
+      |                           ^~~~~~~~
+src/base/refcnt.hh:236:40: note:   no known conversion for argument 1 from ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<unsigned char, short unsigned int>*’ to ‘gem5::StaticInst*’
+  236 |     const RefCountingPtr &operator=(T *p) { set(p); return *this; }
+      |                                     ~~~^
+src/base/refcnt.hh:240:5: note: candidate: ‘const gem5::RefCountingPtr<T>& gem5::RefCountingPtr<T>::operator=(const gem5::RefCountingPtr<T>&) [with T = gem5::StaticInst]’
+  240 |     operator=(const RefCountingPtr &r)
+      |     ^~~~~~~~
+src/base/refcnt.hh:240:37: note:   no known conversion for argument 1 from ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<unsigned char, short unsigned int>*’ to ‘const gem5::RefCountingPtr<gem5::StaticInst>&’
+  240 |     operator=(const RefCountingPtr &r)
+      |               ~~~~~~~~~~~~~~~~~~~~~~^
+src/base/refcnt.hh:247:5: note: candidate: ‘const gem5::RefCountingPtr<T>& gem5::RefCountingPtr<T>::operator=(gem5::RefCountingPtr<T>&&) [with T = gem5::StaticInst]’
+  247 |     operator=(RefCountingPtr&& r)
+      |     ^~~~~~~~
+src/base/refcnt.hh:247:32: note:   no known conversion for argument 1 from ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<unsigned char, short unsigned int>*’ to ‘gem5::RefCountingPtr<gem5::StaticInst>&&’
+  247 |     operator=(RefCountingPtr&& r)
+      |               ~~~~~~~~~~~~~~~~~^
+In file included from build/RISCV/arch/riscv/generated/inst-constrs.cc:11:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc: In instantiation of ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxu<ElemType, IndexType>::Vrgatherei16_vv_rxu(gem5::RiscvISA::ExtMachInst, uint32_t) [with ElemType = short unsigned int; IndexType = short unsigned int; gem5::RiscvISA::ExtMachInst = gem5::bitfield_backend::BitUnionOperators<gem5::RiscvISA::BitfieldUnderlyingClassesExtMachInst>; uint32_t = unsigned int]’:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64222:16:   required from here
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64208:17: error: no match for ‘operator=’ (operand types are ‘gem5::StaticInstPtr’ {aka ‘gem5::RefCountingPtr<gem5::StaticInst>’} and ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<short unsigned int, short unsigned int>*’)
+64208 |         microop = new Vrgatherei16_vv_rxuMicro<ElemType, IndexType>(
+      |         ~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+64209 |             _machInst, micro_vl, i, micro_idx_vs1);
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from src/cpu/static_inst_fwd.hh:32,
+                 from src/cpu/decode_cache.hh:36,
+                 from src/arch/generic/decode_cache.hh:33,
+                 from src/arch/riscv/decoder.hh:33,
+                 from build/RISCV/arch/riscv/generated/decoder-g.cc.inc:16,
+                 from build/RISCV/arch/riscv/generated/inst-constrs.cc:5:
+src/base/refcnt.hh:236:27: note: candidate: ‘const gem5::RefCountingPtr<T>& gem5::RefCountingPtr<T>::operator=(T*) [with T = gem5::StaticInst]’
+  236 |     const RefCountingPtr &operator=(T *p) { set(p); return *this; }
+      |                           ^~~~~~~~
+src/base/refcnt.hh:236:40: note:   no known conversion for argument 1 from ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<short unsigned int, short unsigned int>*’ to ‘gem5::StaticInst*’
+  236 |     const RefCountingPtr &operator=(T *p) { set(p); return *this; }
+      |                                     ~~~^
+src/base/refcnt.hh:240:5: note: candidate: ‘const gem5::RefCountingPtr<T>& gem5::RefCountingPtr<T>::operator=(const gem5::RefCountingPtr<T>&) [with T = gem5::StaticInst]’
+  240 |     operator=(const RefCountingPtr &r)
+      |     ^~~~~~~~
+src/base/refcnt.hh:240:37: note:   no known conversion for argument 1 from ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<short unsigned int, short unsigned int>*’ to ‘const gem5::RefCountingPtr<gem5::StaticInst>&’
+  240 |     operator=(const RefCountingPtr &r)
+      |               ~~~~~~~~~~~~~~~~~~~~~~^
+src/base/refcnt.hh:247:5: note: candidate: ‘const gem5::RefCountingPtr<T>& gem5::RefCountingPtr<T>::operator=(gem5::RefCountingPtr<T>&&) [with T = gem5::StaticInst]’
+  247 |     operator=(RefCountingPtr&& r)
+      |     ^~~~~~~~
+src/base/refcnt.hh:247:32: note:   no known conversion for argument 1 from ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<short unsigned int, short unsigned int>*’ to ‘gem5::RefCountingPtr<gem5::StaticInst>&&’
+  247 |     operator=(RefCountingPtr&& r)
+      |               ~~~~~~~~~~~~~~~~~^
+In file included from build/RISCV/arch/riscv/generated/inst-constrs.cc:11:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc: In instantiation of ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxu<ElemType, IndexType>::Vrgatherei16_vv_rxu(gem5::RiscvISA::ExtMachInst, uint32_t) [with ElemType = unsigned int; IndexType = short unsigned int; gem5::RiscvISA::ExtMachInst = gem5::bitfield_backend::BitUnionOperators<gem5::RiscvISA::BitfieldUnderlyingClassesExtMachInst>; uint32_t = unsigned int]’:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64223:16:   required from here
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64208:17: error: no match for ‘operator=’ (operand types are ‘gem5::StaticInstPtr’ {aka ‘gem5::RefCountingPtr<gem5::StaticInst>’} and ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<unsigned int, short unsigned int>*’)
+64208 |         microop = new Vrgatherei16_vv_rxuMicro<ElemType, IndexType>(
+      |         ~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+64209 |             _machInst, micro_vl, i, micro_idx_vs1);
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from src/cpu/static_inst_fwd.hh:32,
+                 from src/cpu/decode_cache.hh:36,
+                 from src/arch/generic/decode_cache.hh:33,
+                 from src/arch/riscv/decoder.hh:33,
+                 from build/RISCV/arch/riscv/generated/decoder-g.cc.inc:16,
+                 from build/RISCV/arch/riscv/generated/inst-constrs.cc:5:
+src/base/refcnt.hh:236:27: note: candidate: ‘const gem5::RefCountingPtr<T>& gem5::RefCountingPtr<T>::operator=(T*) [with T = gem5::StaticInst]’
+  236 |     const RefCountingPtr &operator=(T *p) { set(p); return *this; }
+      |                           ^~~~~~~~
+src/base/refcnt.hh:236:40: note:   no known conversion for argument 1 from ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<unsigned int, short unsigned int>*’ to ‘gem5::StaticInst*’
+  236 |     const RefCountingPtr &operator=(T *p) { set(p); return *this; }
+      |                                     ~~~^
+src/base/refcnt.hh:240:5: note: candidate: ‘const gem5::RefCountingPtr<T>& gem5::RefCountingPtr<T>::operator=(const gem5::RefCountingPtr<T>&) [with T = gem5::StaticInst]’
+  240 |     operator=(const RefCountingPtr &r)
+      |     ^~~~~~~~
+src/base/refcnt.hh:240:37: note:   no known conversion for argument 1 from ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<unsigned int, short unsigned int>*’ to ‘const gem5::RefCountingPtr<gem5::StaticInst>&’
+  240 |     operator=(const RefCountingPtr &r)
+      |               ~~~~~~~~~~~~~~~~~~~~~~^
+src/base/refcnt.hh:247:5: note: candidate: ‘const gem5::RefCountingPtr<T>& gem5::RefCountingPtr<T>::operator=(gem5::RefCountingPtr<T>&&) [with T = gem5::StaticInst]’
+  247 |     operator=(RefCountingPtr&& r)
+      |     ^~~~~~~~
+src/base/refcnt.hh:247:32: note:   no known conversion for argument 1 from ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<unsigned int, short unsigned int>*’ to ‘gem5::RefCountingPtr<gem5::StaticInst>&&’
+  247 |     operator=(RefCountingPtr&& r)
+      |               ~~~~~~~~~~~~~~~~~^
+In file included from build/RISCV/arch/riscv/generated/inst-constrs.cc:11:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc: In instantiation of ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxu<ElemType, IndexType>::Vrgatherei16_vv_rxu(gem5::RiscvISA::ExtMachInst, uint32_t) [with ElemType = long unsigned int; IndexType = short unsigned int; gem5::RiscvISA::ExtMachInst = gem5::bitfield_backend::BitUnionOperators<gem5::RiscvISA::BitfieldUnderlyingClassesExtMachInst>; uint32_t = unsigned int]’:
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64224:16:   required from here
+build/RISCV/arch/riscv/generated/decoder-ns.cc.inc:64208:17: error: no match for ‘operator=’ (operand types are ‘gem5::StaticInstPtr’ {aka ‘gem5::RefCountingPtr<gem5::StaticInst>’} and ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<long unsigned int, short unsigned int>*’)
+64208 |         microop = new Vrgatherei16_vv_rxuMicro<ElemType, IndexType>(
+      |         ~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+64209 |             _machInst, micro_vl, i, micro_idx_vs1);
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from src/cpu/static_inst_fwd.hh:32,
+                 from src/cpu/decode_cache.hh:36,
+                 from src/arch/generic/decode_cache.hh:33,
+                 from src/arch/riscv/decoder.hh:33,
+                 from build/RISCV/arch/riscv/generated/decoder-g.cc.inc:16,
+                 from build/RISCV/arch/riscv/generated/inst-constrs.cc:5:
+src/base/refcnt.hh:236:27: note: candidate: ‘const gem5::RefCountingPtr<T>& gem5::RefCountingPtr<T>::operator=(T*) [with T = gem5::StaticInst]’
+  236 |     const RefCountingPtr &operator=(T *p) { set(p); return *this; }
+      |                           ^~~~~~~~
+src/base/refcnt.hh:236:40: note:   no known conversion for argument 1 from ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<long unsigned int, short unsigned int>*’ to ‘gem5::StaticInst*’
+  236 |     const RefCountingPtr &operator=(T *p) { set(p); return *this; }
+      |                                     ~~~^
+src/base/refcnt.hh:240:5: note: candidate: ‘const gem5::RefCountingPtr<T>& gem5::RefCountingPtr<T>::operator=(const gem5::RefCountingPtr<T>&) [with T = gem5::StaticInst]’
+  240 |     operator=(const RefCountingPtr &r)
+      |     ^~~~~~~~
+src/base/refcnt.hh:240:37: note:   no known conversion for argument 1 from ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<long unsigned int, short unsigned int>*’ to ‘const gem5::RefCountingPtr<gem5::StaticInst>&’
+  240 |     operator=(const RefCountingPtr &r)
+      |               ~~~~~~~~~~~~~~~~~~~~~~^
+src/base/refcnt.hh:247:5: note: candidate: ‘const gem5::RefCountingPtr<T>& gem5::RefCountingPtr<T>::operator=(gem5::RefCountingPtr<T>&&) [with T = gem5::StaticInst]’
+  247 |     operator=(RefCountingPtr&& r)
+      |     ^~~~~~~~
+src/base/refcnt.hh:247:32: note:   no known conversion for argument 1 from ‘gem5::RiscvISAInst::Vrgatherei16_vv_rxuMicro<long unsigned int, short unsigned int>*’ to ‘gem5::RefCountingPtr<gem5::StaticInst>&&’
+  247 |     operator=(RefCountingPtr&& r)
+      |               ~~~~~~~~~~~~~~~~~^
+scons: *** [build/RISCV/arch/riscv/generated/generic_cpu_exec.o] Error 1
+scons: *** [build/RISCV/arch/riscv/generated/inst-constrs.o] Error 1

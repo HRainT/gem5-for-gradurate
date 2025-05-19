@@ -1,0 +1,10 @@
+Import('*')
+
+if env['CONF']['BUILD_ISA']:
+    SimObject('RxuSimpleTrace.py', sim_objects=['RxuSimpleTrace'])
+    Source('rxu_simple_trace.cc')
+    DebugFlag('RxuSimpleTrace')
+
+    SimObject('RxuElasticTrace.py', sim_objects=['RxuElasticTrace'], tags='protobuf')
+    Source('rxu_elastic_trace.cc', tags='protobuf')
+    DebugFlag('RxuElasticTrace', tags='protobuf')
