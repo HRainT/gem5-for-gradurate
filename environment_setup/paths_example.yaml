@@ -1,0 +1,5 @@
+branch_traces_dir: /Data3/yutong.han/My_G5Project/BranchNet
+experiments_dir: /path/to/dir/for/storing/experiments
+hard_brs_dir: /path/to/dir/for/saving/hard/brs
+ml_datasets_dir: /path/to/dir/for/storing/ml/datasets
+tage_stats_dir: /path/to/dir/for/storing/tage/stats

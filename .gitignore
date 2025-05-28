@@ -1,0 +1,8 @@
+build/
+environment_setup/benchmarks.yaml
+environment_setup/ml_input_partitions.yaml
+environment_setup/paths.yaml
+src/tracer/obj-*/
+bin/__pycache__
+*.pyc
+.vscode/

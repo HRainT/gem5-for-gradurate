@@ -1,0 +1,3 @@
+Pin: pin-3.5-97503-ac534ca30
+Copyright (c) 2003-2017, Intel Corporation. All rights reserved.
+E:  Unable to load /Data3/yutong.han/My_G5Project/BranchNet/pinplay-drdebug-3.5-pin-3.5-97503-gac534ca30-gcc-linux-2/../build/tracer/tracer.so: dlopen failed: cannot locate symbol "_ZnwmSt11align_val_t" referenced by "/Data3/yutong.han/My_G5Project/BranchNet/pinplay-drdebug-3.5-pin-3.5-97503-gac534ca30-gcc-linux-2/../build/tracer/tracer.so"...
