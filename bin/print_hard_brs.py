@@ -5,7 +5,7 @@ import os
 import common
 from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
-TARGET_BENCHMARKS = ['leela']
+TARGET_BENCHMARKS = ['deepsjeng']
 TAGE_CONFIG_NAME = 'tagescl64'
 NUM_BRS_TO_PRINT = 100
 PRODUCE_HARD_BR_FILES = True

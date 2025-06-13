@@ -4,7 +4,7 @@ import common
 from common import PATHS, BENCHMARKS_INFO
 import os
 
-TARGET_BENCHMARKS = ['leela']
+TARGET_BENCHMARKS = ['deepsjeng']
 BINARY_NAME = 'tagescl64'
 CONFIG_NAME = 'tagescl64'
 NUM_THREADS = 32

@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-
+#include <limits>
 std::vector<HistElt> read_trace(char* input_trace, int max_brs) {
   std::vector<HistElt> history;
 

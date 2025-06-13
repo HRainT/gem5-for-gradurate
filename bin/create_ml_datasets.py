@@ -17,7 +17,7 @@ import common
 from common import PATHS, BENCHMARKS_INFO
 
 
-TARGET_BENCHMARKS = ['leela']
+TARGET_BENCHMARKS = ['deeepsjeng']  # Change to your target benchmarks
 HARD_BRS_FILE = 'top100'
 NUM_THREADS = 32
 PC_BITS = 30

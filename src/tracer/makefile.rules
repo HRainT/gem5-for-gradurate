@@ -199,7 +199,8 @@ ${OBJDIR}/%.${OBJEXT}: %.cpp $(BRANCHNET_INCLUDE_DIR)/trace_interface.h
 	$(CXX) ${MYDEFINES} ${COPT} $(CXXFLAGS) $(TOOL_INCLUDES) $(TOOL_CXXFLAGS) $(PIN_CXXFLAGS) ${COMP_OBJ}$@ $<
 
 ${OBJDIR}/tracer.so:  ${OBJDIR}/tracer.${OBJEXT} $(PINPLAY_LIB_HOME)/libpinplay.a $(EXT_LIB_HOME)/libbz2.a $(EXT_LIB_HOME)/libzlib.a $(CONTROLLERLIB)
-	$(LINKER) $(TOOL_LDFLAGS) $(LINK_EXE)$@ $^ $(TOOL_LPATHS) $(TOOL_LIBS) $(MYLIBS) $(EXTRA_LIBS) $(PIN_LIBS) $(DBG)   
+	$(LINKER) $(TOOL_LDFLAGS) $(LINK_EXE)$@ $^ \
+	$(TOOL_LPATHS) $(TOOL_LIBS) $(MYLIBS) $(EXTRA_LIBS) $(PIN_LIBS) $(DBG) 
 
 ## cleaning
 instclean: 
