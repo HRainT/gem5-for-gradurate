@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mode=11
+mode=10
 if [ $1 ]; then
     mode=$1
 fi
@@ -210,15 +210,13 @@ elif [ $mode = 8 ]; then
 elif [ $mode = 9 ]; then
     time \
     build/RISCV/gem5.opt \
-    --outdir=out/gcc/scilab/1049 \
-    --debug-flag CommitInsts \
-    --debug-file trace-rxu.log \
+    --outdir=out/429.mcf/1746 \
     --stats-file stats.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_GV_Zba_Zbb/403.gcc/scilab/1049/_1049_0.027778_memory_.gz \
+    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb/429.mcf/1746/_1746_0.005539_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
-    --cpu-type=RxuO3CPU \
+    --cpu-type=O3CPU \
     --mem-size=12GB \
     --caches \
     --cacheline_size=64 \
@@ -249,16 +247,15 @@ elif [ $mode = 9 ]; then
 elif [ $mode = 10 ]; then
     time \
     build/RISCV/gem5.opt \
-    --outdir=out/gcc/scilab/1049 \
-    --debug-flag RxuO3CPUAll \
-    --debug-file debug-rxu-2.log \
-    --debug-start 0 \
+    --outdir=out/429.mcf/1746 \
+    --debug-flag CommitInsts \
+    --debug-file trace-o3.log \
     --stats-file stats.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_GV_Zba_Zbb/403.gcc/scilab/1049/_1049_0.027778_memory_.gz \
+    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb/429.mcf/1746/_1746_0.005539_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
-    --cpu-type=RxuO3CPU \
+    --cpu-type=O3CPU \
     --mem-size=12GB \
     --caches \
     --cacheline_size=64 \
@@ -290,8 +287,8 @@ elif [ $mode = 11 ]; then
     time \
     build/RISCV/gem5.opt \
     --outdir=out/429.mcf/1746 \
-    --debug-flag O3CPUAll \
-    --debug-file debug.log \
+    --debug-flag O3CPUAll,Branch,Tage \
+    --debug-file debug_v1.log \
     --stats-file stats.txt \
     configs/example/fs.py \
     --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb/429.mcf/1746/_1746_0.005539_memory_.gz \

@@ -5,31 +5,32 @@ from concurrent.futures import ThreadPoolExecutor
 
 # 配置部分
 base_dir = "/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb"  # 根目录
-output_base_dir = "/Data3/yutong.han/riscv/rxu-gem5/out/spec/l2cache_0516_mmu16entry_load_noprefetch_v1"  # 输出基础目录
-gem5_exec = "/Data3/yutong.han/riscv/rxu-gem5/build/RISCV/gem5.opt"
-config_file = "/Data3/yutong.han/riscv/rxu-gem5/configs/example/fs.py"
+output_base_dir = "/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/out/spec/0613_BranchNet_all"  # 输出基础目录
+gem5_exec = "/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/build/RISCV/gem5.opt"
+config_file = "/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/configs/example/fs.py"
 gcpt_restorer = "/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_vector/dir/gcpt_restore/build/gcpt.bin"
 max_parallel_jobs = 30  # 最大并行任务数
 
 # 通用参数
 common_args = [ 
     "--xiangshan-system",
-    "--cpu-type=RxuO3CPU",
+    "--cpu-type=O3CPU",
     "--mem-size=12GB",
     "--caches", "--cacheline_size=64", "--l1i_size=128kB", "--l1i_assoc=8", "--l1d_size=128kB", "--l1d_assoc=8",
     "--l2cache", "--l2_size=2MB", "--l2_assoc=16",
-    # "--l1d-hwp-type=XSCompositePrefetcher",
-    # "--short-stride-thres=0",
-    # "--l1-to-l2-pf-hint",
-    # "--l2-hwp-type=WorkerPrefetcher",
+    "--l1d-hwp-type=XSCompositePrefetcher",
+    "--short-stride-thres=0",
+    "--l1-to-l2-pf-hint",
+    "--l2-hwp-type=WorkerPrefetcher",
+    "--l3cache",
+    "--l3_size=32MB",
+    "--l3_assoc=16",
     "--cpu-clock=2GHz",
     "--TAGE",
-    "--uop-cache",
     "--mem-type=SimpleMemory",
     "--warmup-insts-no-switch=20000000",
     "--maxinsts=40000000",
-    "--rotating",
-    "--rxu-rename"
+    "--rotating"
 ]
 
 

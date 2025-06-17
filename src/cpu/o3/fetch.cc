@@ -234,6 +234,36 @@ Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
         idleRate
             .prereq(idleRate);
 }
+
+Fetch::predictEvent::predictEvent(Fetch *fetchPtr, DynInstPtr ControlInst)
+        : Event(Serialize_Pri, AutoDelete),
+          fetchPtr(fetchPtr),
+          ControlInst(ControlInst)
+{
+}
+
+void
+Fetch::predictEvent::process(){
+    DPRINTF(Fetch, "[sn:%lli] Inst predict this cycle\n", ControlInst->seqNum);
+    if(fetchPtr->fetchStatus[0] != Fetch::WaitPredict || ControlInst->isSquashed()) {
+        DPRINTF(Fetch, "[sn:%lli] Inst no longer predict due to been squashed or ..\n", ControlInst->seqNum);
+        ControlInst->hadpredict = true;
+        return;
+    }
+    bool predictedBranch = false;
+    PCStateBase &this_pc = *(fetchPtr->pc[0]);
+    set(ControlPC, this_pc);
+    predictedBranch |= fetchPtr->lookupAndUpdateNextPC(ControlInst, *ControlPC);
+    ControlInst->hadpredict = true;
+    bool newMacro = false;
+    newMacro |= this_pc.instAddr() != ControlPC->instAddr();
+    set(this_pc, *ControlPC);
+    if (newMacro) {
+        fetchPtr->macroop[0] = NULL;
+        fetchPtr->fetchOffset[0] = 0;
+    }
+    fetchPtr->fetchStatus[0] = Running;
+}
 void
 Fetch::setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer)
 {
@@ -886,6 +916,8 @@ Fetch::tick()
     while (available_insts != 0 && insts_to_decode < decodeWidth) {
         ThreadID tid = *tid_itr;
         if (!stalls[tid].decode && !fetchQueue[tid].empty()) {
+            if(fetchQueue[tid].front()->isControl() && !fetchQueue[tid].front()->hadpredict)
+                break;
             const auto& inst = fetchQueue[tid].front();
             toDecode->insts[toDecode->size++] = inst;
             DPRINTF(Fetch, "[tid:%i] [sn:%llu] Sending instruction to decode "
@@ -1181,7 +1213,7 @@ Fetch::fetch(bool &status_change)
     // Keep issuing while fetchWidth is available and branch is not
     // predicted taken
     while (numInst < fetchWidth && fetchQueue[tid].size() < fetchQueueSize
-           && !predictedBranch && !quiesce) {
+            && !quiesce) {
         // We need to process more memory if we aren't going to get a
         // StaticInst from the rom, the current macroop, or what's already
         // in the decoder.
@@ -1259,16 +1291,32 @@ Fetch::fetch(bool &status_change)
                 instruction->fetchTick = curTick();
             }
 #endif
-
             set(next_pc, this_pc);
+            if(instruction->isControl()){
+                DPRINTF(Fetch, "[sn:%lli] Inst is Control,delay 3 cycle\n", instruction->seqNum);
+                set(ControlPC, this_pc);
+                ControlInst = instruction;
+                predictEvent *predictEvent = new Fetch::predictEvent(
+                    this, instruction);
+                cpu->schedule(predictEvent,cpu->clockEdge(Cycles(3)));
+                if (numInst > 0) {
+                    wroteToTimeBuffer = true;
+                }
+                issuePipelinedIfetch[tid] = false;
+                fetchStatus[tid] = WaitPredict;
+                return;
+            } else{
+                predictedBranch |= this_pc.branching();
+                predictedBranch |= lookupAndUpdateNextPC(instruction, *next_pc);
+            }
 
             // If we're branching after this instruction, quit fetching
             // from the same block.
-            predictedBranch |= this_pc.branching();
-            predictedBranch |= lookupAndUpdateNextPC(instruction, *next_pc);
-            if (predictedBranch) {
-                DPRINTF(Fetch, "Branch detected with PC = %s\n", this_pc);
-            }
+            // predictedBranch |= this_pc.branching();
+            // predictedBranch |= lookupAndUpdateNextPC(instruction, *next_pc);
+            // if (predictedBranch) {
+            //     DPRINTF(Fetch, "Branch detected with PC = %s\n", this_pc);
+            // }
 
             newMacro |= this_pc.instAddr() != next_pc->instAddr();
 
@@ -1301,8 +1349,8 @@ Fetch::fetch(bool &status_change)
     }
 
     if (predictedBranch) {
-        DPRINTF(Fetch, "[tid:%i] Done fetching, predicted branch "
-                "instruction encountered.\n", tid);
+        // DPRINTF(Fetch, "[tid:%i] Done fetching, predicted branch "
+        //         "instruction encountered.\n", tid);
     } else if (numInst >= fetchWidth) {
         DPRINTF(Fetch, "[tid:%i] Done fetching, reached fetch bandwidth "
                 "for this cycle.\n", tid);

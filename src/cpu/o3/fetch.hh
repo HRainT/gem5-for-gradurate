@@ -121,6 +121,24 @@ class Fetch
         }
     };
 
+  class predictEvent : public Event
+  {
+    private:
+      /** Pointer back to the WTB. */
+      Fetch *fetchPtr;
+
+      DynInstPtr ControlInst;
+
+      std::unique_ptr<PCStateBase> ControlPC;
+    public:
+
+      predictEvent(Fetch *fetchPtr, DynInstPtr ControlInst);
+
+      virtual void process();
+  };
+
+  DynInstPtr ControlInst;
+  std::unique_ptr<PCStateBase> ControlPC;
   private:
     /* Event to delay delivery of a fetch translation result in case of
      * a fault and the nop to carry the fault cannot be generated
@@ -179,7 +197,8 @@ class Fetch
         IcacheWaitResponse,
         IcacheWaitRetry,
         IcacheAccessComplete,
-        NoGoodAddr
+        NoGoodAddr,
+        WaitPredict
     };
 
   private:

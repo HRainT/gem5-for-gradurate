@@ -44,6 +44,8 @@
 #include <algorithm>
 #include <set>
 #include <string>
+#include <fstream>
+#include <iomanip>
 
 #include "base/compiler.hh"
 #include "base/loader/symtab.hh"
@@ -168,7 +170,9 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
       ADD_STAT(committedInstType, statistics::units::Count::get(),
                "Class of committed instruction"),
       ADD_STAT(commitEligibleSamples, statistics::units::Cycle::get(),
-               "number cycles where commit BW limit reached")
+               "number cycles where commit BW limit reached"),
+      ADD_STAT(commitControlInstNum, statistics::units::Cycle::get(),
+               "number of commitControlInst")
 {
     using namespace statistics;
 
@@ -1293,6 +1297,9 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
     if (head_inst->isControl() && head_inst->mispredicted()) {
         cpu->baseStats.bpuMissCommitCount++;
     }
+    if(head_inst->isControl()){
+        RecordControlInst(head_inst);
+    }
     // Update the commit rename map
     for (int i = 0; i < head_inst->numDestRegs(); i++) {
         renameMap[tid]->setEntry(head_inst->flattenedDestIdx(i),
@@ -1559,6 +1566,50 @@ Commit::oldestReady()
     } else {
         return InvalidThreadID;
     }
+}
+
+void 
+Commit::RecordControlInst(DynInstPtr controlInst)
+{
+    DPRINTF(Commit, "Control inst [sn:%llu] is recording\n",controlInst->seqNum);
+    stats.commitControlInstNum++;
+    bool taken;
+    std::string branchtype;
+    taken = controlInst->mispredicted()? !controlInst->readPredTaken() : controlInst->readPredTaken();
+    if (controlInst->isUncondCtrl() && controlInst->isDirectCtrl()) {
+        branchtype = "UNCOND_DIRECT";
+    } else if (controlInst->isCondCtrl() && controlInst->isDirectCtrl()) {
+        branchtype = "COND_DIRECT";
+    } else if (controlInst->isUncondCtrl() && controlInst->isIndirectCtrl() && !controlInst->isReturn()) {
+        branchtype = "UNCOND_INDIRECT";
+    } else if (controlInst->isCall()) {
+        branchtype = "CALL";
+    } else if(controlInst->isReturn()){
+        branchtype = "RET";
+    }
+    else {
+        branchtype = "NOT_BR";
+    }
+    bool successRecord = logData(controlInst->pcState().instAddr(),
+                    controlInst->readTargetPC(), taken, branchtype);
+}
+
+bool 
+Commit::logData(Addr pc, Addr tgt_pc, bool taken, const std::string &type)
+{
+    const char *envPath = std::getenv("BRANCH_LOG");   // 变量名随意，但要和脚本对应
+    const char *defaultPath =
+        "out/branchnet";                        // 保险的缺省文件
+    std::ofstream logfile(envPath ? envPath : defaultPath,
+                          std::ios::app);
+    
+    if (logfile.is_open()) {
+        logfile << std::hex << std::setw(16) << std::setfill('0') << pc << " "
+                << std::hex << std::setw(16) << std::setfill('0') << tgt_pc << " "
+                << (taken ? '1' : '0') << " "
+                << type << "\n";
+    }
+    return 1;
 }
 
 } // namespace o3

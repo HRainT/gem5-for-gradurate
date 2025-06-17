@@ -140,6 +140,8 @@ class DynInst : public ExecContext, public RefCounted
     /** InstRecord that tracks this instructions. */
     trace::InstRecord *traceData = nullptr;
 
+    bool hadpredict = false;
+
   protected:
     enum Status
     {
@@ -538,7 +540,12 @@ class DynInst : public ExecContext, public RefCounted
         staticInst->advancePC(*next_pc);
         return *next_pc != *predPC;
     }
-
+    Addr 
+    readTargetPC(){
+        std::unique_ptr<PCStateBase> next_pc(pc->clone());
+        staticInst->advancePC(*next_pc);
+        return next_pc->instAddr();
+    }
     //
     //  Instruction types.  Forward checks to StaticInst object.
     //

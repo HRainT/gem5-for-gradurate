@@ -221,6 +221,10 @@ class Commit
      */
     void generateTCEvent(ThreadID tid);
 
+    void RecordControlInst(DynInstPtr controlInst);
+
+    bool logData(Addr pc, Addr tgt_pc, bool taken, const std::string &type);
+
   private:
     /** Updates the overall status of commit with the nextStatus, and
      * tell the CPU if commit is active/inactive.
@@ -490,6 +494,7 @@ class Commit
 
         /** Number of cycles where the commit bandwidth limit is reached. */
         statistics::Scalar commitEligibleSamples;
+        statistics::Scalar commitControlInstNum;
     } stats;
 };
 
