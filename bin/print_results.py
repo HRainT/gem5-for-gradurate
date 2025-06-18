@@ -9,11 +9,11 @@ import common
 from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
 SUITE = [ # list of (benchmark, input name, weight, validation_br_name) tuples
-  ('deepsjeng', 'default', 1.0, 'top100'),
+  ('473.astar', 'rivers', 1.0, 'top100'),
 ]
 
 CONFIGS = [ # list of (experiment name, model budget) tuples
-  ('testrun1', 1),
+  ('testrun2', 1),
 ]
 
 TAGE_CONFIG_NAME = 'tagescl64'
