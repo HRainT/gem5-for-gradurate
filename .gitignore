@@ -6,3 +6,6 @@ src/tracer/obj-*/
 bin/__pycache__
 *.pyc
 .vscode/
+branch_traces/
+riscv_logs/
+ml_datasets/

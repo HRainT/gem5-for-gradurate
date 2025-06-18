@@ -5,7 +5,7 @@ import os
 import common
 from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
-TARGET_BENCHMARKS = ['deepsjeng']
+TARGET_BENCHMARKS = ['473.astar']
 TAGE_CONFIG_NAME = 'tagescl64'
 NUM_BRS_TO_PRINT = 100
 PRODUCE_HARD_BR_FILES = True
@@ -148,9 +148,9 @@ def greedy_select_top_brs(list_inputs, mpki_dicts, sorted_brs, num_brs):
         next_br_idx[j] += 1
       br = sorted_brs[inp][next_br_idx[j]]
 
-      total_mpki = 0
+      total_mpki = 0.0
       for inppp in list_inputs:
-        total_mpki += mpki_dicts[inppp][br]
+        total_mpki += mpki_dicts[inppp].get(br, 0.0)
       next_br_total_mpki[j] = total_mpki
       next_br_pc[j] = br
 

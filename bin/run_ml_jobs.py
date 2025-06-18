@@ -10,17 +10,17 @@ from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
 Job = namedtuple('Job', ['benchmark', 'hard_brs_file', 'experiment_name', 'config_file', 'training_mode'])
 JOBS = [
-    Job('leela', 'top3', 'testrun2', 'mini_250', 'mini')
+    Job('473.astar', 'top100', 'testrun2', 'mini_250', 'mini')
 ]
 
-BATCH_SIZE = 2048
+BATCH_SIZE = 16
 TRAINING_STEPS = [100, 100, 100]
 FINE_TUNING_STEPS = [50, 50, 50]
 LEARNING_RATE = 0.1
 LASSO_COEFFICIENT = 0.0
 REGULARIZATION_COEFFICIENT = 0.0
 CUDA_DEVICE = 0
-LOG_VALIDATION = False
+LOG_VALIDATION = True
 
 CREATE_WORKDIRS = True
 WORKDIRS_OVERRIDE_OK = True

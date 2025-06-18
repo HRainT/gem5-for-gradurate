@@ -7,7 +7,7 @@ import bz2
 import struct
 
 # 不再需要Pin工具路径
-TARGET_BENCHMARKS = ['deepsjeng']  # 改为你的基准测试名称
+TARGET_BENCHMARKS = ['473.astar']  # 改为你的基准测试名称
 NUM_THREADS = 24
 PROJECT_ROOT = PATHS['project_root']
 INPUT_LOG_DIR = PATHS['riscv_logs_dir']

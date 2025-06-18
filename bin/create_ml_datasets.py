@@ -17,10 +17,10 @@ import common
 from common import PATHS, BENCHMARKS_INFO
 
 
-TARGET_BENCHMARKS = ['deeepsjeng']  # Change to your target benchmarks
+TARGET_BENCHMARKS = ['473.astar']  # Change to your target benchmarks
 HARD_BRS_FILE = 'top100'
 NUM_THREADS = 32
-PC_BITS = 30
+PC_BITS = 20
 
 
 def read_branch_trace(trace_path):
