@@ -1,7 +1,7 @@
-project_root: /Data3/yutong.han/My_G5Project/BranchNet
-branch_traces_dir: /Data3/yutong.han/My_G5Project/BranchNet/branch_traces
-riscv_logs_dir: /Data3/yutong.han/My_G5Project/BranchNet/riscv_logs
-experiments_dir: /Data3/yutong.han/My_G5Project/BranchNet
-hard_brs_dir: /Data3/yutong.han/My_G5Project/BranchNet/hard_brs
-ml_datasets_dir: /Data3/yutong.han/My_G5Project/BranchNet/ml_datasets
-tage_stats_dir: /Data3/yutong.han/My_G5Project/BranchNet/tage_stats
+project_root: /home/rain/BranchNet
+branch_traces_dir: /home/rain/BranchNet/branch_traces
+riscv_logs_dir: /home/rain/BranchNet/riscv_logs
+experiments_dir: /home/rain/BranchNet
+hard_brs_dir: /home/rain/BranchNet/hard_brs
+ml_datasets_dir: /home/rain/BranchNet/ml_datasets
+tage_stats_dir: /home/rain/BranchNet/tage_stats

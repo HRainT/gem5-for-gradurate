@@ -10,10 +10,10 @@ from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
 Job = namedtuple('Job', ['benchmark', 'hard_brs_file', 'experiment_name', 'config_file', 'training_mode'])
 JOBS = [
-    Job('473.astar', 'top100', 'testrun2', 'mini_250', 'mini')
+    Job('473.astar', 'top100', 'testrun5', 'mini_250', 'mini')
 ]
 
-BATCH_SIZE = 16
+BATCH_SIZE = 1024
 TRAINING_STEPS = [100, 100, 100]
 FINE_TUNING_STEPS = [50, 50, 50]
 LEARNING_RATE = 0.1

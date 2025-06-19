@@ -10,6 +10,7 @@ deepsjeng:
   spec_name: 473.astar
   test_set:
   - rivers
+  - BigLakes
   training_set:
   - BigLakes
   - rivers

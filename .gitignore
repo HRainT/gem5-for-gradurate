@@ -6,3 +6,5 @@ bin/__pycache__
 riscv_logs/
 ml_datasets/
 branch_traces/deepsjeng/
+gem5-for-gradurate/
+branchnet-env/

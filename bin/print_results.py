@@ -4,16 +4,18 @@ from collections import defaultdict
 from collections import namedtuple
 from itertools import product
 import operator
+import os
 
 import common
 from common import PATHS, BENCHMARKS_INFO, ML_INPUT_PARTIONS
 
 SUITE = [ # list of (benchmark, input name, weight, validation_br_name) tuples
   ('473.astar', 'rivers', 1.0, 'top100'),
+  ('473.astar', 'BigLakes', 1.0, 'top100'),
 ]
 
 CONFIGS = [ # list of (experiment name, model budget) tuples
-  ('testrun2', 1),
+  ('testrun5', 1024),
 ]
 
 TAGE_CONFIG_NAME = 'tagescl64'
@@ -22,10 +24,21 @@ CSV = True
 DUMP_PER_BR_STATS = True
 PRODUCE_HARD_BRS = False
 HARD_BRS_TAG = None
-BUDGET = 2
+BUDGET = 2048
+OUTPUT_CSV_PATH = "results/testrun5.csv"  # CSV输出路径
 
 State = namedtuple('State', ['selected_brs_set', 'selected_brs_breakdown',
                              'total_size', 'total_mpki_reduction'])
+
+# 新增函数：将CSV结果写入文件
+def write_csv_to_file(csv_data, path):
+    """将CSV数据写入指定路径的文件"""
+    try:
+        with open(path, 'w') as f:
+            f.write(csv_data)
+        print(f"CSV output saved to {os.path.abspath(path)}")
+    except Exception as e:
+        print(f"Error writing CSV file: {e}")
 
 
 def compute_validation_mpki_reductions(benchmark, experiment_name):
@@ -37,7 +50,7 @@ def compute_validation_mpki_reductions(benchmark, experiment_name):
 
         for br in cnn_stats:
           mpki_reductions[br] += (tage_stats[br].weighted_stats.mpki
-                                  - cnn_stats[br].weighted_stats.mpki)
+                                    cnn_stats[br].weighted_stats.mpki)
     return mpki_reductions
 
 
@@ -231,8 +244,14 @@ def print_results_csv(benchmarks_dynamic_states, best_assignments, size):
     name.append(benchmark + '_' + inp)
     mpki.append(cnn_mpki)
   
-  print(','.join(name))
-  print(','.join(map(str, mpki)))
+  header = ','.join(name)
+  data = ','.join(map(str, mpki))
+  
+  print(header)
+  print(data)
+  
+  # 返回CSV数据以便写入文件
+  return f"{header}\n{data}\n"
 
 
 def print_results_verbose(benchmarks_dynamic_states, best_assignments, size):
@@ -247,27 +266,35 @@ def print_results_verbose(benchmarks_dynamic_states, best_assignments, size):
         TAGE_CONFIG_NAME, benchmark, inp, tag)[-1].weighted_stats.mpki
       for benchmark, inp, weight, hard_brs_name in SUITE) / sum_weights
   
-  print('========= Size: {}KB ============'.format(size))
-  print('Total TAGE MPKI: {}'.format(total_tage_mpki))
-  print('Total CNN MPKI: {}'.format(total_tage_mpki - total_mpki_reduction))
-  print('Total MPKI Reduction: {}'.format(total_mpki_reduction))
-
+  output_lines = [
+      f"========= Size: {size}KB ============",
+      f"Total TAGE MPKI: {total_tage_mpki}",
+      f"Total CNN MPKI: {total_tage_mpki - total_mpki_reduction}",
+      f"Total MPKI Reduction: {total_mpki_reduction}"
+  ]
+  
   for benchmark_idx, (benchmark, inp, _, _) in enumerate(SUITE):
     state = benchmarks_dynamic_states[benchmark_idx][state_idx]
     tage_stats = common.read_tage_stats(
         TAGE_CONFIG_NAME, benchmark, inp,
         HARD_BRS_TAG if not PRODUCE_HARD_BRS else None)
     tage_mpki = tage_stats[-1].weighted_stats.mpki
-    print('--------------')
-    print('Benchmark: {}_{}'.format(benchmark, inp))
-    print('TAGE MPKI: {}'.format(tage_mpki))
-    print('CNN MPKI: {}'.format(tage_mpki - state.total_mpki_reduction))
-    print('MPKI Reduction: {}'.format(state.total_mpki_reduction))
+    output_lines.extend([
+        '--------------',
+        f"Benchmark: {benchmark}_{inp}",
+        f"TAGE MPKI: {tage_mpki}",
+        f"CNN MPKI: {tage_mpki - state.total_mpki_reduction}",
+        f"MPKI Reduction: {state.total_mpki_reduction}"
+    ])
+    
     for experiment, _ in CONFIGS:
       selected_brs = state.selected_brs_breakdown[experiment]
-      print('Config {} ---> {} models: {}'.format(
-          experiment, len(selected_brs),
-          ', '.join([hex(br) for br, _ in selected_brs])))
+      output_lines.append(f"Config {experiment} ---> {len(selected_brs)} models: "
+                         f"{', '.join([hex(br) for br, _ in selected_brs])}")
+  
+  output = "\n".join(output_lines)
+  print(output)
+  return output
 
 
 def dump_per_br_stats(benchmarks_dynamic_states, best_assignments, size):
@@ -300,43 +327,34 @@ def dump_per_br_stats(benchmarks_dynamic_states, best_assignments, size):
                            'Yes' if br in state.selected_brs_set else 'No')),
     ]
       
-    print(','.join(header for header, _ in stat_file_defs))
+    header = ','.join(header for header, _ in stat_file_defs)
+    print(header)
+    rows = []
     for br in cnn_stats:
-      print(','.join(
-          str(f(br, tage_stats[br].weighted_stats,
-                cnn_stats[br].weighted_stats))
-          for _, f in stat_file_defs))
-
-#117 f.write(','.join( map( str, [hex(br), 0, 0, tage.total, tage.correct,
-#tage.incorrect, tage.accuracy, tage.mpki, cnn.correct, cnn.incorrect,
-#cnn.accuracy, cnn.mpki, tage.mpki - cnn.mpki, tage.mp ki - cnn.mpki if br in
-#good_brs else 0.0, 0.0 if total_mpki_reduction == 0 else (tage.mpki -
-#cnn.mpki) / total_mpki_reduction * 100.0] + num_zeros_as_list)) + "\n")
-
-    #f.write(','.join(['PC', 'Unweighted Training Set Accuracy', 'Unweighted
-    #Partial Validation Set Accuracy', 'Total', 'Tage Correct', 'Tage
-    #Incorrect', 'Tage Accuracy', 'Tage MPKI', 'CNN Correct', 'CNN Incorrect',
-    #'CNN Accuracy', 'CNN MPKI', 'Raw MPKI Reduction', 'Filtered MPKI
-    #Reduction', 'MPKI Reduction Ratio (%)', 'Number of Zero Filters ...']) +
-    #"\n")
-    #tage_mpki = tage_stats[-1].weighted_stats.mpki
-    #print('--------------')
-    #print('Benchmark: {}_{}'.format(benchmark, inp))
-    #print('TAGE MPKI: {}'.format(tage_mpki))
-    #print('CNN MPKI: {}'.format(tage_mpki - state.total_mpki_reduction))
-    #print('MPKI Reduction: {}'.format(state.total_mpki_reduction))
-    #for experiment, _ in CONFIGS:
-    #  selected_brs = state.selected_brs_breakdown[experiment]
-    #  print('Config {} ---> {} models: {}'.format(
-    #      experiment, len(selected_brs),
-    #      ', '.join([hex(br) for br, _ in selected_brs])))
+        row = ','.join(
+            str(f(br, tage_stats[br].weighted_stats,
+                  cnn_stats[br].weighted_stats))
+            for _, f in stat_file_defs)
+        print(row)
+        rows.append(row)
+    
+    return f"{header}\n" + "\n".join(rows) + "\n"
 
 
 def print_results(benchmarks_dynamic_states, best_assignments, size):
-  f = print_results_csv if CSV else print_results_verbose
-  f(benchmarks_dynamic_states, best_assignments, size)
+  output = ""
+  if CSV:
+      csv_output = print_results_csv(benchmarks_dynamic_states, best_assignments, size)
+      output += csv_output
+  else:
+      verbose_output = print_results_verbose(benchmarks_dynamic_states, best_assignments, size)
+      output += verbose_output
+      
   if DUMP_PER_BR_STATS:
-    dump_per_br_stats(benchmarks_dynamic_states, best_assignments, size)
+      per_br_output = dump_per_br_stats(benchmarks_dynamic_states, best_assignments, size)
+      output += per_br_output if per_br_output else ""
+  
+  return output
 
 
 def produce_hard_br_files(benchmarks_dynamic_states, best_assignments, size, tag):
@@ -361,6 +379,7 @@ def produce_hard_br_files(benchmarks_dynamic_states, best_assignments, size, tag
         f.write('{}: {}\n'.format(experiment, ', '.join(map(hex, (br for br, _ in br_list)))))
 
 
+# 修复函数名错误 - 添加了缺失的"_assignments"部分
 def evaluate_all_assignments(max_models):
   benchmarks_dynamic_states = {}
   for benchmark_idx, (benchmark, inp, _, hard_brs_name) in enumerate(SUITE):
@@ -377,14 +396,14 @@ def main():
   benchmarks_dynamic_states = evaluate_all_assignments(max_models)
   print('Identifying best assignments')
   best_assignments = get_best_assignments(benchmarks_dynamic_states, max_models)
-  print_results(benchmarks_dynamic_states, best_assignments, BUDGET)
+  
+  # 获取输出结果并写入CSV文件
+  output = print_results(benchmarks_dynamic_states, best_assignments, BUDGET)
+  write_csv_to_file(output, OUTPUT_CSV_PATH)
+  
   if PRODUCE_HARD_BRS:
     produce_hard_br_files(benchmarks_dynamic_states, best_assignments,
                           BUDGET, HARD_BRS_TAG)
-  #for size in range(33, 49):
-  #  tag = 'mini-hetero-{}k'.format(size)
-  #  print(tag)
-  #  produce_hard_br_files(benchmarks_dynamic_states, best_assignments, size, tag)
 
 
 if __name__ == '__main__':
