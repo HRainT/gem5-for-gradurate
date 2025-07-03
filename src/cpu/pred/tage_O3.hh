@@ -61,7 +61,7 @@
   #define __CPU_PRED_TAGE_HH__
   
   #include <vector>
-  
+  #include <cstdio>
   #include "base/random.hh"
   #include "base/types.hh"
   #include "cpu/pred/bpred_unit.hh"
@@ -94,7 +94,36 @@
   
       virtual bool predict(ThreadID tid, Addr branch_pc, bool cond_branch,
                            void* &b);
-  
+      static constexpr std::array<uint64_t, 14> astar_branchNetPCs = {
+        73560,
+        115804,
+        107268,
+        115256,
+        110728,
+        90904,
+        107240,
+        111652,
+        115432,
+        85408,
+        111680,
+        73552,
+        115240,
+        107380
+      };
+
+      bool useBranchNet; // 是否启用BranchNet
+      FILE* branchNetService; // BranchNet服务进程句柄
+      FILE* branchNetServiceIn;   // 用于从Python读取
+      FILE* branchNetServiceOut;  // 用于向Python写入
+      float branchNetConfidenceThreshold; // 置信度阈值
+      
+      // BranchNet通信方法
+      void initBranchNetService();
+      bool queryBranchNet(Addr pc, bool& prediction, float& confidence);
+      void closeBranchNetService();
+      
+      // 获取最近分支历史
+      void getBranchNetHistory(ThreadID tid,std::vector<uint16_t>& out,unsigned needLen /*=212*/);
     public:
   
       TAGE(const TAGEParams &params);
@@ -109,6 +138,11 @@
       virtual void squash(ThreadID tid, void *bp_history)override;
       void uncondBranch(ThreadID tid, Addr br_pc, void* &bp_history) override;
       void btbUpdate(ThreadID tid, Addr branch_addr, void* &bp_history) override;
+      bool isBranchNetPC(Addr pc) const {
+        return std::find(std::begin(astar_branchNetPCs), 
+                        std::end(astar_branchNetPCs), pc) != std::end(astar_branchNetPCs);
+      }
+      ~TAGE();
   };
   
   } // namespace branch_prediction

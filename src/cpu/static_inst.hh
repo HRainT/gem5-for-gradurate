@@ -107,7 +107,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     uint32_t _field;
     uint32_t _numFields;
     uint32_t _numMicroops;
-
+    bool useBranchNet = false;
     /** For mask index vload/store */
     mutable bool vElemMask = false;
 

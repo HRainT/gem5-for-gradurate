@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mode=10
+mode=9
 if [ $1 ]; then
     mode=$1
 fi
@@ -210,10 +210,10 @@ elif [ $mode = 8 ]; then
 elif [ $mode = 9 ]; then
     time \
     build/RISCV/gem5.opt \
-    --outdir=out/429.mcf/1746 \
-    --stats-file stats.txt \
+    --outdir=out/473.astar/BigLakes/397 \
+    --stats-file stats_branchnet.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb/429.mcf/1746/_1746_0.005539_memory_.gz \
+    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/397/_397_0.008642_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=O3CPU \
@@ -247,12 +247,12 @@ elif [ $mode = 9 ]; then
 elif [ $mode = 10 ]; then
     time \
     build/RISCV/gem5.opt \
-    --outdir=out/429.mcf/1746 \
+    --outdir=out/473.astar/rivers/7395 \
     --debug-flag CommitInsts \
     --debug-file trace-o3.log \
     --stats-file stats.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb/429.mcf/1746/_1746_0.005539_memory_.gz \
+    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/rivers/7395/_7395_0.051197_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=O3CPU \
@@ -286,12 +286,14 @@ elif [ $mode = 10 ]; then
 elif [ $mode = 11 ]; then
     time \
     build/RISCV/gem5.opt \
-    --outdir=out/429.mcf/1746 \
+    --outdir=out/473.astar/rivers/7395 \
+    --debug-start=2610232500 \
+    --debug-end=2610453500 \
     --debug-flag O3CPUAll,Branch,Tage \
-    --debug-file debug_v1.log \
+    --debug-file debug.log \
     --stats-file stats.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb/429.mcf/1746/_1746_0.005539_memory_.gz \
+    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/rivers/7395/_7395_0.051197_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=O3CPU \

@@ -419,26 +419,15 @@
       int getPathHist(ThreadID tid) const;
       bool isSpeculativeUpdateEnabled() const;
       size_t getSizeInBits() const;
-  
-    protected:
-      const unsigned logRatioBiModalHystEntries;
-      const unsigned nHistoryTables;
-      const unsigned tagTableCounterBits;
-      const unsigned tagTableUBits;
-      const unsigned histBufferSize;
-      const unsigned minHist;
-      const unsigned maxHist;
-      const unsigned pathHistBits;
-  
-      std::vector<unsigned> tagTableTagWidths;
-      std::vector<int> logTagTableSizes;
-  
-      std::vector<bool> btablePrediction;
-      std::vector<bool> btableHysteresis;
-      TageEntry **gtable;
-  
-      // Keep per-thread histories to
-      // support SMT.
+      //for branchnet
+      static constexpr unsigned kPcBits        = 12;   
+      static constexpr unsigned kBnHistLen     = 256;  
+    uint16_t 
+    encodeBranchNet(Addr pc, bool taken)
+    {
+    return (static_cast<uint16_t>(taken) << kPcBits) |
+        static_cast<uint16_t>(pc & ((1u << kPcBits) - 1));
+    }
       struct ThreadHistory
       {
           // Speculative path history
@@ -459,9 +448,37 @@
           // Speculative folded histories.
           FoldedHistory *computeIndices;
           FoldedHistory *computeTags[2];
+          //for branchnet
+          uint16_t branchNetHist[kBnHistLen];  
+          int      bnHead = 0;   
+          int      bnCount = 0;
+          ThreadHistory()   // 构造函数里清 0
+          {
+              std::fill(std::begin(branchNetHist),
+                        std::end(branchNetHist), 0);
+          }               
       };
   
       std::vector<ThreadHistory> threadHistory;
+      const unsigned maxHist;
+    protected:
+      const unsigned logRatioBiModalHystEntries;
+      const unsigned nHistoryTables;
+      const unsigned tagTableCounterBits;
+      const unsigned tagTableUBits;
+      const unsigned histBufferSize;
+      const unsigned minHist;
+      const unsigned pathHistBits;
+  
+      std::vector<unsigned> tagTableTagWidths;
+      std::vector<int> logTagTableSizes;
+  
+      std::vector<bool> btablePrediction;
+      std::vector<bool> btableHysteresis;
+      TageEntry **gtable;
+  
+      // Keep per-thread histories to
+      // support SMT.
   
       /**
        * Initialization of the folded histories

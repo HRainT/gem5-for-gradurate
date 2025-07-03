@@ -615,7 +615,6 @@
       updateGHist(tHist.gHist, taken, tHist.globalHistory, tHist.ptGhist);
       tHist.pathHist = (tHist.pathHist << 1) + pathbit;
       tHist.pathHist = (tHist.pathHist & ((1ULL << pathHistBits) - 1));
-  
       if (speculative) {
           bi->ptGhist = tHist.ptGhist;
           bi->pathHist = tHist.pathHist;

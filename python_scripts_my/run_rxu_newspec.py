@@ -4,9 +4,9 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 
 # 配置部分
-base_dir = "/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb"  # 根目录
-output_base_dir = "/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/out/spec/0613_BranchNet_all"  # 输出基础目录
-gem5_exec = "/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/build/RISCV/gem5.opt"
+base_dir = "/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar"  # 根目录
+output_base_dir = "/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/out/spec/0703_NoBranchNet_astar"  # 输出基础目录
+gem5_exec = "/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/build/RISCV/gem5.fast"
 config_file = "/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/configs/example/fs.py"
 gcpt_restorer = "/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_vector/dir/gcpt_restore/build/gcpt.bin"
 max_parallel_jobs = 30  # 最大并行任务数
