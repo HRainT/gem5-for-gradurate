@@ -9,6 +9,17 @@ deepsjeng:
 473.astar:
   spec_name: 473.astar
   test_set:
+  - rivers
+  - BigLakes
+  training_set:
+  - BigLakes
+  - rivers
+  validation_set:
+  - BigLakes
+  - rivers
+test.astar:
+  spec_name: test.astar
+  test_set:
   - 397test
   training_set:
   - 397test
