@@ -1,7 +1,0 @@
-project_root: /home/rain/BranchNet
-branch_traces_dir: /home/rain/BranchNet/branch_traces
-riscv_logs_dir: /home/rain/BranchNet/riscv_logs
-experiments_dir: /home/rain/BranchNet
-hard_brs_dir: /home/rain/BranchNet/hard_brs
-ml_datasets_dir: /home/rain/BranchNet/ml_datasets
-tage_stats_dir: /home/rain/BranchNet/tage_stats
