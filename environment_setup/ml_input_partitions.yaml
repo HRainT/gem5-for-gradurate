@@ -1,0 +1,16 @@
+deepsjeng:
+  spec_name: deepsjeng
+  test_set:
+  - default
+  training_set:
+  - default
+  validation_set:
+  - default
+473.astar:
+  spec_name: 473.astar
+  test_set:
+  - 397test
+  training_set:
+  - 397test
+  validation_set:
+  - 397test

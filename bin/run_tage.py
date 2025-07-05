@@ -4,7 +4,7 @@ import common
 from common import PATHS, BENCHMARKS_INFO
 import os
 
-TARGET_BENCHMARKS = ['473.astar']
+TARGET_BENCHMARKS = ['test.astar']
 BINARY_NAME = 'tagescl64'
 CONFIG_NAME = 'tagescl64'
 NUM_THREADS = 32
