@@ -513,7 +513,7 @@ Fetch::deactivateThread(ThreadID tid)
 }
 
 bool
-Fetch::lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &next_pc)
+Fetch::lookupAndUpdateNextPC(DynInstPtr &inst, PCStateBase &next_pc)
 {
     // Do branch prediction check here.
     // A bit of a misnomer...next_PC is actually the current PC until

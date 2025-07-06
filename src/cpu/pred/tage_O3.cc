@@ -55,6 +55,7 @@
   #include "base/trace.hh"
   #include "debug/Fetch.hh"
   #include "debug/Tage.hh"
+  #include "debug/BranchNet.hh"
   #include <unistd.h>
   #include <fcntl.h>
   #include <sys/types.h>
@@ -70,7 +71,7 @@
   TAGE::TAGE(const TAGEParams &params) : BPredUnit(params), tage(params.tage)
   {
     useBranchNet = true;
-    branchNetConfidenceThreshold = 0.6;
+    branchNetConfidenceThreshold = 0.7;
     if (useBranchNet) {
         initBranchNetService();
     }
@@ -314,6 +315,10 @@ void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint16_t>& out,unsigned 
   void
   TAGE::squash(ThreadID tid, void *bp_history)
   {
+      if(bp_history == nullptr){
+          DPRINTF(Tage, "Deleting branch info from branchnet which in wrong path\n");
+          return;
+      }
       TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
       DPRINTF(Tage, "Deleting branch info: %lx\n", bi->tageBranchInfo->branchPC);
       delete bi;
@@ -337,7 +342,7 @@ void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint16_t>& out,unsigned 
         float confidence;
         
         if (queryBranchNet(pc, prediction, confidence)) {
-            DPRINTF(Tage, "BranchNet prediction for PC %#x: %s (conf %.2f)\n",
+            DPRINTF(BranchNet, "BranchNet prediction for PC %#x: %s (conf %.2f)\n",
                 pc, prediction ? "TAKEN" : "NOT TAKEN", confidence);
             
             // 检查置信度是否足够

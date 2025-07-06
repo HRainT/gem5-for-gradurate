@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 import os, re, csv
 
-ROOT_DIR    = '/Data3/yutong.han/riscv/rxu-gem5/out/spec/l2cache_0516_mmu16entry_load_noprefetch_v1'
-OUTPUT_DIR  = '/Data3/yutong.han/riscv/rxu-gem5/out/spec'
-OUTPUT_FILE = 'latency_summary_0516_mmu16entry_load_noprefetch_v1.csv'
+ROOT_DIR    = '/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/out/spec/0703_NoBranchNet_astar'
+OUTPUT_DIR  = '/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/out/spec'
+OUTPUT_FILE = '0703_NoBranchNet_astar.csv'
 
 # ---------- 新增的正则表达式 ----------
 p_new_stats = re.compile(

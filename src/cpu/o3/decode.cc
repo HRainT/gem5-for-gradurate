@@ -48,6 +48,7 @@
 #include "debug/Activity.hh"
 #include "debug/Decode.hh"
 #include "debug/O3PipeView.hh"
+#include "debug/BranchNet.hh"
 #include "params/BaseO3CPU.hh"
 #include "sim/full_system.hh"
 
@@ -717,7 +718,11 @@ Decode::decodeInsts(ThreadID tid)
             std::unique_ptr<PCStateBase> target = inst->branchTarget();
             if (*target != inst->readPredTarg()) {
                 ++stats.branchMispred;
-
+                if(cpu->isBranchNetPC(inst->pcState().instAddr())) {
+                    DPRINTF(BranchNet, "[tid:%i] [sn:%llu] PC: 0x%x Decode: "
+                        "BranchNet mispredict.\n",
+                        tid, inst->seqNum, inst->pcState().instAddr());
+                }
                 // Might want to set some sort of boolean and just do
                 // a check at the end
                 squash(inst, inst->threadNumber);

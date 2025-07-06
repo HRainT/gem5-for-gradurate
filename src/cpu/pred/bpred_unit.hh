@@ -79,6 +79,41 @@ class BPredUnit : public SimObject
     /** Perform sanity checks after a drain. */
     void drainSanityCheck() const;
 
+    static constexpr std::array<uint64_t, 14> astar_branchNetPCs = {
+        73560,
+        115804,
+        107268,
+        115256,
+        110728,
+        90904,
+        107240,
+        111652,
+        115432,
+        85408,
+        111680,
+        73552,
+        115240,
+        107380
+      };
+      static constexpr std::array<uint64_t, 14> astar397_branchNetPCs = {
+        91000,
+        91244,
+        91264,
+        90908,
+        91164,
+        90880,
+        90888,
+        90912,
+        90920,
+        90936,
+        90960,
+        90984,
+        91008
+      };
+    bool isBranchNetPC(Addr pc) const {
+        return std::find(std::begin(astar397_branchNetPCs), 
+                        std::end(astar397_branchNetPCs), pc) != std::end(astar397_branchNetPCs);
+      }
     /**
      * Predicts whether or not the instruction is a taken branch, and the
      * target of the branch if it is taken.
@@ -139,7 +174,6 @@ class BPredUnit : public SimObject
      * @return Whether the branch is taken or not taken.
      */
     virtual bool lookup(ThreadID tid, Addr instPC, void * &bp_history) = 0;
-
     // virtual bool lookup(ThreadID tid, Addr instPC, void * &bp_history, bool & pred_weak) = 0;
 
     virtual bool lookup(ThreadID tid, Addr instPC, void * &bp_history, bool & pred_weak, int & pred_ctr) {

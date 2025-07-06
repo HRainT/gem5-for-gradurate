@@ -115,7 +115,25 @@ class CPU : public BaseCPU
 
     /** Overall CPU status. */
     Status _status;
-
+    static constexpr std::array<uint64_t, 14> astar397_branchNetPCs = {
+      91000,
+      91244,
+      91264,
+      90908,
+      91164,
+      90880,
+      90888,
+      90912,
+      90920,
+      90936,
+      90960,
+      90984,
+      91008
+    };
+    bool isBranchNetPC(Addr pc) const {
+      return std::find(std::begin(astar397_branchNetPCs), 
+                      std::end(astar397_branchNetPCs), pc) != std::end(astar397_branchNetPCs);
+    }
   private:
 
     /** The tick event used for scheduling CPU ticks. */

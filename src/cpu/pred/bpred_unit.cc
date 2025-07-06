@@ -48,6 +48,7 @@
 #include "base/compiler.hh"
 #include "base/trace.hh"
 #include "debug/Branch.hh"
+#include "debug/BranchNet.hh"
 
 namespace gem5
 {
@@ -283,6 +284,10 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                 } else {
                     DPRINTF(Branch, "[tid:%i] [sn:%llu] BTB doesn't have a "
                             "valid entry\n", tid, seqNum);
+                    if(isBranchNetPC(pc.instAddr())) {
+                        DPRINTF(BranchNet, "[tid:%i] [sn:%llu] BranchNet PC %s "
+                                "not found in BTB\n", tid, seqNum, pc);
+                    }
                     pred_taken = false;
                     predict_record.predTaken = pred_taken;
                     // The Direction of the branch predictor is altered

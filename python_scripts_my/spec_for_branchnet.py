@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 base_dir               = "/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar"
 
 gem5_output_base_dir   = "/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/out/spec/0617_BranchNet_star"  # --outdir 用
-branch_log_base_dir    = "/Data3/yutong.han/My_G5Project/BranchNet/riscv_logs"                                    # 分支日志专用
+branch_log_base_dir    = "/Data3/yutong.han/My_G5Project/BranchNet/riscv_logs/0705_astar_80000000"                                    # 分支日志专用
 
 gem5_exec              = "/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/build/RISCV/gem5.opt"
 config_file            = "/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/configs/example/fs.py"
@@ -35,7 +35,7 @@ common_args = [
     "--TAGE",
     "--mem-type=SimpleMemory",
     "--warmup-insts-no-switch=20000000",
-    "--maxinsts=40000000",
+    "--maxinsts=80000000",
     "--rotating"
 ]
 

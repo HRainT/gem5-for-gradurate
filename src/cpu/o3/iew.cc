@@ -57,6 +57,7 @@
 #include "debug/IEW.hh"
 #include "debug/Spike.hh"
 #include "debug/O3PipeView.hh"
+#include "debug/BranchNet.hh"
 #include "params/BaseO3CPU.hh"
 
 namespace gem5
@@ -1266,7 +1267,11 @@ IEW::executeInsts()
 
             if (inst->mispredicted() && !loadNotExecuted) {
                 fetchRedirect[tid] = true;
-
+                if(cpu->isBranchNetPC(inst->pcState().instAddr())){
+                    DPRINTF(BranchNet, "[tid:%i] [sn:%llu] PC: 0x%x Execute: "
+                        "BranchNet mispredict.\n",
+                        tid, inst->seqNum, inst->pcState().instAddr());
+                }
                 DPRINTF(IEW, "[tid:%i] [sn:%llu] Execute: "
                         "Branch mispredict detected.\n",
                         tid, inst->seqNum);
