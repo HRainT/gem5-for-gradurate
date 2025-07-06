@@ -25,3 +25,11 @@ test.astar:
   - 397test
   validation_set:
   - 397test
+astar:
+  spec_name: astar
+  test_set:
+  - 397new
+  training_set:
+  - 397new
+  validation_set:
+  - 397new

@@ -12,6 +12,12 @@ test.astar:
     simpoints:
     - id: 0
       weight: 1.0  # 权重值
+astar:
+  inputs:
+  - name: 397new
+    simpoints:
+    - id: 0
+      weight: 1.0  # 权重值
 473.astar:
   inputs:
   - name: BigLakes
