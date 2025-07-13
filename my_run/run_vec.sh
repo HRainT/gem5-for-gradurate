@@ -213,9 +213,9 @@ elif [ $mode = 9 ]; then
     time \
     build/RISCV/gem5.opt \
     --outdir=out/473.astar/BigLakes/397 \
-    --stats-file stats_branchnet_0705_v1.txt \
+    --stats-file stats_0713_branchnet.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/397/_397_0.008642_memory_.gz \
+    --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/397/_397_0.008642_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=O3CPU \
@@ -248,13 +248,13 @@ elif [ $mode = 9 ]; then
     --rxu-rename
 elif [ $mode = 10 ]; then
     time \
-    build/RISCV/gem5.opt \
+    build/RISCV/gem5.debug \
     --outdir=out/473.astar/BigLakes/397 \
-    --debug-flag BranchNet \
-    --debug-file trace-branchnet_0706_v2.log \
-    --stats-file stats_0706_v2.txt \
+    --debug-flag Debug \
+    --debug-file trace-branchnet_0713_Tage_v1.log \
+    --stats-file stats_0713_Tage_v1.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/397/_397_0.008642_memory_.gz \
+    --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/397/_397_0.008642_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=O3CPU \
@@ -295,7 +295,7 @@ elif [ $mode = 11 ]; then
     --debug-file debug.log \
     --stats-file stats.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/rivers/7395/_7395_0.051197_memory_.gz \
+    --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/397/_397_0.008642_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=O3CPU \

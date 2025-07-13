@@ -41,6 +41,7 @@
   #include "base/logging.hh"
   #include "debug/Fetch.hh"
   #include "debug/Tage.hh"
+  #include "debug/BranchNet.hh"
   
   namespace gem5
   {
@@ -192,6 +193,11 @@
           DPRINTF(Tage, "BTB miss resets prediction: %lx\n", branch_pc);
           assert(tHist.gHist == &tHist.globalHistory[tHist.ptGhist]);
           tHist.gHist[0] = 0;
+
+          DPRINTF(BranchNet, "BTB Miss, PC %#x: set %s , gHist: %d%d%d%d%d%, tHist.globalHistory[tHist.ptGhist]: %d\n",
+            branch_pc, "NOT TAKEN", tHist.gHist[4], tHist.gHist[3],
+            tHist.gHist[2], tHist.gHist[1], tHist.gHist[0], tHist.globalHistory[tHist.ptGhist]);
+
           for (int i = 1; i <= nHistoryTables; i++) {
               tHist.computeIndices[i].comp = bi->ci[i];
               tHist.computeTags[0][i].comp = bi->ct0[i];
@@ -377,7 +383,7 @@
   {
       Addr pc = branch_pc;
       bool pred_taken = true;
-  
+      bi->usebranchnet = false;
       if (cond_branch) {
           // TAGE prediction
   
@@ -613,6 +619,11 @@
       //on a squash, return pointers to this and recompute indices.
       //update user history
       updateGHist(tHist.gHist, taken, tHist.globalHistory, tHist.ptGhist);
+
+      DPRINTF(BranchNet, "Update Hist for PC %#x: %s , gHist: %d%d%d%d%d%, tHist.globalHistory[tHist.ptGhist]: %d\n",
+        branch_pc, taken ? "TAKEN" : "NOT TAKEN", tHist.gHist[4], tHist.gHist[3],
+        tHist.gHist[2], tHist.gHist[1], tHist.gHist[0], tHist.globalHistory[tHist.ptGhist]);
+
       tHist.pathHist = (tHist.pathHist << 1) + pathbit;
       tHist.pathHist = (tHist.pathHist & ((1ULL << pathHistBits) - 1));
       if (speculative) {
@@ -655,6 +666,11 @@
       tHist.ptGhist = bi->ptGhist;
       tHist.gHist = &(tHist.globalHistory[tHist.ptGhist]);
       tHist.gHist[0] = (taken ? 1 : 0);
+
+      DPRINTF(BranchNet, "Squash Hist ,taken: %s , gHist: %d%d%d%d%d%, tHist.globalHistory[tHist.ptGhist]: %d\n",
+         taken ? "TAKEN" : "NOT TAKEN", tHist.gHist[4], tHist.gHist[3],
+        tHist.gHist[2], tHist.gHist[1], tHist.gHist[0], tHist.globalHistory[tHist.ptGhist]);
+
       for (int i = 1; i <= nHistoryTables; i++) {
           tHist.computeIndices[i].comp = bi->ci[i];
           tHist.computeTags[0][i].comp = bi->ct0[i];

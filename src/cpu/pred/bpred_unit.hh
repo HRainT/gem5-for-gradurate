@@ -108,12 +108,35 @@ class BPredUnit : public SimObject
         90936,
         90960,
         90984,
+        90996,
         91008
       };
+      static constexpr std::array<uint64_t, 15> astar397_20pcbit_branchNetPCs = {
+        90776,
+        91096,
+        91132,
+        91008,
+        90844,
+        90984,
+        90960,
+        90912,
+        91164,
+        90888,
+        90880,
+        90936,
+        90972,
+        91056,
+        90896
+      };
     bool isBranchNetPC(Addr pc) const {
-        return std::find(std::begin(astar397_branchNetPCs), 
-                        std::end(astar397_branchNetPCs), pc) != std::end(astar397_branchNetPCs);
+        return std::find(std::begin(astar397_20pcbit_branchNetPCs), 
+                        std::end(astar397_20pcbit_branchNetPCs), pc) != std::end(astar397_20pcbit_branchNetPCs);
       }
+      // bool  isBranchNetPC(Addr pc) const
+      // {
+      //     return 0;
+      // }
+    std::map<Addr,int64_t> predcnt;
     /**
      * Predicts whether or not the instruction is a taken branch, and the
      * target of the branch if it is taken.

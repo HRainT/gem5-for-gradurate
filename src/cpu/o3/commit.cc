@@ -1575,7 +1575,7 @@ Commit::RecordControlInst(DynInstPtr controlInst)
     stats.commitControlInstNum++;
     bool taken;
     std::string branchtype;
-    taken = controlInst->mispredicted()? !controlInst->readPredTaken() : controlInst->readPredTaken();
+    taken = controlInst->readTargetPC() - controlInst->pcState().instAddr() == 4? false : true;
     if (controlInst->isUncondCtrl() && controlInst->isDirectCtrl()) {
         branchtype = "UNCOND_DIRECT";
     } else if (controlInst->isCondCtrl() && controlInst->isDirectCtrl()) {
@@ -1590,8 +1590,10 @@ Commit::RecordControlInst(DynInstPtr controlInst)
     else {
         branchtype = "NOT_BR";
     }
-    bool successRecord = logData(controlInst->pcState().instAddr(),
-                    controlInst->readTargetPC(), taken, branchtype);
+    // if((branchtype == "UNCOND_DIRECT" || branchtype == "UNCOND_INDIRECT") && !taken)
+    //     assert(0);
+    // bool successRecord = logData(controlInst->pcState().instAddr(),
+    //                 controlInst->readTargetPC(), taken, branchtype);
 }
 
 bool 
@@ -1599,8 +1601,8 @@ Commit::logData(Addr pc, Addr tgt_pc, bool taken, const std::string &type)
 {
     const char *envPath = std::getenv("BRANCH_LOG");   // 变量名随意，但要和脚本对应
     const char *defaultPath =
-        "out/branchnet";                        // 保险的缺省文件
-    std::ofstream logfile(envPath ? envPath : defaultPath,
+        "/Data3/yutong.han/My_G5Project/BranchNet/riscv_logs/astar_397new.log";                        // 保险的缺省文件
+    std::ofstream logfile(0 ? envPath : defaultPath,
                           std::ios::app);
     
     if (logfile.is_open()) {

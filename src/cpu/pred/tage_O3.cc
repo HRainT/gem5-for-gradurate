@@ -56,6 +56,7 @@
   #include "debug/Fetch.hh"
   #include "debug/Tage.hh"
   #include "debug/BranchNet.hh"
+  #include "debug/Debug.hh"
   #include <unistd.h>
   #include <fcntl.h>
   #include <sys/types.h>
@@ -70,8 +71,8 @@
   
   TAGE::TAGE(const TAGEParams &params) : BPredUnit(params), tage(params.tage)
   {
-    useBranchNet = true;
-    branchNetConfidenceThreshold = 0.7;
+    useBranchNet = false;
+    branchNetConfidenceThreshold = 0.8;
     if (useBranchNet) {
         initBranchNetService();
     }
@@ -214,7 +215,7 @@ bool TAGE::queryBranchNet(Addr pc, bool& prediction, float& confidence)
     }
     
     // 转换历史为整数数组：0表示NT, 1表示T
-    std::vector<uint16_t> intHistory;
+    std::vector<uint64_t> intHistory;
     getBranchNetHistory(0, intHistory, 212);
     
     std::ostringstream oss;
@@ -253,7 +254,7 @@ void TAGE::closeBranchNetService()
     }
 }
 
-void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint16_t>& out,unsigned needLen)
+void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint64_t>& out,unsigned needLen)
 {
     const TAGEBase::ThreadHistory &th = tage->threadHistory[tid];
     out.resize(needLen, 0);
@@ -281,18 +282,28 @@ void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint16_t>& out,unsigned 
       tHist.bnHead = (tHist.bnHead + 1) & (tage->kBnHistLen - 1);   // 位运算取模
       if (tHist.bnCount < tage->kBnHistLen) 
             ++tHist.bnCount;
-      if(bp_history == nullptr){
-        DPRINTF(Tage, "BranchNet predict currect for PC: %lx\n", pc);
-        return;
-      }
       assert(bp_history);
   
       TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
       TAGEBase::BranchInfo *tage_bi = bi->tageBranchInfo;
-  
+      bool needSquashed = squashed && !tage_bi->usebranchnet 
+            || squashed && tage_bi->usebranchnet && !tage_bi->diffpred
+            || !squashed && tage_bi->usebranchnet && tage_bi->diffpred;
+      if(isBranchNetPC(pc)){
+        if(predcnt.find(pc) == predcnt.end())
+            assert(0);
+        else{
+            if(needSquashed && tage_bi->diffpred)
+                predcnt[pc] --;
+            else if(!needSquashed && tage_bi->diffpred)
+                predcnt[pc] ++;
+        }
+      }
       if (squashed) {
           // This restores the global history, then update it
           // and recomputes the folded histories.
+          DPRINTF(BranchNet, "Squash PC: %lx, Tage pred %s, Final pred %s, Use %s\n",
+                    pc,bi->tageBranchInfo->tagePred? 1:0, squashed? "Fault":"Correct",tage_bi->usebranchnet? "BranchNet" : "TAGE");
           tage->squash(tid, taken, tage_bi, target);
           return;
       }
@@ -308,21 +319,17 @@ void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint16_t>& out,unsigned 
   
       // optional non speculative update of the histories
       tage->updateHistories(tid, pc, taken, tage_bi, false, inst, target);
-      delete bi;
-      bp_history = nullptr;
+      delete bi; //pred failed, tage currect
+      bp_history = nullptr; 
   }
   
   void
   TAGE::squash(ThreadID tid, void *bp_history)
   {
-      if(bp_history == nullptr){
-          DPRINTF(Tage, "Deleting branch info from branchnet which in wrong path\n");
-          return;
-      }
       TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
       DPRINTF(Tage, "Deleting branch info: %lx\n", bi->tageBranchInfo->branchPC);
       delete bi;
-      bp_history = nullptr;
+      bp_history = nullptr; 
   }
   
   bool
@@ -337,26 +344,49 @@ void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint16_t>& out,unsigned 
   TAGE::lookup(ThreadID tid, Addr pc, void* &bp_history)
   {
     bool prediction;
+    bool retval = predict(tid, pc, true, bp_history);
+    DPRINTF(BranchNet, "TAGE Lookup branch PC: %lx; predict:%d\n", pc, retval);
+    TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
+    if(isBranchNetPC(pc)){
+        if(predcnt.find(pc) == predcnt.end()){
+            predcnt[pc] = 0;
+        }
+    }
     // 首先尝试BranchNet预测
     if (useBranchNet && branchNetService && isBranchNetPC(pc)) {
         float confidence;
         
         if (queryBranchNet(pc, prediction, confidence)) {
+            if(retval != prediction){
+                bi->tageBranchInfo->diffpred = true; // 标记预测不一致
+            } else {
+                bi->tageBranchInfo->diffpred = false; // 标记预测一致
+            }
             DPRINTF(BranchNet, "BranchNet prediction for PC %#x: %s (conf %.2f)\n",
                 pc, prediction ? "TAKEN" : "NOT TAKEN", confidence);
-            
             // 检查置信度是否足够
             if (confidence >= branchNetConfidenceThreshold || 
                 (1 - confidence) >= branchNetConfidenceThreshold) {
                 // 使用BranchNet预测结果
-                return prediction;
+                if(predcnt[pc] <= 0){
+                    DPRINTF(BranchNet, "Use BranchNet for BN PC %#x: %s (conf %.2f)\n",
+                    pc, prediction ? "TAKEN" : "NOT TAKEN", confidence);
+                    DPRINTF(Debug, "Use BranchNet for BN PC %#x: %s (conf %.2f)\n",
+                        pc, prediction ? "TAKEN" : "NOT TAKEN", confidence);
+                    bi->tageBranchInfo->usebranchnet = true; // 标记使用了BranchNet
+                    tage->updateHistories(tid, pc, prediction, bi->tageBranchInfo, true);
+                    return prediction;
+                }
             }
         }
     }
-    // 如果BranchNet不可用或置信度不足，使用原始TAGE预测
-    DPRINTF(Tage, "Using TAGE prediction for PC %#x\n", pc);
-    bool retval = predict(tid, pc, true, bp_history);
-    DPRINTF(Tage, "TAGE Lookup branch: %lx; predict:%d\n", pc, retval);
+    if(isBranchNetPC(pc)){
+        DPRINTF(BranchNet, "Use Tage for BN PC %#x: %s\n",
+            pc, retval ? "TAKEN" : "NOT TAKEN");
+        DPRINTF(Debug, "Use Tage for BN PC %#x: %s\n",
+            pc, retval ? "TAKEN" : "NOT TAKEN");
+    }
+    tage->updateHistories(tid, pc, retval, bi->tageBranchInfo, true);
     return retval;
   }
   
@@ -387,9 +417,6 @@ void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint16_t>& out,unsigned 
   void
   TAGE::btbUpdate(ThreadID tid, Addr branch_addr, void* &bp_history)
 {
-        if (!bp_history) {  // 检查 bp_history 是否为空
-            return;
-        }
         TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
         tage->btbUpdate(tid, branch_addr, bi->tageBranchInfo);
 }

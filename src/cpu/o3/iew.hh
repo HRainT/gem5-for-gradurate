@@ -235,41 +235,6 @@ class IEW
     {
         ldstQueue.setLastRetiredHtmUid(tid, htmUid);
     }
-    static constexpr std::array<uint64_t, 14> astar_branchNetPCs = {
-      73560,
-      115804,
-      107268,
-      115256,
-      110728,
-      90904,
-      107240,
-      111652,
-      115432,
-      85408,
-      111680,
-      73552,
-      115240,
-      107380
-    };
-    static constexpr std::array<uint64_t, 14> astar397_branchNetPCs = {
-      91000,
-      91244,
-      91264,
-      90908,
-      91164,
-      90880,
-      90888,
-      90912,
-      90920,
-      90936,
-      90960,
-      90984,
-      91008
-    };
-    bool isBranchNetPC(Addr pc) const {
-      return std::find(std::begin(astar397_branchNetPCs), 
-                      std::end(astar397_branchNetPCs), pc) != std::end(astar397_branchNetPCs);
-    }
   private:
     /** Sends commit proper information for a squash due to a branch
      * mispredict.

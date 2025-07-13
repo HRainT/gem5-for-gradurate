@@ -157,7 +157,8 @@
   
           // for stats purposes
           unsigned provider;
-  
+          bool usebranchnet;
+          bool diffpred;
           BranchInfo(const TAGEBase &tage)
               : pathHist(0), ptGhist(0),
                 hitBank(0), hitBankIndex(0),
@@ -166,7 +167,7 @@
                 tagePred(false), altTaken(false),
                 condBranch(false), longestMatchPred(false),
                 pseudoNewAlloc(false), branchPC(0),
-                provider(-1)
+                provider(-1),usebranchnet(false),diffpred(false)
           {
               int sz = tage.nHistoryTables + 1;
               storage = new int [sz * 5];
@@ -420,13 +421,13 @@
       bool isSpeculativeUpdateEnabled() const;
       size_t getSizeInBits() const;
       //for branchnet
-      static constexpr unsigned kPcBits        = 12;   
+      static constexpr unsigned kPcBits        = 20;   
       static constexpr unsigned kBnHistLen     = 256;  
-    uint16_t 
+    uint64_t 
     encodeBranchNet(Addr pc, bool taken)
     {
-    return (static_cast<uint16_t>(taken) << kPcBits) |
-        static_cast<uint16_t>(pc & ((1u << kPcBits) - 1));
+    return (static_cast<uint64_t>(taken) << kPcBits) |
+        static_cast<uint64_t>(pc & ((1u << kPcBits) - 1));
     }
       struct ThreadHistory
       {
@@ -449,7 +450,7 @@
           FoldedHistory *computeIndices;
           FoldedHistory *computeTags[2];
           //for branchnet
-          uint16_t branchNetHist[kBnHistLen];  
+          uint64_t branchNetHist[kBnHistLen];  
           int      bnHead = 0;   
           int      bnCount = 0;
           ThreadHistory()   // 构造函数里清 0

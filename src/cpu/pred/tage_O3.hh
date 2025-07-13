@@ -106,7 +106,7 @@
       void closeBranchNetService();
       
       // 获取最近分支历史
-      void getBranchNetHistory(ThreadID tid,std::vector<uint16_t>& out,unsigned needLen /*=212*/);
+      void getBranchNetHistory(ThreadID tid,std::vector<uint64_t>& out,unsigned needLen /*=212*/);
     public:
       
       TAGE(const TAGEParams &params);
