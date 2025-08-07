@@ -115,21 +115,21 @@ class CPU : public BaseCPU
 
     /** Overall CPU status. */
     Status _status;
-    static constexpr std::array<uint64_t, 14> astar397_branchNetPCs = {
-      91000,
-      91244,
-      91264,
-      90908,
-      91164,
-      90880,
-      90888,
-      90912,
-      90920,
-      90936,
-      90960,
-      90984,
-      90996,
-      91008
+    static constexpr std::array<uint64_t, 14> astar_biglakes_branchNetPCs = {
+      107332,
+      97560,
+      116900,
+      111640,
+      96884,
+      117104,
+      117400,
+      117024,
+      96936,
+      90904,
+      96892,
+      116952,
+      83548,
+      117344
     };
     static constexpr std::array<uint64_t, 15> astar397_20pcbit_branchNetPCs = {
       90776,
@@ -149,8 +149,8 @@ class CPU : public BaseCPU
       90896
     };
     bool isBranchNetPC(Addr pc) const {
-      return std::find(std::begin(astar397_20pcbit_branchNetPCs), 
-                      std::end(astar397_20pcbit_branchNetPCs), pc) != std::end(astar397_20pcbit_branchNetPCs);
+      return std::find(std::begin(astar_biglakes_branchNetPCs), 
+                      std::end(astar_biglakes_branchNetPCs), pc) != std::end(astar_biglakes_branchNetPCs);
     }
     // bool  isBranchNetPC(Addr pc) const
     // {
@@ -516,7 +516,7 @@ class CPU : public BaseCPU
 
     /** The IEW stage's instruction queue. */
     TimeBuffer<IEWStruct> iewQueue;
-
+    bool regtable[32] = {false}; 
   private:
     /** The activity recorder; used to tell if the CPU has any
      * activity remaining or if it can go to idle and deschedule

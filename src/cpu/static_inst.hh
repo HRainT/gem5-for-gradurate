@@ -108,6 +108,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     uint32_t _numFields;
     uint32_t _numMicroops;
     bool useBranchNet = false;
+    bool regtable[32]; 
     /** For mask index vload/store */
     mutable bool vElemMask = false;
 
@@ -163,6 +164,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     /// instruction property flags.  See StaticInst::Flags for descriptions
     /// of the individual flags.
     //@{
+    void setRegTable(int regid,bool valid){regtable[regid] = valid;}
     void setRenamedDestIdx(PhysRegIdPtr destIdx) {_destIdx = destIdx;}
     PhysRegIdPtr         getRenamedDestIdx() const {return _destIdx;}
     void setRenamedVs1Idx(PhysRegIdPtr destIdx) {_vs1Idx = destIdx;}

@@ -94,6 +94,8 @@
   
       virtual bool predict(ThreadID tid, Addr branch_pc, bool cond_branch,
                            void* &b);
+      virtual bool predict(ThreadID tid, Addr branch_pc, bool cond_branch,
+                           void* &b,const StaticInstPtr & inst);
       bool useBranchNet; // 是否启用BranchNet
       FILE* branchNetService; // BranchNet服务进程句柄
       FILE* branchNetServiceIn;   // 用于从Python读取
@@ -104,12 +106,13 @@
       void initBranchNetService();
       bool queryBranchNet(Addr pc, bool& prediction, float& confidence);
       void closeBranchNetService();
-      
+      int get_random_0_to_3();
       // 获取最近分支历史
       void getBranchNetHistory(ThreadID tid,std::vector<uint64_t>& out,unsigned needLen /*=212*/);
     public:
       
       TAGE(const TAGEParams &params);
+      bool lookup(ThreadID tid, Addr pc, void* &bp_histor,const StaticInstPtr & inst);
       // Base class methods.
       bool lookup(ThreadID tid, Addr pc, void* &bp_history) override;
       void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,

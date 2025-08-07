@@ -79,7 +79,20 @@
           uint8_t u;
           TageEntry() : ctr(0), tag(0), u(0) { }
       };
-  
+      struct UTEntry
+      {
+          bool valid[4];
+          uint16_t u[4];
+          uint16_t Digest[4];
+          RegIndex Regid[4];
+          UTEntry() : valid{0,0,0,0} ,u{0,0,0,0}, Digest{0,0,0,0}, Regid{0,0,0,0} { }
+      };
+      struct WTEntry
+      {
+        uint16_t weight;
+        WTEntry() : weight(0) { }
+      };
+      
       // Folded History Table - compressed history
       // to mix with instruction PC to index partially
       // tagged tables.
@@ -113,7 +126,6 @@
       };
   
     public:
-  
       // provider type
       enum
       {
@@ -159,6 +171,10 @@
           unsigned provider;
           bool usebranchnet;
           bool diffpred;
+
+          uint32_t ut_index[8];
+          std::array<uint32_t, 8> wt_index[8];
+          bool useRegPred;
           BranchInfo(const TAGEBase &tage)
               : pathHist(0), ptGhist(0),
                 hitBank(0), hitBankIndex(0),
@@ -167,7 +183,9 @@
                 tagePred(false), altTaken(false),
                 condBranch(false), longestMatchPred(false),
                 pseudoNewAlloc(false), branchPC(0),
-                provider(-1),usebranchnet(false),diffpred(false)
+                provider(-1),usebranchnet(false),diffpred(false),
+                ut_index{}, 
+                useRegPred(false)
           {
               int sz = tage.nHistoryTables + 1;
               storage = new int [sz * 5];
@@ -340,6 +358,8 @@
        */
       bool tagePredict(
           ThreadID tid, Addr branch_pc, bool cond_branch, BranchInfo* bi);
+      bool tagePredict(
+          ThreadID tid, Addr branch_pc, bool cond_branch, BranchInfo* bi,const StaticInstPtr & inst);
   
       /**
        * Update the stats
@@ -429,6 +449,11 @@
     return (static_cast<uint64_t>(taken) << kPcBits) |
         static_cast<uint64_t>(pc & ((1u << kPcBits) - 1));
     }
+    uint64_t 
+    GHRRecord(bool taken)
+    {
+    return ((GHR << 1) | static_cast<uint64_t>(taken));
+    }
       struct ThreadHistory
       {
           // Speculative path history
@@ -462,6 +487,147 @@
   
       std::vector<ThreadHistory> threadHistory;
       const unsigned maxHist;
+      UTEntry *Utable[8];
+      WTEntry *Wtable[8];
+    uint32_t sliceGHR(uint64_t fullGHR);
+    uint64_t buildKey(uint64_t pc, uint64_t ghr_full, uint16_t digest, uint16_t regID);
+    int PC_BITS     = 16;   // 取 PC 的低 16 位
+    int GHR_BITS    = 32;   // slice(GHR) 长度
+    int DIGEST_BITS = 12;   // 寄存器 Value Digest 位宽
+    int RID_BITS    =  4;   // 寄存器编号位宽
+    uint64_t GHR    =  0;
+    static constexpr unsigned NUM_BANKS          = 8;              // 2/4/8/…  (must be power-of-2)
+    static constexpr unsigned UT_ROWS_PER_BANK   = 128;            // 深度，可自行调整为 64/256…
+    static constexpr unsigned BANK_BITS          = __builtin_ctz(NUM_BANKS);          // log2(NUM_BANKS)
+    static constexpr unsigned INDEX_BITS         = __builtin_ctz(UT_ROWS_PER_BANK);   // log2(rows)
+    struct UTIndex {
+        uint32_t bank;    // 0 .. NUM_BANKS-1
+        uint32_t row;     // 0 .. UT_ROWS_PER_BANK-1
+    };
+    uint32_t fold_xor(uint64_t v, unsigned out_bits);
+    uint32_t mix32(uint32_t x);
+    uint64_t mix64(uint64_t x);
+    UTIndex makeUTindex(uint64_t pc /*byte addr*/,
+                                  uint64_t ghr /*global history*/);
+
+    static inline uint64_t rotl64(uint64_t x, unsigned r)
+    {
+        return (x << r) | (x >> (64 - r));
+    }
+    
+#ifndef UT_ROW_BITS          // log2(每个 UT-bank 的行数)
+#define UT_ROW_BITS  4        // => 2^3 = 8 行/ bank；如需 16 行改成 4
+#endif
+#define UT_NUM_ROWS  (1u << UT_ROW_BITS)
+
+// 全局历史寄存器长度（比任何旋转位数都要长）
+#ifndef GHR_LEN
+#define GHR_LEN  64
+#endif
+
+// ============================================================
+// 工具函数：32-bit 左旋
+// ============================================================
+static inline uint32_t rotl32(uint32_t x, unsigned r)
+{
+    return (x << (r & 31)) | (x >> ((32 - r) & 31));
+}
+
+// ============================================================
+// SplitMix64——简单但高质量的 64→64 bit 混洗
+// ============================================================
+static inline uint64_t splitmix64(uint64_t x)
+{
+    x += 0x9E3779B97F4A7C15ull;
+    x  = (x ^ (x >> 30)) * 0xBF58476D1CE4E5B9ull;
+    x  = (x ^ (x >> 27)) * 0x94D049BB133111EBull;
+    return x ^ (x >> 31);
+}
+static inline uint32_t ut_gindex(uint64_t pc, int i, uint64_t GHR)
+{
+    /*----------------------------------------------------------
+     * 1) 取 PC 的不同位段 → 初级 key
+     *--------------------------------------------------------*/
+    uint32_t p_low  = (uint32_t) pc;            // PC[31:0]
+    uint32_t p_high = (uint32_t)(pc >> 32);     // PC[63:32]
+    uint32_t key    = p_low ^ rotl32(p_high, 13);
+
+    /*----------------------------------------------------------
+     * 2) 把 GHR 引入并做 bank-相关旋转
+     *--------------------------------------------------------*/
+    uint32_t g_lo = (uint32_t) GHR;             // GHR[31:0]
+    uint32_t g_hi = (uint32_t)(GHR >> 32);      // GHR[63:32]
+
+    key ^= rotl32(g_lo,  5 + i);                // 旋转量与 bank 相关
+    key ^= rotl32(g_hi, 19 - i);
+
+    /*----------------------------------------------------------
+     * 3) bank-专属常量进一步 decorrelate
+     *--------------------------------------------------------*/
+    static const uint64_t BANK_SEED[8] = {
+        0x243F6A8885A308D3ull, 0x13198A2E03707344ull,
+        0xA4093822299F31D0ull, 0x082EFA98EC4E6C89ull,
+        0x452821E638D01377ull, 0xBE5466CF34E90C6Cull,
+        0xC0AC29B7C97C50DDull, 0x3F84D5B5B5470917ull
+    };
+    key ^= (uint32_t)splitmix64(BANK_SEED[i] ^ pc ^ GHR);
+
+    /*----------------------------------------------------------
+     * 4) 最终折叠到所需位宽
+     *--------------------------------------------------------*/
+    return key & (UT_NUM_ROWS-1);
+}
+
+// ----------------- FOR WT-----------------
+static constexpr size_t WT_N = 8;
+template <size_t WT_N>
+std::array<uint32_t, WT_N> make_indices(uint64_t key,
+                                     const std::array<uint32_t, WT_N>& masks,
+                                     const std::array<uint64_t, WT_N>& salt)
+{
+    std::array<uint32_t, WT_N> idx{};
+
+    uint64_t base = mix64(key);               // step-1：公共一次高质量混合
+
+    for (size_t k = 0; k < WT_N; ++k) {
+        uint64_t v = rotl64(base, 7 * k);     // step-2a：每张表不同的循环左移
+        v ^= salt[k];                         // step-2b：每张表独立的随机盐
+        v *= 0x9e3779b97f4a7c15ULL;           // 黄金分割常数进一步打散
+        v = mix64(v);                         // 再洗一次
+        idx[k] = static_cast<uint32_t>(v & masks[k]);   // step-3：按表大小取模
+    }
+    return idx;
+}
+
+// ----------------- 用法示例 -----------------
+/*
+   假设有 5 张 WT 表，大小分别为 512, 256, 128, 128, 64。
+   则 masks = size-1。
+*/
+static constexpr std::array<uint32_t, WT_N> masks = {
+    1024 - 1,    // 0 : 1 Ki entry
+     512 - 1,    // 1
+     256 - 1,    // 2
+     256 - 1,    // 3
+     128 - 1,    // 4
+     128 - 1,    // 5
+     128 - 1,    // 6
+      64 - 1     // 7
+};
+
+static constexpr std::array<uint64_t, WT_N> salt = {
+    0x243F6A8885A308D3ULL,   // π
+    0x13198A2E03707344ULL,   // √2
+    0xA4093822299F31D0ULL,   // √3
+    0x082EFA98EC4E6C89ULL,   // √5
+    0x452821E638D01377ULL,   // φ
+    0xBE5466CF34E90C6CULL,   // e
+    0xC0AC29B7C97C50DDULL,   // √7
+    0x3F84D5B5B5470917ULL    // √11
+};
+
+
+
     protected:
       const unsigned logRatioBiModalHystEntries;
       const unsigned nHistoryTables;

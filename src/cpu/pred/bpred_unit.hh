@@ -79,22 +79,22 @@ class BPredUnit : public SimObject
     /** Perform sanity checks after a drain. */
     void drainSanityCheck() const;
 
-    static constexpr std::array<uint64_t, 14> astar_branchNetPCs = {
-        73560,
-        115804,
-        107268,
-        115256,
-        110728,
-        90904,
-        107240,
-        111652,
-        115432,
-        85408,
-        111680,
-        73552,
-        115240,
-        107380
-      };
+    static constexpr std::array<uint64_t, 14> astar_biglakes_branchNetPCs = {
+      107332,
+      97560,
+      116900,
+      111640,
+      96884,
+      117104,
+      117400,
+      117024,
+      96936,
+      90904,
+      96892,
+      116952,
+      83548,
+      117344
+    };
       static constexpr std::array<uint64_t, 14> astar397_branchNetPCs = {
         91000,
         91244,
@@ -129,8 +129,8 @@ class BPredUnit : public SimObject
         90896
       };
     bool isBranchNetPC(Addr pc) const {
-        return std::find(std::begin(astar397_20pcbit_branchNetPCs), 
-                        std::end(astar397_20pcbit_branchNetPCs), pc) != std::end(astar397_20pcbit_branchNetPCs);
+        return std::find(std::begin(astar_biglakes_branchNetPCs), 
+                        std::end(astar_biglakes_branchNetPCs), pc) != std::end(astar_biglakes_branchNetPCs);
       }
       // bool  isBranchNetPC(Addr pc) const
       // {
@@ -202,7 +202,9 @@ class BPredUnit : public SimObject
     virtual bool lookup(ThreadID tid, Addr instPC, void * &bp_history, bool & pred_weak, int & pred_ctr) {
         return true;
     };
-
+    virtual bool lookup(ThreadID tid, Addr instPC, void * &bp_history, const StaticInstPtr & inst){
+      return true;
+    }
      /**
      * If a branch is not taken, because the BTB address is invalid or missing,
      * this function sets the appropriate counter in the global and local

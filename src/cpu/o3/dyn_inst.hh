@@ -142,6 +142,9 @@ class DynInst : public ExecContext, public RefCounted
 
     bool hadpredict = false;
 
+    uint32_t utindex_brank;
+    uint32_t utindex_row;
+    uint32_t uw_index[5];
   protected:
     enum Status
     {

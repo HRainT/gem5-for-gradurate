@@ -980,6 +980,7 @@ Commit::commitInsts()
             if (commit_success) {
                 __uint128_t dest_val = 0;
                 if (head_inst->numDestRegs() > 0 && !head_inst->destRegIdx(0).isZeroReg()) {
+                    cpu->regtable[head_inst->destRegIdx(0)] = true;
                     PhysRegIdPtr phys_reg = head_inst->renamedDestIdx(0);
                     RegClassType type = phys_reg->classValue();
                     RegIndex idx = phys_reg->index();

@@ -393,6 +393,7 @@ class DynInst : public ExecContext, public RefCounted
     bool src1_ready = false;
     bool src2_ready = false;
     bool src3_ready = false;
+
     // Returns the flattened register index of the idx'th destination
     // register.
     const RegId &

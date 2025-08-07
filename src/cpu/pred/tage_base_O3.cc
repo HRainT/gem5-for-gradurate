@@ -259,8 +259,98 @@
   
       return (tag & ((1ULL << tagTableTagWidths[bank]) - 1));
   }
-  
-  
+  /*------------------------------------------------------------------
+ *  sliceGHR():   把全长 GHR (≥ GHR_BITS) 缩到 GHR_BITS 位
+ *                下面的实现等价于“分段 XOR 折叠”
+ * |63................48|47...........16|15........4|3....0|
+     PC[15:0]            GHR_slice        Digest     RegID
+     16 bit               32 bit           12 bit     4 bit
+ *----------------------------------------------------------------*/
+uint32_t
+TAGEBase::sliceGHR(uint64_t fullGHR)
+{
+    uint64_t x = fullGHR;
+    while (x >> GHR_BITS)           // 只要还超过目标位宽，就继续折叠
+        x = (x & ((1ull<<GHR_BITS)-1)) ^ (x >> GHR_BITS);
+    return static_cast<uint32_t>(x);
+}
+
+/*------------------------------------------------------------------
+ *  buildKey():   把各字段拼成 64-bit Key
+ *----------------------------------------------------------------*/
+uint64_t 
+TAGEBase::buildKey(uint64_t pc,  uint64_t ghr_full,
+                                uint16_t digest,   // 12 bit
+                                uint16_t  regID)    // 4  bit
+{
+    const uint64_t pcField  =  pc & ((1ull<<PC_BITS)-1);          // 16b
+    const uint64_t ghrField =  sliceGHR(ghr_full);                // 32b
+    const uint64_t dgField  =  digest & ((1u<<DIGEST_BITS)-1);    // 12b
+    const uint64_t idField  =  regID & ((1u<<RID_BITS)-1);        // 4b
+
+    // 拼接：高位开始依次左移再 OR
+    uint64_t key = 0;
+    key |= pcField;
+    key <<= GHR_BITS;   key |= ghrField;
+    key <<= DIGEST_BITS; key |= dgField;
+    key <<= RID_BITS;   key |= idField;
+
+    return key;     // 64-bit Key
+}
+uint32_t 
+TAGEBase::fold_xor(uint64_t v, unsigned out_bits)
+{
+    uint64_t mask  = (1ULL << out_bits) - 1;
+    while (v >> out_bits)
+        v = (v & mask) ^ (v >> out_bits);
+    return static_cast<uint32_t>(v & mask);
+}
+uint32_t 
+TAGEBase::mix32(uint32_t x)
+{
+    // 32-bit finalizer of Murmur3
+    x ^= x >> 16;
+    x *= 0x85ebca6bU;
+    x ^= x >> 13;
+    x *= 0xc2b2ae35U;
+    x ^= x >> 16;
+    return x;
+}
+uint64_t 
+TAGEBase::mix64(uint64_t x)
+{
+    // MurmurHash3 finalizer
+    x ^= x >> 33;
+    x *= 0xff51afd7ed558ccdULL;
+    x ^= x >> 33;
+    x *= 0xc4ceb9fe1a85ec53ULL;
+    x ^= x >> 33;
+    return x;
+}
+TAGEBase::UTIndex
+TAGEBase::makeUTindex(uint64_t pc /*byte addr*/,
+                                  uint64_t ghr /*global history*/)
+{
+    //------------------------------------------------------------------
+    // 1) 先各做一次折叠，使位数 ≧ BANK_BITS + INDEX_BITS 即可
+    //------------------------------------------------------------------
+    uint32_t pc_fold  = fold_xor(pc >> 2,                 // >>2 去掉始终为 0 的字对齐位
+                                 BANK_BITS + INDEX_BITS);
+    uint32_t ghr_fold = fold_xor(ghr, BANK_BITS + INDEX_BITS);
+
+    //------------------------------------------------------------------
+    // 2) XOR 再乘法扰动，得到 final 32-bit 值
+    //------------------------------------------------------------------
+    uint32_t mixed = mix32(pc_fold ^ ghr_fold);
+
+    //------------------------------------------------------------------
+    // 3) 拆出 {bank,row}
+    //------------------------------------------------------------------
+    UTIndex ret;
+    ret.bank =  mixed & ((1u << BANK_BITS) - 1);
+    ret.row  = (mixed >> BANK_BITS) & ((1u << INDEX_BITS) - 1);
+    return ret;
+}
   // Up-down saturating counter
   template<typename T>
   void
@@ -379,14 +469,51 @@
   
   bool
   TAGEBase::tagePredict(ThreadID tid, Addr branch_pc,
-                bool cond_branch, BranchInfo* bi)
+                bool cond_branch, BranchInfo* bi,const StaticInstPtr & inst)
   {
       Addr pc = branch_pc;
       bool pred_taken = true;
       bi->usebranchnet = false;
       if (cond_branch) {
+        uint32_t ut_index[8];
+        RegIndex regid[8];
+        uint16_t Digest[8];
+        uint16_t u[8] = {0,0,0,0,0,0,0,0};
+        int cnt[8] = {4,4,4,4,4,4,4,4};
+        uint16_t weight[8] = {0,0,0,0,0,0,0,0};
+        uint64_t key[8] = {0,0,0,0,0,0,0,0};
+        std::array<uint32_t, WT_N> wt_index[8];
+        uint16_t result;
+        for(int i = 0; i < 8; i++) {
+            ut_index[i] = ut_gindex(branch_pc, i, GHR);
+            bi->ut_index[i] = ut_index[i];
+            for(int j = 0; j < 4; j++) {
+                if(inst->regtable[i*4 + j] != 0) {
+                    if(u[i] < Utable[i][ut_index[i]].u[j]) {
+                        u[i] = Utable[i][ut_index[i]].u[j];
+                        regid[i] = Utable[i][ut_index[i]].Regid[j];
+                        Digest[i] = Utable[i][ut_index[i]].Digest[j];
+                    }
+                    else{
+                        cnt[i]--;
+                    }
+                }
+                else{
+                    cnt[i]--;
+                }
+            }
+            if(!cnt[i]){
+                key[i] = buildKey(pc, GHR, Digest[i], regid[i]);
+                wt_index[i] = make_indices(key[i], masks, salt);
+                weight[i] = Wtable[i][wt_index[i][i]].weight;
+                result += weight[i];
+                bi->useRegPred = true;
+                bi->wt_index[i] = wt_index[i];
+          } 
+        }
+        //   UTIndex ut_index = makeUTindex(pc, GHR);  
           // TAGE prediction
-  
+        
           calculateIndicesAndTags(tid, pc, bi);
   
           bi->bimodalIndex = bindex(pc);
@@ -455,6 +582,83 @@
       return pred_taken;
   }
   
+bool
+  TAGEBase::tagePredict(ThreadID tid, Addr branch_pc,
+                bool cond_branch, BranchInfo* bi)
+  {
+      Addr pc = branch_pc;
+      bool pred_taken = true;
+      bi->usebranchnet = false;
+      if (cond_branch) {
+          // TAGE prediction
+        
+          calculateIndicesAndTags(tid, pc, bi);
+  
+          bi->bimodalIndex = bindex(pc);
+  
+          bi->hitBank = 0;
+          bi->altBank = 0;
+          //Look for the bank with longest matching history
+          for (int i = nHistoryTables; i > 0; i--) {
+              if (noSkip[i] &&
+                  gtable[i][tableIndices[i]].tag == tableTags[i]) {
+                  bi->hitBank = i;
+                  bi->hitBankIndex = tableIndices[bi->hitBank];
+                  break;
+              }
+          }
+          //Look for the alternate bank
+          for (int i = bi->hitBank - 1; i > 0; i--) {
+              if (noSkip[i] &&
+                  gtable[i][tableIndices[i]].tag == tableTags[i]) {
+                  bi->altBank = i;
+                  bi->altBankIndex = tableIndices[bi->altBank];
+                  break;
+              }
+          }
+          //computes the prediction and the alternate prediction
+          if (bi->hitBank > 0) {
+              if (bi->altBank > 0) {
+                  bi->altTaken =
+                      gtable[bi->altBank][tableIndices[bi->altBank]].ctr >= 0;
+                  extraAltCalc(bi);
+              }else {
+                  bi->altTaken = getBimodePred(pc, bi);
+              }
+  
+              bi->longestMatchPred =
+                  gtable[bi->hitBank][tableIndices[bi->hitBank]].ctr >= 0;
+              bi->pseudoNewAlloc =
+                  abs(2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) <= 1;
+  
+              //if the entry is recognized as a newly allocated entry and
+              //useAltPredForNewlyAllocated is positive use the alternate
+              //prediction
+              if ((useAltPredForNewlyAllocated[getUseAltIdx(bi, branch_pc)] < 0)
+                  || ! bi->pseudoNewAlloc) {
+                  bi->tagePred = bi->longestMatchPred;
+                  bi->provider = TAGE_LONGEST_MATCH;
+              } else {
+                  bi->tagePred = bi->altTaken;
+                  bi->provider = bi->altBank ? TAGE_ALT_MATCH
+                                             : BIMODAL_ALT_MATCH;
+              }
+          } else {
+              bi->altTaken = getBimodePred(pc, bi);
+              bi->tagePred = bi->altTaken;
+              bi->longestMatchPred = bi->altTaken;
+              bi->provider = BIMODAL_ONLY;
+          }
+          //end TAGE prediction
+  
+          pred_taken = (bi->tagePred);
+          DPRINTF(Tage, "Predict for %lx: taken?:%d, tagePred:%d, altPred:%d\n",
+                  branch_pc, pred_taken, bi->tagePred, bi->altTaken);
+      }
+      bi->branchPC = branch_pc;
+      bi->condBranch = cond_branch;
+      return pred_taken;
+  }
   void
   TAGEBase::adjustAlloc(bool & alloc, bool taken, bool pred_taken)
   {

@@ -72,7 +72,7 @@
   TAGE::TAGE(const TAGEParams &params) : BPredUnit(params), tage(params.tage)
   {
     useBranchNet = false;
-    branchNetConfidenceThreshold = 0.8;
+    branchNetConfidenceThreshold = 0.6;
     if (useBranchNet) {
         initBranchNetService();
     }
@@ -283,9 +283,44 @@ void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint64_t>& out,unsigned 
       if (tHist.bnCount < tage->kBnHistLen) 
             ++tHist.bnCount;
       assert(bp_history);
-  
+      tage->GHRRecord(taken);
       TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
       TAGEBase::BranchInfo *tage_bi = bi->tageBranchInfo;
+      /********update reg pred*********/
+      uint32_t ut_index[8];
+      std::array<uint32_t, 8> wt_index[8];
+      for(int i = 0; i < 8; i++){
+        ut_index[i] = tage_bi->ut_index[i];
+        wt_index[i] = tage_bi->wt_index[i];
+        std::vector<int> valid_indices;
+        for (int j = 0; j < 4; ++j) {
+            if (tage->Utable[i][ut_index[i]].valid[j]) {
+                valid_indices.push_back(j);
+            }
+        }
+        if (valid_indices.empty()) {
+            continue;;
+        }
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        std::uniform_int_distribution<size_t> dist(0, valid_indices.size() - 1);
+        
+        size_t random_index = dist(gen);
+        int selected_j = valid_indices[random_index];
+        if(tage->Utable[i][ut_index[i]].u[selected_j] > -8 && squashed){
+            tage->Utable[i][ut_index[i]].u[selected_j] --;
+        }
+        else if(tage->Utable[i][ut_index[i]].u[selected_j] < 8 && !squashed){
+            tage->Utable[i][ut_index[i]].u[selected_j] ++;
+        }
+        if(squashed && tage->Wtable[i][wt_index[i][i]].weight > -8){
+            tage->Wtable[i][wt_index[i][i]].weight --;
+        }
+        else if(!squashed && tage->Wtable[i][wt_index[i][i]].weight < 8){
+            tage->Wtable[i][wt_index[i][i]].weight ++;
+        }
+    }
+       /***********end************/
       bool needSquashed = squashed && !tage_bi->usebranchnet 
             || squashed && tage_bi->usebranchnet && !tage_bi->diffpred
             || !squashed && tage_bi->usebranchnet && tage_bi->diffpred;
@@ -339,6 +374,13 @@ void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint64_t>& out,unsigned 
       b = (void*)(bi);
       return tage->tagePredict(tid, pc, cond_branch, bi->tageBranchInfo);
   }
+bool
+  TAGE::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b, const StaticInstPtr & inst)
+  {
+      TageBranchInfo *bi = new TageBranchInfo(*tage);//nHistoryTables+1);
+      b = (void*)(bi);
+      return tage->tagePredict(tid, pc, cond_branch, bi->tageBranchInfo,inst);
+  }
   
   bool
   TAGE::lookup(ThreadID tid, Addr pc, void* &bp_history)
@@ -390,6 +432,55 @@ void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint64_t>& out,unsigned 
     return retval;
   }
   
+bool
+  TAGE::lookup(ThreadID tid, Addr pc, void* &bp_history, const StaticInstPtr & inst)
+  {
+    bool prediction;
+    bool retval = predict(tid, pc, true, bp_history, inst);
+    DPRINTF(BranchNet, "TAGE Lookup branch PC: %lx; predict:%d\n", pc, retval);
+    TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
+    if(isBranchNetPC(pc)){
+        if(predcnt.find(pc) == predcnt.end()){
+            predcnt[pc] = 0;
+        }
+    }
+    // 首先尝试BranchNet预测
+    if (useBranchNet && branchNetService && isBranchNetPC(pc)) {
+        float confidence;
+        
+        if (queryBranchNet(pc, prediction, confidence)) {
+            if(retval != prediction){
+                bi->tageBranchInfo->diffpred = true; // 标记预测不一致
+            } else {
+                bi->tageBranchInfo->diffpred = false; // 标记预测一致
+            }
+            DPRINTF(BranchNet, "BranchNet prediction for PC %#x: %s (conf %.2f)\n",
+                pc, prediction ? "TAKEN" : "NOT TAKEN", confidence);
+            // 检查置信度是否足够
+            if (confidence >= branchNetConfidenceThreshold || 
+                (1 - confidence) >= branchNetConfidenceThreshold) {
+                // 使用BranchNet预测结果
+                if(predcnt[pc] <= 0){
+                    DPRINTF(BranchNet, "Use BranchNet for BN PC %#x: %s (conf %.2f)\n",
+                    pc, prediction ? "TAKEN" : "NOT TAKEN", confidence);
+                    DPRINTF(Debug, "Use BranchNet for BN PC %#x: %s (conf %.2f)\n",
+                        pc, prediction ? "TAKEN" : "NOT TAKEN", confidence);
+                    bi->tageBranchInfo->usebranchnet = true; // 标记使用了BranchNet
+                    tage->updateHistories(tid, pc, prediction, bi->tageBranchInfo, true);
+                    return prediction;
+                }
+            }
+        }
+    }
+    if(isBranchNetPC(pc)){
+        DPRINTF(BranchNet, "Use Tage for BN PC %#x: %s\n",
+            pc, retval ? "TAKEN" : "NOT TAKEN");
+        DPRINTF(Debug, "Use Tage for BN PC %#x: %s\n",
+            pc, retval ? "TAKEN" : "NOT TAKEN");
+    }
+    tage->updateHistories(tid, pc, retval, bi->tageBranchInfo, true);
+    return retval;
+  }
   void
   TAGE::updateHistories(ThreadID tid, Addr pc, bool uncond,
                            bool taken, Addr target, void * &bp_history)
@@ -420,6 +511,14 @@ void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint64_t>& out,unsigned 
         TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
         tage->btbUpdate(tid, branch_addr, bi->tageBranchInfo);
 }
-  
+  int 
+  TAGE::get_random_0_to_3() {
+    // 静态对象只初始化一次
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_int_distribution<int> dist(0, 3);
+    
+    return dist(gen);
+}
   } // namespace branch_prediction
   } // namespace gem5
