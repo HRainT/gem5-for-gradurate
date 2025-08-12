@@ -89,7 +89,7 @@
       };
       struct WTEntry
       {
-        uint16_t weight;
+        int8_t weight = 0;
         WTEntry() : weight(0) { }
       };
       
@@ -171,10 +171,12 @@
           unsigned provider;
           bool usebranchnet;
           bool diffpred;
-
-          uint32_t ut_index[8];
-          std::array<uint32_t, 8> wt_index[8];
-          bool useRegPred;
+          int8_t hit_ctr = 0;
+          int8_t alt_ctr = 0;
+          int8_t result = 0;
+          uint32_t ut_index[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+          uint32_t wt_index[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+          bool useRegPred = false;
           BranchInfo(const TAGEBase &tage)
               : pathHist(0), ptGhist(0),
                 hitBank(0), hitBankIndex(0),
@@ -184,7 +186,6 @@
                 condBranch(false), longestMatchPred(false),
                 pseudoNewAlloc(false), branchPC(0),
                 provider(-1),usebranchnet(false),diffpred(false),
-                ut_index{}, 
                 useRegPred(false)
           {
               int sz = tage.nHistoryTables + 1;
@@ -487,8 +488,16 @@
   
       std::vector<ThreadHistory> threadHistory;
       const unsigned maxHist;
-      UTEntry *Utable[8];
-      WTEntry *Wtable[8];
+    static constexpr std::array<std::size_t, 8> WT_SIZE = {
+        1024, 512, 256, 256, 128, 128, 128, 64
+    };
+    void init_tables()
+    {
+        for (std::size_t i = 0; i < 8; ++i)
+            Wtable[i].resize(WT_SIZE[i]);      // 每张表独立分配
+    }
+    std::array<std::vector<WTEntry>, 8> Wtable;
+    UTEntry Utable[8][16];
     uint32_t sliceGHR(uint64_t fullGHR);
     uint64_t buildKey(uint64_t pc, uint64_t ghr_full, uint16_t digest, uint16_t regID);
     int PC_BITS     = 16;   // 取 PC 的低 16 位
@@ -506,15 +515,9 @@
     };
     uint32_t fold_xor(uint64_t v, unsigned out_bits);
     uint32_t mix32(uint32_t x);
-    uint64_t mix64(uint64_t x);
     UTIndex makeUTindex(uint64_t pc /*byte addr*/,
                                   uint64_t ghr /*global history*/);
 
-    static inline uint64_t rotl64(uint64_t x, unsigned r)
-    {
-        return (x << r) | (x >> (64 - r));
-    }
-    
 #ifndef UT_ROW_BITS          // log2(每个 UT-bank 的行数)
 #define UT_ROW_BITS  4        // => 2^3 = 8 行/ bank；如需 16 行改成 4
 #endif
@@ -579,52 +582,55 @@ static inline uint32_t ut_gindex(uint64_t pc, int i, uint64_t GHR)
 }
 
 // ----------------- FOR WT-----------------
-static constexpr size_t WT_N = 8;
-template <size_t WT_N>
-std::array<uint32_t, WT_N> make_indices(uint64_t key,
-                                     const std::array<uint32_t, WT_N>& masks,
-                                     const std::array<uint64_t, WT_N>& salt)
+// ---------------------------------------------------------
+// 共有常量（保持与论文/原实现相同）
+// ---------------------------------------------------------
+static constexpr std::array<uint32_t, 8> WT_MASK = {
+    1024-1, 512-1, 256-1, 256-1, 128-1, 128-1, 128-1, 64-1
+};
+
+static constexpr std::array<uint64_t, 8> WT_SALT = {
+    0x243F6A8885A308D3ULL, 0x13198A2E03707344ULL,
+    0xA4093822299F31D0ULL, 0x082EFA98EC4E6C89ULL,
+    0x452821E638D01377ULL, 0xBE5466CF34E90C6CULL,
+    0xC0AC29B7C97C50DDULL, 0x3F84D5B5B5470917ULL
+};
+
+// ---------------------------------------------------------
+// 工具：64-bit 左旋 (与 GCC/Clang 的 rotl 内建同义）
+// ---------------------------------------------------------
+static inline uint64_t rotl64(uint64_t x, unsigned r)
 {
-    std::array<uint32_t, WT_N> idx{};
-
-    uint64_t base = mix64(key);               // step-1：公共一次高质量混合
-
-    for (size_t k = 0; k < WT_N; ++k) {
-        uint64_t v = rotl64(base, 7 * k);     // step-2a：每张表不同的循环左移
-        v ^= salt[k];                         // step-2b：每张表独立的随机盐
-        v *= 0x9e3779b97f4a7c15ULL;           // 黄金分割常数进一步打散
-        v = mix64(v);                         // 再洗一次
-        idx[k] = static_cast<uint32_t>(v & masks[k]);   // step-3：按表大小取模
-    }
-    return idx;
+    return (x << (r & 63)) | (x >> ((64 - r) & 63));
 }
 
-// ----------------- 用法示例 -----------------
-/*
-   假设有 5 张 WT 表，大小分别为 512, 256, 128, 128, 64。
-   则 masks = size-1。
-*/
-static constexpr std::array<uint32_t, WT_N> masks = {
-    1024 - 1,    // 0 : 1 Ki entry
-     512 - 1,    // 1
-     256 - 1,    // 2
-     256 - 1,    // 3
-     128 - 1,    // 4
-     128 - 1,    // 5
-     128 - 1,    // 6
-      64 - 1     // 7
-};
+// ---------------------------------------------------------
+// 工具：一次性高质量 64→64 位扩散
+// （同 splitmix64，也可以用 CRC/hash 替代）
+// ---------------------------------------------------------
+static inline uint64_t mix64(uint64_t x)
+{
+    x += 0x9E3779B97F4A7C15ULL;
+    x = (x ^ (x >> 30)) * 0xBF58476D1CE4E5B9ULL;
+    x = (x ^ (x >> 27)) * 0x94D049BB133111EBULL;
+    return x ^ (x >> 31);
+}
 
-static constexpr std::array<uint64_t, WT_N> salt = {
-    0x243F6A8885A308D3ULL,   // π
-    0x13198A2E03707344ULL,   // √2
-    0xA4093822299F31D0ULL,   // √3
-    0x082EFA98EC4E6C89ULL,   // √5
-    0x452821E638D01377ULL,   // φ
-    0xBE5466CF34E90C6CULL,   // e
-    0xC0AC29B7C97C50DDULL,   // √7
-    0x3F84D5B5B5470917ULL    // √11
-};
+// ---------------------------------------------------------
+// 计算“第 bank_id 张 WT” 的行号
+//   key      : 该 bank 自己的 key
+//   bank_id  : 0~7
+// ---------------------------------------------------------
+static inline uint32_t make_indices(uint64_t key, unsigned bank_id)
+{
+    uint64_t v = mix64(key);                   // 公共一次打散
+    v  = rotl64(v, 7 * bank_id);               // bank 专属旋转
+    v ^= WT_SALT[bank_id];                     // bank 专属盐
+    v *= 0x9e3779b97f4a7c15ULL;                // 再扩散
+    v  = mix64(v);                             // 最后一次混洗
+    return static_cast<uint32_t>(v & WT_MASK[bank_id]);
+}
+
 
 
 

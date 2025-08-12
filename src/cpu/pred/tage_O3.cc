@@ -57,6 +57,7 @@
   #include "debug/Tage.hh"
   #include "debug/BranchNet.hh"
   #include "debug/Debug.hh"
+  #include "debug/NewTage.hh"
   #include <unistd.h>
   #include <fcntl.h>
   #include <sys/types.h>
@@ -288,13 +289,13 @@ void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint64_t>& out,unsigned 
       TAGEBase::BranchInfo *tage_bi = bi->tageBranchInfo;
       /********update reg pred*********/
       uint32_t ut_index[8];
-      std::array<uint32_t, 8> wt_index[8];
+      uint32_t wt_index[8];
       for(int i = 0; i < 8; i++){
         ut_index[i] = tage_bi->ut_index[i];
         wt_index[i] = tage_bi->wt_index[i];
         std::vector<int> valid_indices;
         for (int j = 0; j < 4; ++j) {
-            if (tage->Utable[i][ut_index[i]].valid[j]) {
+            if (inst->regtable[i*4 + j] != 0) {
                 valid_indices.push_back(j);
             }
         }
@@ -307,19 +308,37 @@ void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint64_t>& out,unsigned 
         
         size_t random_index = dist(gen);
         int selected_j = valid_indices[random_index];
-        if(tage->Utable[i][ut_index[i]].u[selected_j] > -8 && squashed){
+        if(tage->Utable[i][ut_index[i]].u[selected_j] > 0 && squashed){
             tage->Utable[i][ut_index[i]].u[selected_j] --;
         }
-        else if(tage->Utable[i][ut_index[i]].u[selected_j] < 8 && !squashed){
+        else if(tage->Utable[i][ut_index[i]].u[selected_j] < 8 && (taken == 1 && tage_bi->result > 0 || taken == 0 && tage_bi->result <= 0)){
             tage->Utable[i][ut_index[i]].u[selected_j] ++;
         }
-        if(squashed && tage->Wtable[i][wt_index[i][i]].weight > -8){
-            tage->Wtable[i][wt_index[i][i]].weight --;
+        if(tage->Wtable[i][wt_index[i]].weight > -8 && (taken == 1 && tage_bi->result <= 0 || taken == 0 && tage_bi->result > 0)){
+            tage->Wtable[i][wt_index[i]].weight --;
         }
-        else if(!squashed && tage->Wtable[i][wt_index[i][i]].weight < 8){
-            tage->Wtable[i][wt_index[i][i]].weight ++;
+        else if(tage->Wtable[i][wt_index[i]].weight < 8 && (taken == 1 && tage_bi->result > 0 || taken == 0 && tage_bi->result <= 0)){
+            tage->Wtable[i][wt_index[i]].weight ++;
         }
+        // if(tage->Utable[i][ut_index[i]].u[selected_j] > 0 && (taken == 1 && tage_bi->result <= 0 || taken == 0 && tage_bi->result > 0)){
+        //     tage->Utable[i][ut_index[i]].u[selected_j] --;
+        // }
+        // else if(tage->Utable[i][ut_index[i]].u[selected_j] < 8 && (taken == 1 && tage_bi->result > 0 || taken == 0 && tage_bi->result <= 0)){
+        //     tage->Utable[i][ut_index[i]].u[selected_j] ++;
+        // }
+        // if(tage->Wtable[i][wt_index[i]].weight > -8 && (taken == 1 && tage_bi->result <= 0 || taken == 0 && tage_bi->result > 0)){
+        //     tage->Wtable[i][wt_index[i]].weight --;
+        // }
+        // else if(tage->Wtable[i][wt_index[i]].weight < 8 && (taken == 1 && tage_bi->result > 0 || taken == 0 && tage_bi->result <= 0)){
+        //     tage->Wtable[i][wt_index[i]].weight ++;
+        // }
     }
+        if(squashed){
+            DPRINTF(NewTage, "Squash for pc:%lx; taken?:%d, tage_pred?:%d, tage_ctr:%d, reg_pred?:%d, reg_ctr:%d\n",
+                  pc, taken, tage_bi->provider == 1?tage_bi->longestMatchPred:tage_bi->altTaken, 
+                  tage_bi->provider == 1?tage_bi->hit_ctr:(tage_bi->provider == 2?tage_bi->alt_ctr:0),
+                  tage_bi->result > 0?1:0, tage_bi->result);
+        }
        /***********end************/
       bool needSquashed = squashed && !tage_bi->usebranchnet 
             || squashed && tage_bi->usebranchnet && !tage_bi->diffpred

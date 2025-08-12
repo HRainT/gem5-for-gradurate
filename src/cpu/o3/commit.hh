@@ -224,7 +224,33 @@ class Commit
     void RecordControlInst(DynInstPtr controlInst);
 
     bool logData(Addr pc, Addr tgt_pc, bool taken, const std::string &type);
+static inline uint16_t make_int_digest(uint64_t val)
+{
+    // ---- 1) 计算 leading_same（0-7，>=8 时饱和到 7）
+    uint8_t leading;
+    bool msb = (val >> 63) & 1;                 // MSB
+    if (msb == 0)
+        leading = std::min<uint8_t>(__builtin_clzll(val), 7);
+    else
+        leading = std::min<uint8_t>(__builtin_clzll(~val), 7);
 
+    // ---- 2) 计算 trailing_same（0-7，>=8 时饱和到 7）
+    uint8_t trailing;
+    bool lsb = val & 1;                         // LSB
+    if (lsb == 0)
+        trailing = std::min<uint8_t>(__builtin_ctzll(val), 7);
+    else
+        trailing = std::min<uint8_t>(__builtin_ctzll(~val), 7);
+
+    // ---- 3) 取 6 个最低位
+    uint8_t lsb6 = static_cast<uint8_t>(val & 0x3F);
+
+    // ---- 4) 拼装 12 位
+    uint16_t digest = (static_cast<uint16_t>(leading)  << 9) |
+                      (static_cast<uint16_t>(trailing) << 6) |
+                      lsb6;
+    return digest;          // bits[11:0]
+}
   private:
     /** Updates the overall status of commit with the nextStatus, and
      * tell the CPU if commit is active/inactive.

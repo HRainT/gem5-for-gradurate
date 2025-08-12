@@ -517,6 +517,7 @@ class CPU : public BaseCPU
     /** The IEW stage's instruction queue. */
     TimeBuffer<IEWStruct> iewQueue;
     bool regtable[32] = {false}; 
+    std::map<RegIndex, uint16_t> digestMap;
   private:
     /** The activity recorder; used to tell if the CPU has any
      * activity remaining or if it can go to idle and deschedule

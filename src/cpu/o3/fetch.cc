@@ -528,6 +528,7 @@ Fetch::lookupAndUpdateNextPC(DynInstPtr &inst, PCStateBase &next_pc)
     }
     for(int i = 0; i < 32; i++){
         inst->staticInst->setRegTable(i,cpu->regtable[i]);
+        inst->staticInst->setDigestMap(i, cpu->digestMap[i]);
     }
     ThreadID tid = inst->threadNumber;
     predict_taken = branchPred->predict(inst->staticInst, inst->seqNum,

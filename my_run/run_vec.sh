@@ -213,7 +213,7 @@ elif [ $mode = 9 ]; then
     time \
     build/RISCV/gem5.opt \
     --outdir=out/473.astar/BigLakes/397 \
-    --stats-file stats_0713_branchnet_nospeculative.txt \
+    --stats-file stats_0812_onlynewtage.txt \
     configs/example/fs.py \
     --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/397/_397_0.008642_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
@@ -250,9 +250,9 @@ elif [ $mode = 10 ]; then
     time \
     build/RISCV/gem5.opt \
     --outdir=out/473.astar/BigLakes/397 \
-    --debug-flag BranchNet \
-    --debug-file trace-branchnet_0716_BranchNet_meta_0.6_biglakesPc.log \
-    --stats-file stats_0716_BranchNet_meta_0.6_biglakesPc.txt \
+    --debug-flag NewTage \
+    --debug-file trace-0812_NewTage_v1.log \
+    --stats-file stats_0812_NewTage_v1.txt \
     configs/example/fs.py \
     --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/397/_397_0.008642_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \

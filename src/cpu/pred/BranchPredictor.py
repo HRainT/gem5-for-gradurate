@@ -165,7 +165,7 @@ class TAGEBase(SimObject):
         "for the Bimodal",
     )
 
-    tagTableCounterBits = Param.Unsigned(3, "Number of tag table counter bits")
+    tagTableCounterBits = Param.Unsigned(5, "Number of tag table counter bits")
     tagTableUBits = Param.Unsigned(2, "Number of tag table u bits")
 
     histBufferSize = Param.Unsigned(

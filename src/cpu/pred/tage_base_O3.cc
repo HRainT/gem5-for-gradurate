@@ -42,6 +42,7 @@
   #include "debug/Fetch.hh"
   #include "debug/Tage.hh"
   #include "debug/BranchNet.hh"
+  #include "debug/NewTage.hh"
   
   namespace gem5
   {
@@ -146,6 +147,7 @@
       tableIndices = new int [nHistoryTables+1];
       tableTags = new int [nHistoryTables+1];
       initialized = true;
+      init_tables();
   }
   
   void
@@ -316,17 +318,6 @@ TAGEBase::mix32(uint32_t x)
     x ^= x >> 16;
     return x;
 }
-uint64_t 
-TAGEBase::mix64(uint64_t x)
-{
-    // MurmurHash3 finalizer
-    x ^= x >> 33;
-    x *= 0xff51afd7ed558ccdULL;
-    x ^= x >> 33;
-    x *= 0xc4ceb9fe1a85ec53ULL;
-    x ^= x >> 33;
-    return x;
-}
 TAGEBase::UTIndex
 TAGEBase::makeUTindex(uint64_t pc /*byte addr*/,
                                   uint64_t ghr /*global history*/)
@@ -480,10 +471,12 @@ TAGEBase::makeUTindex(uint64_t pc /*byte addr*/,
         uint16_t Digest[8];
         uint16_t u[8] = {0,0,0,0,0,0,0,0};
         int cnt[8] = {4,4,4,4,4,4,4,4};
-        uint16_t weight[8] = {0,0,0,0,0,0,0,0};
+        int8_t weight[8] = {0,0,0,0,0,0,0,0};
         uint64_t key[8] = {0,0,0,0,0,0,0,0};
-        std::array<uint32_t, WT_N> wt_index[8];
-        uint16_t result;
+        uint32_t wt_index[8];
+        int8_t result = 0;
+        int8_t hit_ctr = 0;
+        int8_t alt_ctr = 0;
         for(int i = 0; i < 8; i++) {
             ut_index[i] = ut_gindex(branch_pc, i, GHR);
             bi->ut_index[i] = ut_index[i];
@@ -491,8 +484,8 @@ TAGEBase::makeUTindex(uint64_t pc /*byte addr*/,
                 if(inst->regtable[i*4 + j] != 0) {
                     if(u[i] < Utable[i][ut_index[i]].u[j]) {
                         u[i] = Utable[i][ut_index[i]].u[j];
-                        regid[i] = Utable[i][ut_index[i]].Regid[j];
-                        Digest[i] = Utable[i][ut_index[i]].Digest[j];
+                        regid[i] = i*4 + j;
+                        Digest[i] = inst->digestMap[i*4 + j];
                     }
                     else{
                         cnt[i]--;
@@ -504,13 +497,13 @@ TAGEBase::makeUTindex(uint64_t pc /*byte addr*/,
             }
             if(!cnt[i]){
                 key[i] = buildKey(pc, GHR, Digest[i], regid[i]);
-                wt_index[i] = make_indices(key[i], masks, salt);
-                weight[i] = Wtable[i][wt_index[i][i]].weight;
+                wt_index[i] = make_indices(key[i], i);
+                weight[i] = Wtable[i][wt_index[i]].weight;
                 result += weight[i];
-                bi->useRegPred = true;
                 bi->wt_index[i] = wt_index[i];
           } 
         }
+          bi->result = result;
         //   UTIndex ut_index = makeUTindex(pc, GHR);  
           // TAGE prediction
         
@@ -543,11 +536,14 @@ TAGEBase::makeUTindex(uint64_t pc /*byte addr*/,
               if (bi->altBank > 0) {
                   bi->altTaken =
                       gtable[bi->altBank][tableIndices[bi->altBank]].ctr >= 0;
+                  alt_ctr = gtable[bi->altBank][tableIndices[bi->altBank]].ctr * 8;
+                  bi->alt_ctr = alt_ctr;
                   extraAltCalc(bi);
               }else {
                   bi->altTaken = getBimodePred(pc, bi);
               }
-  
+              hit_ctr = gtable[bi->hitBank][tableIndices[bi->hitBank]].ctr * 8;
+              bi->hit_ctr = hit_ctr;
               bi->longestMatchPred =
                   gtable[bi->hitBank][tableIndices[bi->hitBank]].ctr >= 0;
               bi->pseudoNewAlloc =
@@ -566,13 +562,48 @@ TAGEBase::makeUTindex(uint64_t pc /*byte addr*/,
                                              : BIMODAL_ALT_MATCH;
               }
           } else {
-              bi->altTaken = getBimodePred(pc, bi);
-              bi->tagePred = bi->altTaken;
-              bi->longestMatchPred = bi->altTaken;
-              bi->provider = BIMODAL_ONLY;
+                bi->altTaken = getBimodePred(pc, bi);
+                bi->tagePred = bi->altTaken;
+                bi->longestMatchPred = bi->altTaken;
+                bi->provider = BIMODAL_ONLY;
           }
           //end TAGE prediction
-  
+            if(bi->provider == TAGE_LONGEST_MATCH){
+                if(hit_ctr + result > 16){
+                    bi->tagePred = true;
+                    bi->useRegPred = true;
+                }
+                else if(hit_ctr + result < -16){
+                    bi->tagePred = false;
+                    bi->useRegPred = true;
+                }
+                // DPRINTF(NewTage, "Predict for %lx: taken?:%d, tagePred:%d, tage_ctr:%d, regPred:%d, reg_ctr:%d\n",
+                // branch_pc, bi->tagePred, (hit_ctr > 0)?1:0, hit_ctr, (result > 0)?1:0, result);
+            }
+            else if(bi->provider == TAGE_ALT_MATCH){
+                if(alt_ctr + result > 16){
+                    bi->tagePred = true;
+                    bi->useRegPred = true;
+                }
+                else if(alt_ctr + result < -16){
+                    bi->tagePred = false;
+                    bi->useRegPred = true;
+                }
+                // DPRINTF(NewTage, "Predict for %lx: taken?:%d, tagePred:%d, tage_ctr:%d, regPred:%d, reg_ctr:%d\n",
+                // branch_pc, bi->tagePred, (alt_ctr > 0)?1:0, alt_ctr, (result > 0)?1:0, result);
+            }
+            else if(bi->provider == BIMODAL_ONLY){
+                if(result > 8){
+                    bi->tagePred = true;
+                    bi->useRegPred = true;
+                }
+                else if(result < -8){
+                    bi->tagePred = false;
+                    bi->useRegPred = true;
+                }
+                // DPRINTF(NewTage, "Predict for %lx: taken?:%d, tagePred:%d, tage_ctr:Bimodal_None, regPred:%d, reg_ctr:%d\n",
+                // branch_pc, bi->tagePred, bi->altTaken, (result > 0)?1:0, result);
+            }
           pred_taken = (bi->tagePred);
           DPRINTF(Tage, "Predict for %lx: taken?:%d, tagePred:%d, altPred:%d\n",
                   branch_pc, pred_taken, bi->tagePred, bi->altTaken);

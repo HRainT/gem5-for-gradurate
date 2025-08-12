@@ -114,7 +114,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
 
     /** Eliminate differences of RxuO3 and O3 commint insts log. */
     mutable bool canPrintLog = true;
-
+    std::map<RegIndex, uint16_t> digestMap;
   private:
     /// See srcRegIdx().
     RegIdArrayPtr _srcRegIdxPtr = nullptr;
@@ -165,6 +165,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     /// of the individual flags.
     //@{
     void setRegTable(int regid,bool valid){regtable[regid] = valid;}
+    void setDigestMap(int regid,uint16_t digest){digestMap[regid] = digest;}
     void setRenamedDestIdx(PhysRegIdPtr destIdx) {_destIdx = destIdx;}
     PhysRegIdPtr         getRenamedDestIdx() const {return _destIdx;}
     void setRenamedVs1Idx(PhysRegIdPtr destIdx) {_vs1Idx = destIdx;}
