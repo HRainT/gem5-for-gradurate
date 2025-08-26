@@ -166,6 +166,8 @@ class StatisticalCorrector : public SimObject
     std::vector<int8_t> * igehl;
     std::vector<int8_t> wi;
 
+    std::vector<int8_t> wr;
+
     std::vector<int8_t> bias;
     std::vector<int8_t> biasSK;
     std::vector<int8_t> biasBank;
@@ -216,6 +218,14 @@ class StatisticalCorrector : public SimObject
         int thres;
         bool predBeforeSC;
         bool usedScPred;
+        int8_t pre_result = 0;
+        int8_t result = 0;
+        uint32_t ut_index[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+        bool ut_valid[8][4] = {0, 0, 0, 0, 0, 0, 0, 0};
+        bool ut_bank_vld[8] = {false, false, false, false, false, false, false, false};
+        uint32_t wt_index[8][3] = {0, 0, 0, 0, 0, 0, 0, 0};
+        int8_t wt_ctr[8][3] = {0, 0, 0, 0, 0, 0, 0, 0};
+        int16_t per_bank[8] = {0, 0, 0, 0, 0, 0, 0, 0}; 
     };
 
     StatisticalCorrector(const StatisticalCorrectorParams &p);
@@ -230,7 +240,11 @@ class StatisticalCorrector : public SimObject
         bool prev_pred_taken, bool bias_bit, bool use_conf_ctr,
         int8_t conf_ctr, unsigned conf_bits, int hitBank, int altBank,
         int64_t phist, int init_lsum = 0);
-
+    virtual bool scPredict(
+        ThreadID tid, Addr branch_pc, bool cond_branch, BranchInfo* bi,
+        bool prev_pred_taken, bool bias_bit, bool use_conf_ctr,
+        int8_t conf_ctr, unsigned conf_bits, int hitBank, int altBank,
+        int64_t phist, const StaticInstPtr & inst, int init_lsum = 0);
     virtual unsigned getIndBias(Addr branch_pc, BranchInfo* bi, bool b) const;
 
     virtual unsigned getIndBiasSK(Addr branch_pc, BranchInfo* bi) const;
@@ -243,9 +257,9 @@ class StatisticalCorrector : public SimObject
 
     virtual int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo* bi,
         int & lsum, int64_t phist) = 0;
-
+    virtual int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo* bi,
+        int & lsum, int64_t phist, const StaticInstPtr &inst){ return 0; }
     int64_t gIndex(Addr branch_pc, int64_t bhist, int logs, int nbr, int i);
-
     virtual int gIndexLogsSubstr(int nbr, int i) = 0;
 
     int gPredict(

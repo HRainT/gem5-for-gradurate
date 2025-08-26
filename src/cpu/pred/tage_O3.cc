@@ -288,50 +288,41 @@ void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint64_t>& out,unsigned 
       TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
       TAGEBase::BranchInfo *tage_bi = bi->tageBranchInfo;
       /********update reg pred*********/
-      uint32_t ut_index[8];
-      uint32_t wt_index[8];
-      for(int i = 0; i < 8; i++){
-        ut_index[i] = tage_bi->ut_index[i];
-        wt_index[i] = tage_bi->wt_index[i];
-        std::vector<int> valid_indices;
-        for (int j = 0; j < 4; ++j) {
-            if (inst->regtable[i*4 + j] != 0) {
-                valid_indices.push_back(j);
+      bool use_reg_pred = true;
+      if(use_reg_pred){
+        uint32_t ut_index[8];
+        uint32_t wt_index[8];
+        for(int i = 0; i < 8; i++){
+            ut_index[i] = tage_bi->ut_index[i];
+            wt_index[i] = tage_bi->wt_index[i];
+            std::vector<int> valid_indices;
+            for (int j = 0; j < 4; ++j) {
+                if (inst->regtable[i*4 + j] != 0) {
+                    valid_indices.push_back(j);
+                }
             }
+            if (valid_indices.empty()) {
+                continue;;
+            }
+            static std::random_device rd;
+            static std::mt19937 gen(rd());
+            std::uniform_int_distribution<size_t> dist(0, valid_indices.size() - 1);
+            
+            size_t random_index = dist(gen);
+            int selected_j = valid_indices[random_index];
+            if(tage->Utable[i][ut_index[i]].u[selected_j] > 0 && (taken == 1 && tage_bi->result <= 0 || taken == 0 && tage_bi->result > 0)){
+                tage->Utable[i][ut_index[i]].u[selected_j] --;
+            }
+            else if(tage->Utable[i][ut_index[i]].u[selected_j] < 8 && (taken == 1 && tage_bi->result > 0 || taken == 0 && tage_bi->result <= 0)){
+                tage->Utable[i][ut_index[i]].u[selected_j] ++;
+            }
+            if(tage->Wtable[i][wt_index[i]].weight > -4 && (taken == 1 && tage_bi->result <= 0 || taken == 0 && tage_bi->result > 0)){
+                tage->Wtable[i][wt_index[i]].weight --;
+            }
+            else if(tage->Wtable[i][wt_index[i]].weight < 4 && (taken == 1 && tage_bi->result > 0 || taken == 0 && tage_bi->result <= 0)){
+                tage->Wtable[i][wt_index[i]].weight ++;
+            } 
         }
-        if (valid_indices.empty()) {
-            continue;;
-        }
-        static std::random_device rd;
-        static std::mt19937 gen(rd());
-        std::uniform_int_distribution<size_t> dist(0, valid_indices.size() - 1);
-        
-        size_t random_index = dist(gen);
-        int selected_j = valid_indices[random_index];
-        if(tage->Utable[i][ut_index[i]].u[selected_j] > 0 && squashed){
-            tage->Utable[i][ut_index[i]].u[selected_j] --;
-        }
-        else if(tage->Utable[i][ut_index[i]].u[selected_j] < 8 && (taken == 1 && tage_bi->result > 0 || taken == 0 && tage_bi->result <= 0)){
-            tage->Utable[i][ut_index[i]].u[selected_j] ++;
-        }
-        if(tage->Wtable[i][wt_index[i]].weight > -8 && (taken == 1 && tage_bi->result <= 0 || taken == 0 && tage_bi->result > 0)){
-            tage->Wtable[i][wt_index[i]].weight --;
-        }
-        else if(tage->Wtable[i][wt_index[i]].weight < 8 && (taken == 1 && tage_bi->result > 0 || taken == 0 && tage_bi->result <= 0)){
-            tage->Wtable[i][wt_index[i]].weight ++;
-        }
-        // if(tage->Utable[i][ut_index[i]].u[selected_j] > 0 && (taken == 1 && tage_bi->result <= 0 || taken == 0 && tage_bi->result > 0)){
-        //     tage->Utable[i][ut_index[i]].u[selected_j] --;
-        // }
-        // else if(tage->Utable[i][ut_index[i]].u[selected_j] < 8 && (taken == 1 && tage_bi->result > 0 || taken == 0 && tage_bi->result <= 0)){
-        //     tage->Utable[i][ut_index[i]].u[selected_j] ++;
-        // }
-        // if(tage->Wtable[i][wt_index[i]].weight > -8 && (taken == 1 && tage_bi->result <= 0 || taken == 0 && tage_bi->result > 0)){
-        //     tage->Wtable[i][wt_index[i]].weight --;
-        // }
-        // else if(tage->Wtable[i][wt_index[i]].weight < 8 && (taken == 1 && tage_bi->result > 0 || taken == 0 && tage_bi->result <= 0)){
-        //     tage->Wtable[i][wt_index[i]].weight ++;
-        // }
     }
         if(squashed){
             DPRINTF(NewTage, "Squash for pc:%lx; taken?:%d, tage_pred?:%d, tage_ctr:%d, reg_pred?:%d, reg_ctr:%d\n",

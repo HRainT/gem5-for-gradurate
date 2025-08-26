@@ -122,7 +122,8 @@ class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
 
     int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo* bi,
                      int & lsum, int64_t phist) override;
-
+    int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo* bi,
+                     int & lsum, int64_t phist,const StaticInstPtr &inst) override;
     int gIndexLogsSubstr(int nbr, int i) override;
 
     void scHistoryUpdate(Addr branch_pc, const StaticInstPtr &inst, bool taken,
@@ -130,6 +131,77 @@ class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
 
     void gUpdates(ThreadID tid, Addr pc, bool taken, BranchInfo* bi,
             int64_t phist) override;
+    int sRPredict(ThreadID tid, Addr pc, BranchInfo* bi, const StaticInstPtr & inst);
+    void rUpdates( ThreadID tid, Addr pc, bool taken, BranchInfo* bi, int64_t phist, std::vector<int8_t> & w);
+    // static inline uint64_t mixBankSalt(int bank) {
+    //     // Knuth/黄金分割常数的 64 位版本，作为 bank 盐值
+    //     return 0x9E3779B97F4A7C15ULL * (uint64_t)(bank + 1);
+    // }
+    uint32_t ut_gindex(Addr pc, int bank, int logUt)
+    {
+        uint64_t x = (uint64_t)pc;
+        // 轻度 skew，和 getIndUpds 风格相近
+        x ^= (x >> 2) ^ (x >> 5) ^ (x >> 13);
+        x ^= mixBankSalt(bank);
+        return (uint32_t)(x & ((1u << logUt) - 1)); // logUt=8 → 256 项
+    }
+    struct UTEntry
+    {
+        uint16_t u[4];
+        UTEntry() :u{0,0,0,0} { }
+    };
+    struct WTEntry
+    {
+    int8_t weight = 0;
+    WTEntry() : weight(0) { }
+    };
+    UTEntry Utable[8][256];
+
+    static constexpr int WT_layers = 3; // 举例：3 层 GEHL
+    // 每层大小（按层 i）
+    static constexpr std::array<std::size_t, WT_layers> WT_SIZE = { 1024, 512, 256 };
+
+    using Ctr = int8_t;
+
+    // [bank][layer][idx]
+    std::array<std::array<std::vector<Ctr>, WT_layers>, 8> Wtable;
+
+    void init_tables()
+    {
+        for (int b = 0; b < 8; ++b) {
+            for (int i = 0; i < WT_layers; ++i) {
+                Wtable[b][i].assign(WT_SIZE[i], 0); // 初始化为 0
+            }
+        }
+    }
+
+    
+    static inline uint64_t rol64(uint64_t x, unsigned r) {
+        r &= 63;
+        return (x << r) | (x >> ((64 - r) & 63));
+    }
+    static inline uint64_t mixBankSalt(int bank) {
+        return 0x9E3779B97F4A7C15ULL * (uint64_t)(bank + 1);
+    }
+    uint32_t wt_gindex(Addr pc,
+                            uint16_t digest12,
+                            int bank,
+                            int logs,    // log2(size)
+                            int nbr,     // 层数
+                            int i)
+    {
+        uint64_t x = (uint64_t)pc;
+        uint64_t d = (uint64_t)(digest12 & 0xFFFu);
+
+        // 层相关的折叠与打散（模仿 gIndex 的“逐层变化”）
+        x ^= rol64(d, 3 + i) ^ (d * 0x9E37u);
+        x ^= (x >> (8 + i)) ^ (x >> (16 + 2*i));
+        x ^= mixBankSalt(bank);
+        x ^= (x >> 17) ^ (x >> 31);
+
+        int cut = logs - gIndexLogsSubstr(nbr, i);
+        return (uint32_t)(x & ((1u << cut) - 1));
+    }
 };
 
 class TAGE_SC_L_64KB : public TAGE_SC_L

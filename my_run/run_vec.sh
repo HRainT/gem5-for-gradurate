@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mode=10
+mode=9
 if [ $1 ]; then
     mode=$1
 fi
@@ -212,10 +212,10 @@ elif [ $mode = 8 ]; then
 elif [ $mode = 9 ]; then
     time \
     build/RISCV/gem5.opt \
-    --outdir=out/473.astar/BigLakes/397 \
-    --stats-file stats_0812_onlynewtage.txt \
+    --outdir=out/473.astar/BigLakes/11757 \
+    --stats-file stats_0822_new_tagesc.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/397/_397_0.008642_memory_.gz \
+    --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/11757/_11757_0.066769_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=O3CPU \
@@ -249,12 +249,12 @@ elif [ $mode = 9 ]; then
 elif [ $mode = 10 ]; then
     time \
     build/RISCV/gem5.opt \
-    --outdir=out/473.astar/BigLakes/397 \
+    --outdir=out/473.astar/BigLakes/11757 \
     --debug-flag NewTage \
-    --debug-file trace-0812_NewTage_v1.log \
-    --stats-file stats_0812_NewTage_v1.txt \
+    --debug-file trace-0819_tagesc.log \
+    --stats-file stats_0819_tagesc.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/397/_397_0.008642_memory_.gz \
+    --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/11757/_11757_0.066769_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=O3CPU \

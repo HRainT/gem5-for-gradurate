@@ -477,31 +477,37 @@ TAGEBase::makeUTindex(uint64_t pc /*byte addr*/,
         int8_t result = 0;
         int8_t hit_ctr = 0;
         int8_t alt_ctr = 0;
-        for(int i = 0; i < 8; i++) {
-            ut_index[i] = ut_gindex(branch_pc, i, GHR);
-            bi->ut_index[i] = ut_index[i];
-            for(int j = 0; j < 4; j++) {
-                if(inst->regtable[i*4 + j] != 0) {
-                    if(u[i] < Utable[i][ut_index[i]].u[j]) {
-                        u[i] = Utable[i][ut_index[i]].u[j];
-                        regid[i] = i*4 + j;
-                        Digest[i] = inst->digestMap[i*4 + j];
+        bool use_reg_pred = true;
+        if(use_reg_pred){
+            for(int i = 0; i < 8; i++) {
+                ut_index[i] = ut_gindex(branch_pc, i, GHR);
+                bi->ut_index[i] = ut_index[i];
+                for(int j = 0; j < 4; j++) {
+                    if(inst->regtable[i*4 + j] != 0) {
+                        if(u[i] < Utable[i][ut_index[i]].u[j]) {
+                            u[i] = Utable[i][ut_index[i]].u[j];
+                            regid[i] = i*4 + j;
+                            Digest[i] = inst->digestMap[i*4 + j];
+                        }
+                        else{
+                            cnt[i]--;
+                        }
                     }
                     else{
                         cnt[i]--;
                     }
                 }
-                else{
-                    cnt[i]--;
-                }
+                if(!cnt[i]){
+                    key[i] = buildKey(pc, GHR, Digest[i], regid[i]);
+                    wt_index[i] = make_indices(key[i], i);
+                    weight[i] = Wtable[i][wt_index[i]].weight;
+                    result += weight[i];
+                    bi->wt_index[i] = wt_index[i];
+                } 
             }
-            if(!cnt[i]){
-                key[i] = buildKey(pc, GHR, Digest[i], regid[i]);
-                wt_index[i] = make_indices(key[i], i);
-                weight[i] = Wtable[i][wt_index[i]].weight;
-                result += weight[i];
-                bi->wt_index[i] = wt_index[i];
-          } 
+        }
+        else{
+            result = 0;
         }
           bi->result = result;
         //   UTIndex ut_index = makeUTindex(pc, GHR);  
@@ -569,11 +575,11 @@ TAGEBase::makeUTindex(uint64_t pc /*byte addr*/,
           }
           //end TAGE prediction
             if(bi->provider == TAGE_LONGEST_MATCH){
-                if(hit_ctr + result > 16){
+                if(hit_ctr + result > 8){
                     bi->tagePred = true;
                     bi->useRegPred = true;
                 }
-                else if(hit_ctr + result < -16){
+                else if(hit_ctr + result < -8){
                     bi->tagePred = false;
                     bi->useRegPred = true;
                 }
@@ -581,11 +587,11 @@ TAGEBase::makeUTindex(uint64_t pc /*byte addr*/,
                 // branch_pc, bi->tagePred, (hit_ctr > 0)?1:0, hit_ctr, (result > 0)?1:0, result);
             }
             else if(bi->provider == TAGE_ALT_MATCH){
-                if(alt_ctr + result > 16){
+                if(alt_ctr + result > 8){
                     bi->tagePred = true;
                     bi->useRegPred = true;
                 }
-                else if(alt_ctr + result < -16){
+                else if(alt_ctr + result < -8){
                     bi->tagePred = false;
                     bi->useRegPred = true;
                 }
@@ -593,11 +599,11 @@ TAGEBase::makeUTindex(uint64_t pc /*byte addr*/,
                 // branch_pc, bi->tagePred, (alt_ctr > 0)?1:0, alt_ctr, (result > 0)?1:0, result);
             }
             else if(bi->provider == BIMODAL_ONLY){
-                if(result > 8){
+                if(result > 2){
                     bi->tagePred = true;
                     bi->useRegPred = true;
                 }
-                else if(result < -8){
+                else if(result < -2){
                     bi->tagePred = false;
                     bi->useRegPred = true;
                 }

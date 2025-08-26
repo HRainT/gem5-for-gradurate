@@ -128,14 +128,14 @@ class BPredUnit : public SimObject
         91056,
         90896
       };
-    bool isBranchNetPC(Addr pc) const {
-        return std::find(std::begin(astar_biglakes_branchNetPCs), 
-                        std::end(astar_biglakes_branchNetPCs), pc) != std::end(astar_biglakes_branchNetPCs);
+    // bool isBranchNetPC(Addr pc) const {
+    //     return std::find(std::begin(astar_biglakes_branchNetPCs), 
+    //                     std::end(astar_biglakes_branchNetPCs), pc) != std::end(astar_biglakes_branchNetPCs);
+    //   }
+      bool  isBranchNetPC(Addr pc) const
+      {
+          return 0;
       }
-      // bool  isBranchNetPC(Addr pc) const
-      // {
-      //     return 0;
-      // }
     std::map<Addr,int64_t> predcnt;
     /**
      * Predicts whether or not the instruction is a taken branch, and the
