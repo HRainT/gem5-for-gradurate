@@ -219,6 +219,7 @@ class StatisticalCorrector : public SimObject
         bool predBeforeSC;
         bool usedScPred;
         int8_t pre_result = 0;
+        int16_t weight = 0;
         int8_t result = 0;
         uint32_t ut_index[8] = {0, 0, 0, 0, 0, 0, 0, 0};
         bool ut_valid[8][4] = {0, 0, 0, 0, 0, 0, 0, 0};

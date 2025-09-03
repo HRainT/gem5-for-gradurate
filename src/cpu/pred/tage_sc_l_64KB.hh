@@ -147,7 +147,7 @@ class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
     }
     struct UTEntry
     {
-        uint16_t u[4];
+        int16_t u[4];
         UTEntry() :u{0,0,0,0} { }
     };
     struct WTEntry

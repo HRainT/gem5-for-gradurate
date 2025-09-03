@@ -1301,7 +1301,7 @@ Fetch::fetch(bool &status_change)
                 for(int i=0; i<32; i++){
                     if(i == instruction->destRegIdx(0))
                         continue;
-                    else if(cpu->reg_ctr[i] < 255){
+                    else if(cpu->reg_ctr[i] < 255 && cpu->regtable[i] == true){
                         cpu->reg_ctr[i]++;
                     }
                     if(cpu->reg_ctr[i] == 255)

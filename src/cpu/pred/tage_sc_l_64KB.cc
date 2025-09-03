@@ -102,7 +102,7 @@ TAGE_SC_L_64KB_StatisticalCorrector::sRPredict(ThreadID tid, Addr pc, BranchInfo
     uint32_t ut_index[8];
     RegIndex regid[8];
     uint16_t Digest[8];
-    uint16_t u[8] = {0,0,0,0,0,0,0,0};
+    int16_t u[8] = {0,0,0,0,0,0,0,0};
     int cnt[8] = {4,4,4,4,4,4,4,4};
     int8_t weight[8] = {0,0,0,0,0,0,0,0};
     uint64_t key[8] = {0,0,0,0,0,0,0,0};
@@ -156,6 +156,7 @@ TAGE_SC_L_64KB_StatisticalCorrector::sRPredict(ThreadID tid, Addr pc, BranchInfo
     result = result >> 2;
     bi->pre_result = result;
     result = (1 + (wr[getIndUpds(pc)] >= 0)) * result;
+    bi->weight = (wr[getIndUpds(pc)] >= 0) ? 2 : 1;
     bi->result = result;
     return result;
 }
@@ -330,17 +331,18 @@ void
 TAGE_SC_L_64KB_StatisticalCorrector::rUpdates(ThreadID tid, Addr pc, bool taken, BranchInfo* bi, int64_t phist, std::vector<int8_t> & w)
 {
     DPRINTF(NewTage, "pc %lx Update; taken = %d\n", pc, taken);
-    int xsum = bi->lsum - ((wr[getIndUpds(pc)] >= 0)) * bi->pre_result;
-    if ((xsum + bi->pre_result >= 0) != (xsum >= 0)) {
-        ctrUpdate(wr[getIndUpds(pc)], ((bi->pre_result >= 0) == taken),
-                  extraWeightsWidth);
+    // int xsum = bi->lsum - ((wr[getIndUpds(pc)] >= 0)) * bi->pre_result;
+    // if ((xsum + bi->pre_result >= 0) != (xsum >= 0)) {
+    //     ctrUpdate(wr[getIndUpds(pc)], ((bi->pre_result >= 0) == taken),
+    //               extraWeightsWidth);
+    // }
+    int lsum_w1 = bi->lsum - bi->result + 1 * bi->pre_result;
+    int lsum_w2 = bi->lsum - bi->result + 2 * bi->pre_result;
+    if ((lsum_w1 >= 0) != (lsum_w2 >= 0)) {
+        ctrUpdate(wr[getIndUpds(pc)], ((bi->pre_result >= 0) == taken), extraWeightsWidth);
     }
-
     for(int i = 0; i < 8; i++){
         if(!bi->ut_bank_vld[i]){
-            continue;
-        }
-        else{
             std::vector<int> valid_indices;
             for(int j = 0; j < 4; j++){
                 if(!bi->ut_valid[i][j]){
@@ -350,26 +352,32 @@ TAGE_SC_L_64KB_StatisticalCorrector::rUpdates(ThreadID tid, Addr pc, bool taken,
                     valid_indices.push_back(j);
                 }
             }
+            static std::random_device rd;
+            static std::mt19937 gen(rd());
+            std::uniform_int_distribution<size_t> dist(0, valid_indices.size() - 1);      
+            size_t random_index = dist(gen);
+            int selected_j = valid_indices[random_index];          
+            if(Utable[i][bi->ut_index[i]].u[selected_j] < ((1 << (6 - 1)) - 1))
+                Utable[i][bi->ut_index[i]].u[selected_j] += 1;
+        }
+        else{
             for(int j = 0; j < 3; ++j){
                 if(Wtable[i][j][bi->wt_index[i][j]] < 8 && taken)
                     Wtable[i][j][bi->wt_index[i][j]] += 1;
                 else if(Wtable[i][j][bi->wt_index[i][j]] > -8 && !taken)
                     Wtable[i][j][bi->wt_index[i][j]] -= 1;
             }
-            if(!valid_indices.size()){
-                continue;
-            }
-            static std::random_device rd;
-            static std::mt19937 gen(rd());
-            std::uniform_int_distribution<size_t> dist(0, valid_indices.size() - 1);      
-            size_t random_index = dist(gen);
-            int selected_j = valid_indices[random_index];
-            // int selected_j = bi->ut_j[i];
-            if(taken && (bi->per_bank[i] > 0) || !taken && (bi->per_bank[i] < 0)){
+
+            int base = bi->lsum - bi->result; 
+            int bank_scaled = bi->per_bank[i] >> 2;
+            int bank_weighted = bi->weight * bank_scaled;
+            bool influence = ((base + bank_weighted) >= 0) != (base >= 0);
+            int selected_j = bi->ut_j[i];
+            if((taken && (bi->per_bank[i] > 0)) || (!taken && (bi->per_bank[i] < 0))){
                 if(Utable[i][bi->ut_index[i]].u[selected_j] < ((1 << (6 - 1)) - 1))
                     Utable[i][bi->ut_index[i]].u[selected_j] += 1;
             }
-            else if(!taken && (bi->per_bank[i] > 0) || taken && (bi->per_bank[i] < 0)){
+            else if((!taken && (bi->per_bank[i] > 0)) || (taken && (bi->per_bank[i] < 0))){
                 if(Utable[i][bi->ut_index[i]].u[selected_j] > -(1 << (6 - 1)))
                     Utable[i][bi->ut_index[i]].u[selected_j] -= 1;
             }
