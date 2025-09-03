@@ -518,6 +518,7 @@ class CPU : public BaseCPU
     TimeBuffer<IEWStruct> iewQueue;
     bool regtable[32] = {false}; 
     std::map<RegIndex, uint16_t> digestMap;
+    uint32_t reg_ctr[32] = {0};
   private:
     /** The activity recorder; used to tell if the CPU has any
      * activity remaining or if it can go to idle and deschedule

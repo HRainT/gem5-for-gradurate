@@ -325,10 +325,10 @@ void TAGE::getBranchNetHistory(ThreadID tid,std::vector<uint64_t>& out,unsigned 
         }
     }
         if(squashed){
-            DPRINTF(NewTage, "Squash for pc:%lx; taken?:%d, tage_pred?:%d, tage_ctr:%d, reg_pred?:%d, reg_ctr:%d\n",
-                  pc, taken, tage_bi->provider == 1?tage_bi->longestMatchPred:tage_bi->altTaken, 
-                  tage_bi->provider == 1?tage_bi->hit_ctr:(tage_bi->provider == 2?tage_bi->alt_ctr:0),
-                  tage_bi->result > 0?1:0, tage_bi->result);
+            // DPRINTF(NewTage, "Squash for pc:%lx; taken?:%d, tage_pred?:%d, tage_ctr:%d, reg_pred?:%d, reg_ctr:%d\n",
+            //       pc, taken, tage_bi->provider == 1?tage_bi->longestMatchPred:tage_bi->altTaken, 
+            //       tage_bi->provider == 1?tage_bi->hit_ctr:(tage_bi->provider == 2?tage_bi->alt_ctr:0),
+            //       tage_bi->result > 0?1:0, tage_bi->result);
         }
        /***********end************/
       bool needSquashed = squashed && !tage_bi->usebranchnet 

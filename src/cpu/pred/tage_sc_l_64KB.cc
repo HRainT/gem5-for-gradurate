@@ -40,6 +40,7 @@
  */
 
 #include "cpu/pred/tage_sc_l_64KB.hh"
+#include "debug/NewTage.hh"
 
 namespace gem5
 {
@@ -121,6 +122,7 @@ TAGE_SC_L_64KB_StatisticalCorrector::sRPredict(ThreadID tid, Addr pc, BranchInfo
                         u[i] = Utable[i][ut_index[i]].u[j];
                         regid[i] = i*4 + j;
                         Digest[i] = inst->digestMap[i*4 + j];
+                        bi->ut_j[i] = j;
                     }
                     else{
                         cnt[i]--;
@@ -130,7 +132,7 @@ TAGE_SC_L_64KB_StatisticalCorrector::sRPredict(ThreadID tid, Addr pc, BranchInfo
                     cnt[i]--;
                 }
             }
-            if(!cnt[i]){
+            if(cnt[i]){
                 bi->ut_bank_vld[i] = true;
                 int prebank = 0;
                 for(int j = 0; j < 3; ++j){
@@ -164,42 +166,61 @@ TAGE_SC_L_64KB_StatisticalCorrector::gPredictions(ThreadID tid, Addr branch_pc,
 {
     SC_64KB_ThreadHistory *sh =
         static_cast<SC_64KB_ThreadHistory *>(scHistory);
+    DPRINTF(NewTage, "pc %lx Begin; tage pred:%d, lsum:%d\n", branch_pc, bi->predBeforeSC, lsum);
+    int trans;
 
-    lsum += gPredict(
+    trans = gPredict(
         (branch_pc << 1) + bi->predBeforeSC, sh->bwHist, bwm,
         bwgehl, bwnb, logBwnb, wbw);
+    DPRINTF(NewTage, "pc %lx, bwm:%d\n", branch_pc, trans);
+    lsum += trans;
 
-    lsum += gPredict(
+    trans = gPredict(
         branch_pc, pathHist, pm, pgehl, pnb, logPnb, wp);
+    DPRINTF(NewTage, "pc %lx, wp:%d\n", branch_pc, trans);
+    lsum += trans;
 
-    lsum += gPredict(
+    trans = gPredict(
         branch_pc, sh->getLocalHistory(1, branch_pc), lm,
         lgehl, lnb, logLnb, wl);
+    DPRINTF(NewTage, "pc %lx, lm:%d\n", branch_pc, trans);
+    lsum += trans;
 
-    lsum += gPredict(
+    trans = gPredict(
         branch_pc, sh->getLocalHistory(2, branch_pc), sm,
         sgehl, snb, logSnb, ws);
+    DPRINTF(NewTage, "pc %lx, sm:%d\n", branch_pc, trans);
+    lsum += trans;
 
-    lsum += gPredict(
+    trans = gPredict(
         branch_pc, sh->getLocalHistory(3, branch_pc), tm,
         tgehl, tnb, logTnb, wt);
+    DPRINTF(NewTage, "pc %lx, tm:%d\n", branch_pc, trans);
+    lsum += trans;
 
-    lsum += gPredict(
+    trans = gPredict(
         branch_pc, sh->imHist[scHistory->imliCount], imm,
         imgehl, imnb, logImnb, wim);
+    DPRINTF(NewTage, "pc %lx, imm:%d\n", branch_pc, trans);
+    lsum += trans;
 
-    lsum += gPredict(
+    trans = gPredict(
         branch_pc, sh->imliCount, im, igehl, inb, logInb, wi);
-    // lsum += sRPredict(tid, branch_pc, bi, inst);
+    DPRINTF(NewTage, "pc %lx, wi:%d\n", branch_pc, trans);
+    lsum += trans;
+
+    trans = sRPredict(tid, branch_pc, bi, inst);
+    DPRINTF(NewTage, "pc %lx, SR:%d\n", branch_pc, trans);
+    lsum += trans;
 
     int thres = (updateThreshold>>3) + pUpdateThreshold[getIndUpd(branch_pc)]
       + 12*((wb[getIndUpds(branch_pc)] >= 0) + (wp[getIndUpds(branch_pc)] >= 0)
       + (ws[getIndUpds(branch_pc)] >= 0) + (wt[getIndUpds(branch_pc)] >= 0)
       + (wl[getIndUpds(branch_pc)] >= 0) + (wbw[getIndUpds(branch_pc)] >= 0)
       + (wi[getIndUpds(branch_pc)] >= 0) 
-    //   + (wr[getIndUpds(branch_pc)] >= 0)
+      + (wr[getIndUpds(branch_pc)] >= 0)
     );
-
+    DPRINTF(NewTage, "pc %lx End; tage pred:%d, lsum:%d, thres:%d\n", branch_pc, bi->predBeforeSC, lsum, thres);
     return thres;
 }
 
@@ -302,12 +323,13 @@ TAGE_SC_L_64KB_StatisticalCorrector::gUpdates(ThreadID tid, Addr pc,
 
     gUpdate(pc, taken, sh->imliCount, im,
             igehl, inb, logInb, wi, bi);
-    // rUpdates(tid, pc, taken, bi, phist, wr);
+    rUpdates(tid, pc, taken, bi, phist, wr);
 }
 
 void
-TAGE_SC_L_64KB_StatisticalCorrector::rUpdates( ThreadID tid, Addr pc, bool taken, BranchInfo* bi, int64_t phist, std::vector<int8_t> & w)
+TAGE_SC_L_64KB_StatisticalCorrector::rUpdates(ThreadID tid, Addr pc, bool taken, BranchInfo* bi, int64_t phist, std::vector<int8_t> & w)
 {
+    DPRINTF(NewTage, "pc %lx Update; taken = %d\n", pc, taken);
     int xsum = bi->lsum - ((wr[getIndUpds(pc)] >= 0)) * bi->pre_result;
     if ((xsum + bi->pre_result >= 0) != (xsum >= 0)) {
         ctrUpdate(wr[getIndUpds(pc)], ((bi->pre_result >= 0) == taken),
@@ -315,13 +337,13 @@ TAGE_SC_L_64KB_StatisticalCorrector::rUpdates( ThreadID tid, Addr pc, bool taken
     }
 
     for(int i = 0; i < 8; i++){
-        if(bi->ut_bank_vld[i]){
+        if(!bi->ut_bank_vld[i]){
             continue;
         }
         else{
             std::vector<int> valid_indices;
             for(int j = 0; j < 4; j++){
-                if(bi->ut_valid[i][j]){
+                if(!bi->ut_valid[i][j]){
                     continue;
                 }
                 else{
@@ -342,6 +364,7 @@ TAGE_SC_L_64KB_StatisticalCorrector::rUpdates( ThreadID tid, Addr pc, bool taken
             std::uniform_int_distribution<size_t> dist(0, valid_indices.size() - 1);      
             size_t random_index = dist(gen);
             int selected_j = valid_indices[random_index];
+            // int selected_j = bi->ut_j[i];
             if(taken && (bi->per_bank[i] > 0) || !taken && (bi->per_bank[i] < 0)){
                 if(Utable[i][bi->ut_index[i]].u[selected_j] < ((1 << (6 - 1)) - 1))
                     Utable[i][bi->ut_index[i]].u[selected_j] += 1;

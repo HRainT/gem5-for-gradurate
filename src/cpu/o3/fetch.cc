@@ -529,6 +529,7 @@ Fetch::lookupAndUpdateNextPC(DynInstPtr &inst, PCStateBase &next_pc)
     for(int i = 0; i < 32; i++){
         inst->staticInst->setRegTable(i,cpu->regtable[i]);
         inst->staticInst->setDigestMap(i, cpu->digestMap[i]);
+        // inst->staticInst->setRegCtr(i,cpu->reg_ctr[i]);
     }
     ThreadID tid = inst->threadNumber;
     predict_taken = branchPred->predict(inst->staticInst, inst->seqNum,
@@ -1297,6 +1298,15 @@ Fetch::fetch(bool &status_change)
             set(next_pc, this_pc);
             if(instruction->numDestRegs() > 0 && !instruction->destRegIdx(0).isZeroReg()){
                 cpu->regtable[instruction->destRegIdx(0)] = false;
+                for(int i=0; i<32; i++){
+                    if(i == instruction->destRegIdx(0))
+                        continue;
+                    else if(cpu->reg_ctr[i] < 255){
+                        cpu->reg_ctr[i]++;
+                    }
+                    if(cpu->reg_ctr[i] == 255)
+                        cpu->regtable[i] = false;
+                }
             }
             if(instruction->isControl()){
                 DPRINTF(Fetch, "[sn:%lli] Inst is Control,delay 3 cycle\n", instruction->seqNum);

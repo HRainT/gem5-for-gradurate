@@ -42,6 +42,7 @@
 #include "cpu/pred/statistical_corrector.hh"
 
 #include "params/StatisticalCorrector.hh"
+#include "debug/NewTage.hh"
 
 namespace gem5
 {
@@ -256,7 +257,7 @@ StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
         lsum = (1 + (wb[getIndUpds(branch_pc)] >= 0)) * lsum;
 
         int thres = gPredictions(tid, branch_pc, bi, lsum, phist,inst);
-
+        DPRINTF(NewTage, "pc %lx, highConf:%d, medConf:%d, lowConf:%d, firstH:%d, secondH:%d\n", branch_pc, bi->highConf, bi->medConf, bi->lowConf, firstH, secondH);
         // These will be needed at update time
         bi->lsum = lsum;
         bi->thres = thres;
@@ -286,6 +287,7 @@ StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
                 bi->scPred = scPred;
             }
         }
+        DPRINTF(NewTage, "pc %lx Final Pred; taken = %d, useScPred = %d\n", branch_pc, pred_taken, bi->usedScPred);
     }
 
     return pred_taken;

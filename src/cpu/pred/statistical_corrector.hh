@@ -226,6 +226,7 @@ class StatisticalCorrector : public SimObject
         uint32_t wt_index[8][3] = {0, 0, 0, 0, 0, 0, 0, 0};
         int8_t wt_ctr[8][3] = {0, 0, 0, 0, 0, 0, 0, 0};
         int16_t per_bank[8] = {0, 0, 0, 0, 0, 0, 0, 0}; 
+        uint8_t ut_j[8] = {0, 0, 0, 0, 0, 0, 0, 0}; 
     };
 
     StatisticalCorrector(const StatisticalCorrectorParams &p);

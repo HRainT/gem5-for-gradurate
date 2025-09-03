@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mode=9
+mode=10
 if [ $1 ]; then
     mode=$1
 fi
@@ -213,7 +213,7 @@ elif [ $mode = 9 ]; then
     time \
     build/RISCV/gem5.opt \
     --outdir=out/473.astar/BigLakes/11757 \
-    --stats-file stats_0822_new_tagesc.txt \
+    --stats-file stats_0827_new_tagesc_utUpdateNotRandom.txt \
     configs/example/fs.py \
     --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/11757/_11757_0.066769_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
@@ -251,8 +251,8 @@ elif [ $mode = 10 ]; then
     build/RISCV/gem5.opt \
     --outdir=out/473.astar/BigLakes/11757 \
     --debug-flag NewTage \
-    --debug-file trace-0819_tagesc.log \
-    --stats-file stats_0819_tagesc.txt \
+    --debug-file debug_0829_newtagesc.log \
+    --stats-file stats_0829_newtagesc.txt \
     configs/example/fs.py \
     --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/11757/_11757_0.066769_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \

@@ -109,6 +109,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     uint32_t _numMicroops;
     bool useBranchNet = false;
     bool regtable[32]; 
+    // uint32_t reg_ctr[32]
     /** For mask index vload/store */
     mutable bool vElemMask = false;
 
@@ -166,6 +167,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     //@{
     void setRegTable(int regid,bool valid){regtable[regid] = valid;}
     void setDigestMap(int regid,uint16_t digest){digestMap[regid] = digest;}
+    // void setRegCtr(int regid,int ctr){reg_ctr[regid] = ctr;}
     void setRenamedDestIdx(PhysRegIdPtr destIdx) {_destIdx = destIdx;}
     PhysRegIdPtr         getRenamedDestIdx() const {return _destIdx;}
     void setRenamedVs1Idx(PhysRegIdPtr destIdx) {_vs1Idx = destIdx;}
