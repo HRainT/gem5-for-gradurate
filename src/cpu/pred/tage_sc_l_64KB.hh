@@ -145,6 +145,37 @@ class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
         x ^= mixBankSalt(bank);
         return (uint32_t)(x & ((1u << logUt) - 1)); // logUt=8 → 256 项
     }
+    class RunLts{
+        public:
+            struct UTEntry
+            {
+                int16_t u;
+                UTEntry() :u{-8} { }
+            };
+            struct WTEntry
+            {
+                int8_t weight = 0;
+                WTEntry() : weight(0) { }
+            };
+            inline static UTEntry Utable[3][256] = {};
+            inline static WTEntry Wtable0[8][512] = {};
+            inline static WTEntry Wtable1[8][256] = {};
+            inline static WTEntry Wtable2[8][128] = {};
+            static void WtableUpdate(uint16_t i1, uint16_t i2, uint16_t i3, int i, bool taken){
+                if(RunLts::Wtable0[i][i1].weight < 8 && taken)
+                    RunLts::Wtable0[i][i1].weight++;
+                if(RunLts::Wtable1[i][i2].weight < 8 && taken)
+                    RunLts::Wtable1[i][i2].weight++;
+                if(RunLts::Wtable2[i][i3].weight < 8 && taken)
+                    RunLts::Wtable2[i][i3].weight++;                    
+                if(RunLts::Wtable0[i][i1].weight > -8 && !taken)
+                    RunLts::Wtable0[i][i1].weight--;
+                if(RunLts::Wtable1[i][i2].weight > -8 && !taken)
+                    RunLts::Wtable1[i][i2].weight--;
+                if(RunLts::Wtable2[i][i3].weight > -8 && !taken)
+                    RunLts::Wtable2[i][i3].weight--;    
+            }
+    };
     struct UTEntry
     {
         int16_t u[4];

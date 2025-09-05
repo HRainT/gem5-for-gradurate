@@ -228,6 +228,10 @@ class StatisticalCorrector : public SimObject
         int8_t wt_ctr[8][3] = {0, 0, 0, 0, 0, 0, 0, 0};
         int16_t per_bank[8] = {0, 0, 0, 0, 0, 0, 0, 0}; 
         uint8_t ut_j[8] = {0, 0, 0, 0, 0, 0, 0, 0}; 
+
+        uint8_t ut_index1[8][3] = {0, 0, 0, 0, 0, 0, 0, 0};
+        uint16_t wt_index1[8][3] = {0, 0, 0, 0, 0, 0, 0, 0};
+        uint16_t digest[32] = {0};
     };
 
     StatisticalCorrector(const StatisticalCorrectorParams &p);

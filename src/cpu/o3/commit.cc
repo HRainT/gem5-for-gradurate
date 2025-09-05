@@ -988,10 +988,10 @@ Commit::commitInsts()
                     } else {
                         dest_val = cpu->getReg(phys_reg, tid);
                     }
-                    // uint16_t digest = make_int_digest(dest_val);
-                    // cpu->regtable[head_inst->destRegIdx(0)] = true;
-                    // cpu->digestMap[head_inst->destRegIdx(0)] = digest;
-                    // cpu->reg_ctr[head_inst->destRegIdx(0)] = 0;
+                    uint16_t digest = make_int_digest((uint64_t)dest_val);
+                    cpu->regtable[head_inst->destRegIdx(0)] = true;
+                    cpu->digestMap[head_inst->destRegIdx(0)] = digest;
+                    cpu->reg_ctr[head_inst->destRegIdx(0)] = 0;
                 }
                 uint64_t high = (uint64_t)(dest_val >> 64);
                 uint64_t low = (uint64_t)dest_val;
