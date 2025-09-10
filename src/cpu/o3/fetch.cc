@@ -1297,16 +1297,20 @@ Fetch::fetch(bool &status_change)
 #endif
             set(next_pc, this_pc);
             if(instruction->numDestRegs() > 0 && !instruction->destRegIdx(0).isZeroReg()){
-                cpu->regtable[instruction->destRegIdx(0)] = false;
                 for(int i=0; i<32; i++){
-                    if(i == instruction->destRegIdx(0))
+                    if(!cpu->regtable[i])
                         continue;
-                    else if(cpu->reg_ctr[i] < 255 && cpu->regtable[i] == true){
-                        cpu->reg_ctr[i]++;
-                    }
-                    if(cpu->reg_ctr[i] == 255)
+                    else if(cpu->reg_ctr[i] == 255){
                         cpu->regtable[i] = false;
+                        cpu->reg_ctr[i] = 0;
+                    }
+                    else{
+                        ++cpu->reg_ctr[i];
+                    }
                 }
+                cpu->regtable[instruction->destRegIdx(0)] = false;
+                cpu->reg_ctr[instruction->destRegIdx(0)] = 0;
+                cpu->RegSnMap[instruction->destRegIdx(0)] = instruction->seqNum;
             }
             if(instruction->isControl()){
                 DPRINTF(Fetch, "[sn:%lli] Inst is Control,delay 3 cycle\n", instruction->seqNum);

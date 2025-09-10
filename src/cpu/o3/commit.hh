@@ -251,42 +251,45 @@ class Commit
 //                       lsb6;
 //     return digest;          // bits[11:0]
 // }
-static inline uint16_t make_int_digest(uint64_t v)
+static inline uint16_t make_int_digest(uint32_t v)
 {
-    // Flags
-    const uint16_t sign = (v >> 63) & 1;
+    const uint16_t sign    = (v >> 31) & 1u;
     const uint16_t is_zero = (v == 0);
-    // 绝对值（处理 INT64_MIN：用按位或 1 防止 clz 未定义）
-    uint64_t mag = (int64_t)v < 0 ? (~v + 1) : v;
-    mag |= 1ull;
 
-    // log2(|v|) -> 0..63，压缩/饱和到 3bit 桶（你也可用 min(7, msb_idx)）
-    int msb_idx = 63 - __builtin_clzll(mag);
-    uint16_t msb_bucket = (uint16_t)std::min(msb_idx, 7);
+    uint32_t mag = (int32_t)v < 0 ? (uint32_t)(~v + 1u) : v;
+    int msb_idx = (mag ? (31 - __builtin_clz(v)) : 0);
+    uint16_t msb_bucket = (uint16_t)std::min(msb_idx / 4, 7);  // 8 桶
 
-    // 尾部0计数（ctz(0)未定义，因此对 v==0 用上面的 is_zero 护航）
-    int tz = __builtin_ctzll(v | 1ull);
+    int tz = __builtin_ctz(v | 1u);
     uint16_t ctz_bucket = (uint16_t)std::min(tz, 7);
 
-    // 2 的幂检测（排除 0）
-    uint16_t is_pow2 = (mag && ((mag & (mag - 1)) == 0)) ? 1 : 0;
+    auto is_pow2_abs = (mag && ((mag & (mag - 1)) == 0));
+    uint16_t is_contig_ones = 0;
+    if (v) {
+        int lo = __builtin_ctz(v);
+        int hi = 31 - __builtin_clz(v);
+        int width = hi - lo + 1;
+        uint32_t mask = (width == 32) ? 0xFFFFFFFFu : (((1u << width) - 1u) << lo);
+        is_contig_ones = (v == mask);
+    }
+    uint16_t is_masklike = (is_pow2_abs || is_contig_ones) ? 1 : 0;
 
-    // 32 位符号扩展检测
-    uint16_t signext32 = (((int64_t)(int32_t)v) == (int64_t)v) ? 1 : 0;
+    // imm12 适配（slti/sltiu 常见）
+    uint16_t fits_imm12 = ((int32_t)v >= -2048 && (int32_t)v <= 2047) ? 1 : 0;
 
-    // 低位折叠 2 bit（比直接取 LSB2 更抗对齐/步进）：跨段 XOR 后再取 2 位
-    uint16_t fold2 = (uint16_t)((v ^ (v >> 6) ^ (v >> 12) ^ (v >> 24) ^ (v >> 36) ^ (v >> 48)) & 0x3);
+    uint16_t fold2 = (uint16_t)((v ^ (v >> 5) ^ (v >> 11) ^ (v >> 17) ^ (v >> 23) ^ (v >> 29)) & 0x3);
 
     uint16_t d = 0;
-    d |= (sign      & 1u) << 11;
-    d |= (is_zero   & 1u) << 10;
-    d |= (is_pow2   & 1u) << 9;
-    d |= (signext32 & 1u) << 8;
-    d |= (msb_bucket & 7u) << 5;
-    d |= (ctz_bucket & 7u) << 2;
-    d |= (fold2      & 3u) << 0;
+    d |= (sign        & 1u) << 11;
+    d |= (is_zero     & 1u) << 10;
+    d |= (is_masklike & 1u) << 9;
+    d |= (fits_imm12  & 1u) << 8;
+    d |= (msb_bucket  & 7u) << 5;
+    d |= (ctz_bucket  & 7u) << 2;
+    d |= (fold2       & 3u) << 0;
     return d;
 }
+
 
   private:
     /** Updates the overall status of commit with the nextStatus, and
