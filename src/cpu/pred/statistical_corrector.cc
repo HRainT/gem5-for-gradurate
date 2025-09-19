@@ -246,7 +246,7 @@ StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
         }
 
         int lsum = init_lsum;
-
+        DPRINTF(NewTage, "pc %lx SC Begin;\n", branch_pc);
         int8_t ctr = bias[getIndBias(branch_pc, bi, bias_bit)];
         lsum += (2 * ctr + 1);
         ctr = biasSK[getIndBiasSK(branch_pc, bi)];
@@ -255,7 +255,7 @@ StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
         lsum += (2 * ctr + 1);
 
         lsum = (1 + (wb[getIndUpds(branch_pc)] >= 0)) * lsum;
-
+        DPRINTF(NewTage, "pc %lx, bias:%d\n", branch_pc, lsum);
         int thres = gPredictions(tid, branch_pc, bi, lsum, phist,inst);
         DPRINTF(NewTage, "pc %lx, highConf:%d, medConf:%d, lowConf:%d, firstH:%d, secondH:%d\n", branch_pc, bi->highConf, bi->medConf, bi->lowConf, firstH, secondH);
         // These will be needed at update time
@@ -312,16 +312,16 @@ StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
         }
 
         int lsum = init_lsum;
-
+        DPRINTF(NewTage, "pc %lx SC Begin;\n", branch_pc);
         int8_t ctr = bias[getIndBias(branch_pc, bi, bias_bit)];
         lsum += (2 * ctr + 1);
         ctr = biasSK[getIndBiasSK(branch_pc, bi)];
         lsum += (2 * ctr + 1);
         ctr = biasBank[getIndBiasBank(branch_pc, bi, hitBank, altBank)];
         lsum += (2 * ctr + 1);
-
+        
         lsum = (1 + (wb[getIndUpds(branch_pc)] >= 0)) * lsum;
-
+        DPRINTF(NewTage, "pc %lx, bias:%d\n", branch_pc, lsum);
         int thres = gPredictions(tid, branch_pc, bi, lsum, phist);
 
         // These will be needed at update time

@@ -1250,19 +1250,20 @@ IEW::executeInsts()
 
         // __uint128_t dest_val = 0;
         // if (inst->numDestRegs() > 0 && !inst->destRegIdx(0).isZeroReg()) {
-        //     PhysRegIdPtr phys_reg = inst->renamedDestIdx(0);
-        //     RegClassType type = phys_reg->classValue();
-        //     RegIndex idx = phys_reg->index();
-        //     if (type == VecRegClass || type == VecElemClass) {
-        //         dest_val = cpu->getVectorReg(phys_reg);
-        //     } else {
-        //         dest_val = cpu->getReg(phys_reg, 0);
+        //         PhysRegIdPtr phys_reg = inst->renamedDestIdx(0);
+        //         RegClassType type = phys_reg->classValue();
+        //         RegIndex idx = phys_reg->index();
+        //         if (type == VecRegClass || type == VecElemClass) {
+        //             dest_val = cpu->getVectorReg(phys_reg);
+        //         } else {
+        //             dest_val = cpu->getReg(phys_reg, 0);
+        //         }
+        //     if(cpu->regtable[inst->destRegIdx(0)] == false && cpu->RegSnMap[inst->destRegIdx(0)] == inst->seqNum) {
+        //         cpu->regtable[inst->destRegIdx(0)] = true;
+        //         cpu->digestMap[inst->destRegIdx(0)] = make_int_digest((uint64_t)dest_val,inst->destRegIdx(0));
         //     }
-        //     uint16_t digest = Commit::make_int_digest(dest_val);
-        //     cpu->regtable[inst->destRegIdx(0)] = true;
-        //     cpu->digestMap[inst->destRegIdx(0)] = digest;
-        //     cpu->reg_ctr[inst->destRegIdx(0)] = 0;
         // }
+
         // Check if branch prediction was correct, if not then we need
         // to tell commit to squash in flight instructions.  Only
         // handle this if there hasn't already been something that

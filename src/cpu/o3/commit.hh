@@ -251,45 +251,63 @@ class Commit
 //                       lsb6;
 //     return digest;          // bits[11:0]
 // }
-static inline uint16_t make_int_digest(uint32_t v)
-{
-    const uint16_t sign    = (v >> 31) & 1u;
-    const uint16_t is_zero = (v == 0);
+static inline uint64_t mix64(uint64_t x) {
+    x += 0x9e3779b97f4a7c15ull;
+    x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ull;
+    x = (x ^ (x >> 27)) * 0x94d049bb133111ebull;
+    x ^= x >> 31;
+    return x;
+}
+static inline int clz64(uint64_t x){ return x? __builtin_clzll(x) : 64; }
+static inline int ctz64(uint64_t x){ return x? __builtin_ctzll(x) : 64; }
 
-    uint32_t mag = (int32_t)v < 0 ? (uint32_t)(~v + 1u) : v;
-    int msb_idx = (mag ? (31 - __builtin_clz(v)) : 0);
-    uint16_t msb_bucket = (uint16_t)std::min(msb_idx / 4, 7);  // 8 桶
+uint16_t make_int_digest(uint64_t v, int reg_id){
+    uint64_t sign = v >> 63;
+    uint64_t clz6 = std::min(63, clz64(v)) & 0x3F;   // 6b
+    uint64_t ctz6 = std::min(63, ctz64(v)) & 0x3F;   // 6b
+    uint64_t pop4 = (__builtin_popcountll(v & 0xFFu) & 0xF); // 4b
+    uint64_t low12 = v & 0xFFFu;
 
-    int tz = __builtin_ctz(v | 1u);
-    uint16_t ctz_bucket = (uint16_t)std::min(tz, 7);
-
-    auto is_pow2_abs = (mag && ((mag & (mag - 1)) == 0));
-    uint16_t is_contig_ones = 0;
-    if (v) {
-        int lo = __builtin_ctz(v);
-        int hi = 31 - __builtin_clz(v);
-        int width = hi - lo + 1;
-        uint32_t mask = (width == 32) ? 0xFFFFFFFFu : (((1u << width) - 1u) << lo);
-        is_contig_ones = (v == mask);
-    }
-    uint16_t is_masklike = (is_pow2_abs || is_contig_ones) ? 1 : 0;
-
-    // imm12 适配（slti/sltiu 常见）
-    uint16_t fits_imm12 = ((int32_t)v >= -2048 && (int32_t)v <= 2047) ? 1 : 0;
-
-    uint16_t fold2 = (uint16_t)((v ^ (v >> 5) ^ (v >> 11) ^ (v >> 17) ^ (v >> 23) ^ (v >> 29)) & 0x3);
-
-    uint16_t d = 0;
-    d |= (sign        & 1u) << 11;
-    d |= (is_zero     & 1u) << 10;
-    d |= (is_masklike & 1u) << 9;
-    d |= (fits_imm12  & 1u) << 8;
-    d |= (msb_bucket  & 7u) << 5;
-    d |= (ctz_bucket  & 7u) << 2;
-    d |= (fold2       & 3u) << 0;
-    return d;
+    uint64_t feat = (sign << 63)
+                  ^ (clz6 << 48) ^ (ctz6 << 40) ^ (pop4 << 32)
+                  ^ (low12 << 16) ^ (uint64_t(reg_id) << 8) ^ (v & 0xFF);
+    uint64_t h = mix64(feat) ^ mix64(v ^ (uint64_t(reg_id) * 0x9e3779b97f4a7c15ull));
+    return (h ^ (h >> 12)) & 0xFFF; // 12-bit
 }
 
+void logUniqueInt(int value, const std::string& filename) {
+    static std::unordered_set<int> seenValues; // 静态集合跟踪已处理的值
+    static std::mutex mtx;                     // 静态互斥锁保证线程安全
+
+    // 加锁检查值是否已存在
+    std::lock_guard<std::mutex> lock(mtx);
+    if (seenValues.find(value) != seenValues.end()) {
+        return; // 如果值已存在则直接返回
+    }
+
+    // 打开文件检查磁盘中的历史记录（可选步骤）
+    std::ifstream inFile(filename);
+    if (inFile.is_open()) {
+        int existingValue;
+        while (inFile >> existingValue) {
+            if (existingValue == value) {
+                seenValues.insert(value); // 将值加入集合后返回
+                return;
+            }
+        }
+        inFile.close();
+    }
+
+    // 写入新值到文件并更新集合
+    std::ofstream outFile(filename, std::ios::app);
+    if (outFile.is_open()) {
+        outFile << value << std::endl;
+        seenValues.insert(value); // 记录已写入的值
+    } else {
+        // 文件打开失败处理（可根据需求添加错误处理）
+        throw std::runtime_error("无法打开日志文件: " + filename);
+    }
+}
 
   private:
     /** Updates the overall status of commit with the nextStatus, and

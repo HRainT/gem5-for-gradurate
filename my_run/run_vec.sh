@@ -173,12 +173,9 @@ elif [ $mode = 7 ]; then
 elif [ $mode = 8 ]; then
     time \
     build/RISCV/gem5.opt \
-    --outdir=out/cpu2006_build_gz/astar \
-    --debug-flag O3CPUAll \
-    --debug-file debug.log \
-    --stats-file stats.txt \
+    --outdir=out/473.astar/BigLakes/11757 \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/elf/cpu2006_build_gz/astar \
+    --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/11757/_11757_0.066769_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=O3CPU \
@@ -213,7 +210,7 @@ elif [ $mode = 9 ]; then
     time \
     build/RISCV/gem5.opt \
     --outdir=out/473.astar/BigLakes/11757 \
-    --stats-file stats_0909_new_tagesc.txt \
+    --stats-file stats_0918_new_tagesc_v1.txt \
     configs/example/fs.py \
     --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/11757/_11757_0.066769_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
@@ -251,8 +248,8 @@ elif [ $mode = 10 ]; then
     build/RISCV/gem5.opt \
     --outdir=out/473.astar/BigLakes/11757 \
     --debug-flag NewTage \
-    --debug-file debug_0908_newtagesc.log \
-    --stats-file stats_0908_newtagesc.txt \
+    --debug-file debug_0917_newtagesc.log \
+    --stats-file stats_0917_newtagesc.txt \
     configs/example/fs.py \
     --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/11757/_11757_0.066769_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \

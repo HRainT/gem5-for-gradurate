@@ -182,9 +182,12 @@ TAGE_SC_L_64KB_StatisticalCorrector::sRPredict(ThreadID tid, Addr pc, BranchInfo
                 if(inst->regtable[i*4 + j] != 0) {
                     bi->ut_valid[i][j] = true;
                     int reg_id = i*4 + j; 
-                    size_t idx1 = reg_id * 8 + ((pc ^ (pc >> 2)) % 8);
-                    size_t idx2 = reg_id * 8 + ((pc ^ (pc >> 4)) % 8);
-                    size_t idx3 = reg_id * 8 + ((pc ^ (pc >> 6)) % 8);
+                    // size_t idx1 = reg_id * 8 + ((pc ^ (pc >> 2)) % 8);
+                    // size_t idx2 = reg_id * 8 + ((pc ^ (pc >> 4)) % 8);
+                    // size_t idx3 = reg_id * 8 + ((pc ^ (pc >> 6)) % 8);
+                    uint32_t idx1 = ut_index1(1, pc, reg_id);
+                    uint32_t idx2 = ut_index1(2, pc, reg_id);
+                    uint32_t idx3 = ut_index1(3, pc, reg_id);
                     u_reg[reg_id] = RunLts::Utable[0][idx1].u + RunLts::Utable[1][idx2].u + RunLts::Utable[2][idx3].u;
                     bi->digest[reg_id] = inst->digestMap[reg_id];
                     if(u_reg[reg_id] > u[i]) {
@@ -205,11 +208,14 @@ TAGE_SC_L_64KB_StatisticalCorrector::sRPredict(ThreadID tid, Addr pc, BranchInfo
             }
             if(cnt[i]){
                 bi->ut_bank_vld[i] = true;
-                uint16_t PR = (pc ^ (pc >> 8) ^ Digest[i]) % 4096;
+                // uint16_t PR = (pc ^ (pc >> 8) ^ Digest[i]) % 4096;
                 uint8_t reg_id = i*4 + bi->ut_j[i];
-                uint16_t i1 = (PR + reg_id*633) & (512-1);
-                uint16_t i2 = (((PR >> 2) ^ (PR << 6)) + reg_id) & (256-1);
-                uint16_t i3 = (PR ^ (reg_id << 3)) & (128-1);
+                // uint16_t i1 = (PR + reg_id*633) & (512-1);
+                // uint16_t i2 = (((PR >> 2) ^ (PR << 6)) + reg_id) & (256-1);
+                // uint16_t i3 = (PR ^ (reg_id << 3)) & (128-1);
+                uint32_t i1 = wt_index1(pc, reg_id, Digest[i]);
+                uint32_t i2 = wt_index2(pc, reg_id, Digest[i]);
+                uint32_t i3 = wt_index3(pc, reg_id, Digest[i]);
                 bi->wt_index1[i][0] = i1;
                 bi->wt_index1[i][1] = i2;
                 bi->wt_index1[i][2] = i3;
@@ -227,7 +233,7 @@ TAGE_SC_L_64KB_StatisticalCorrector::sRPredict(ThreadID tid, Addr pc, BranchInfo
     }
     // result = result >> 2;
     bi->pre_result = result;
-    result = 5 * result;
+    result = Scale * result;
     // bi->weight = (wr[getIndUpds(pc)] >= 0) ? 2 : 1;
     bi->result = result;
     return result;
@@ -290,7 +296,7 @@ TAGE_SC_L_64KB_StatisticalCorrector::gPredictions(ThreadID tid, Addr branch_pc,
       + 12*((wb[getIndUpds(branch_pc)] >= 0) + (wp[getIndUpds(branch_pc)] >= 0)
       + (ws[getIndUpds(branch_pc)] >= 0) + (wt[getIndUpds(branch_pc)] >= 0)
       + (wl[getIndUpds(branch_pc)] >= 0) + (wbw[getIndUpds(branch_pc)] >= 0)
-      + (wi[getIndUpds(branch_pc)] >= 0)) + 5 * 6;
+      + (wi[getIndUpds(branch_pc)] >= 0)) + Scale * 6;
     DPRINTF(NewTage, "pc %lx End; tage pred:%d, lsum:%d, thres:%d\n", branch_pc, bi->predBeforeSC, lsum, thres);
     return thres;
 }
@@ -497,20 +503,26 @@ TAGE_SC_L_64KB_StatisticalCorrector::rUpdates(ThreadID tid, Addr pc, bool taken,
             int selected_j = valid_indices[random_index];    
             uint8_t reg_id = i*4 + selected_j;  
 
-            uint16_t PR = (pc ^ (pc >> 8) ^ bi->digest[reg_id]) & 4095;
-            uint16_t i1 = (PR + reg_id*633) & (512-1);
-            uint16_t i2 = (((PR >> 2) ^ (PR << 6)) + reg_id) & (256-1);
-            uint16_t i3 = (PR ^ (reg_id << 3)) & (128-1);
+            // uint16_t PR = (pc ^ (pc >> 8) ^ bi->digest[reg_id]) & 4095;
+            // uint16_t i1 = (PR + reg_id*633) & (512-1);
+            // uint16_t i2 = (((PR >> 2) ^ (PR << 6)) + reg_id) & (256-1);
+            // uint16_t i3 = (PR ^ (reg_id << 3)) & (128-1);
+            uint32_t i1 = wt_index1(pc, reg_id, bi->digest[reg_id]);
+            uint32_t i2 = wt_index2(pc, reg_id, bi->digest[reg_id]);
+            uint32_t i3 = wt_index3(pc, reg_id, bi->digest[reg_id]);
             int bank_scaled = RunLts::Wtable0[i][i1].weight + RunLts::Wtable1[i][i2].weight + RunLts::Wtable2[i][i3].weight;
             RunLts::WtableUpdate(i1, i2, i3, i, taken);
             
-            uint8_t idx1 = (uint8_t)(reg_id * 8 + ((pc ^ (pc >> 2)) & 7));
-            uint8_t idx2 = (uint8_t)(reg_id * 8 + ((pc ^ (pc >> 4)) & 7));
-            uint8_t idx3 = (uint8_t)(reg_id * 8 + ((pc ^ (pc >> 6)) & 7));
+            // uint8_t idx1 = (uint8_t)(reg_id * 8 + ((pc ^ (pc >> 2)) & 7));
+            // uint8_t idx2 = (uint8_t)(reg_id * 8 + ((pc ^ (pc >> 4)) & 7));
+            // uint8_t idx3 = (uint8_t)(reg_id * 8 + ((pc ^ (pc >> 6)) & 7));
+            uint32_t idx1 = ut_index1(1, pc, reg_id);
+            uint32_t idx2 = ut_index1(2, pc, reg_id);
+            uint32_t idx3 = ut_index1(3, pc, reg_id);            
             int c = bank_scaled;
             int ut = RunLts::Utable[0][idx1].u + RunLts::Utable[1][idx2].u + RunLts::Utable[2][idx3].u;
-            int XSUM = bi->lsum - c * 5 * (ut >= 0);
-            if((XSUM + 5 * c >= 0) != (XSUM >= 0)){
+            int XSUM = bi->lsum - c * Scale * (ut >= 0);
+            if((XSUM + Scale * c >= 0) != (XSUM >= 0)){
                 if((c >= 0) == taken){
                     if(RunLts::Utable[0][idx1].u <31)
                         RunLts::Utable[0][idx1].u += 1;
@@ -532,8 +544,8 @@ TAGE_SC_L_64KB_StatisticalCorrector::rUpdates(ThreadID tid, Addr pc, bool taken,
         else{
             RunLts::WtableUpdate(bi->wt_index1[i][0], bi->wt_index1[i][1], bi->wt_index1[i][2], i, taken);
             int c = bi->per_bank[i];
-            int XSUM = bi->lsum - c * 5;
-            if((XSUM + 5 * c >= 0) != (XSUM >= 0)){
+            int XSUM = bi->lsum - c * Scale;
+            if((XSUM + Scale * c >= 0) != (XSUM >= 0)){
                 int selected_j = bi->ut_j[i];
                 uint8_t reg_id = i*4 + selected_j;
                 if((c >= 0) == taken){

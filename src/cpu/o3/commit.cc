@@ -990,8 +990,10 @@ Commit::commitInsts()
                     }
                     if(cpu->regtable[head_inst->destRegIdx(0)] == false && cpu->RegSnMap[head_inst->destRegIdx(0)] == head_inst->seqNum) {
                         cpu->regtable[head_inst->destRegIdx(0)] = true;
-                        cpu->digestMap[head_inst->destRegIdx(0)] = make_int_digest((uint64_t)dest_val);
+                        cpu->digestMap[head_inst->destRegIdx(0)] = make_int_digest((uint64_t)dest_val,head_inst->destRegIdx(0));
                     }
+
+                    //  logUniqueInt(head_inst->destRegIdx(0),"/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/out/473.astar/BigLakes/11757/regid.log");
                 }
                 uint64_t high = (uint64_t)(dest_val >> 64);
                 uint64_t low = (uint64_t)dest_val;
