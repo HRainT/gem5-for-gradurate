@@ -1,0 +1,1 @@
+python3 `which scons` build/RISCV/gem5.fast --gold-linker -j32
