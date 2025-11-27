@@ -299,14 +299,14 @@ class TAGE_SC_L_TAGE_64KB(TAGE_SC_L_TAGE):
     cxx_class = "gem5::branch_prediction::TAGE_SC_L_TAGE_64KB"
     cxx_header = "cpu/pred/tage_sc_l_64KB.hh"
 
-    nHistoryTables = 36
+    nHistoryTables = 12
 
     minHist = 6
     maxHist = 3000
 
     tagTableUBits = 1
 
-    logTagTableSizes = [13]
+    logTagTableSizes = [14]
 
     # This is used to handle the 2-way associativity
     # (all odd entries are set to one, and if the corresponding even entry

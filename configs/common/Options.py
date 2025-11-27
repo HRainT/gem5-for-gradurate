@@ -916,7 +916,6 @@ def addCommonOptions(parser, default_isa: Optional[ISA] = None):
     parser.add_argument(
         "--sr",
         action="store_true",
-        default=False,
         help="Enable SR predictor",
     )
 

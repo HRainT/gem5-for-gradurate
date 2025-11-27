@@ -183,7 +183,7 @@ class System(SimObject):
 
     ucRP = Param.String("lru", "uop cache replace policy")
 
-    sr = Param.Bool(False, "Enable SR predictor")
+    sr = Param.Bool(True, "Enable SR predictor")
 
     BPUDelay = Param.Unsigned(2, "BPU delay in fetch")
 

@@ -109,24 +109,11 @@ TAGEBase::init()
        return;
     }
 
-    for ( int i = 0; i < nHistoryTables + 1; ++i )
-    {
-      assert ( logTagTableSizes[i] >= logBankNum );
-    }
-
-    // Current method for periodically resetting the u counter bits only
-    // works for 1 or 2 bits
-    // Also make sure that it is not 0
+    // 与 logTagTableSizes 无关的参数检查可以保留在前面
     assert(tagTableUBits <= 2 && (tagTableUBits > 0));
-
-    // we use int type for the path history, so it cannot be more than
-    // its size
     assert(pathHistBits <= (sizeof(int)*8));
-
-    // initialize the counter to half of the period
     assert(logUResetPeriod != 0);
     tCounter = initialTCounterValue;
-
     assert(histBufferSize > maxHist * 2);
 
     useAltPredForNewlyAllocated.resize( ( 1 << logBankNum ) * numUseAltOnNa, 0 );
@@ -139,15 +126,22 @@ TAGEBase::init()
         history.ptGhist = 0;
     }
 
+    // 先分配 histLengths
     histLengths = new int [nHistoryTables+1];
 
+    // 先计算并填充 tagTableTagWidths / logTagTableSizes
     calculateParameters();
 
+    // 现在向量尺寸必须是 nHistoryTables+1
     assert(tagTableTagWidths.size() == (nHistoryTables+1));
     assert(logTagTableSizes.size() == (nHistoryTables+1));
 
-    // First entry is for the Bimodal table and it is untagged in this
-    // implementation
+    // 再检查每个表的大小与 logBankNum 的关系
+    for (int i = 0; i <= nHistoryTables; ++i) {
+        assert(logTagTableSizes[i] >= logBankNum);
+    }
+
+    // bimodal 的 tag 宽度必须为 0
     assert(tagTableTagWidths[0] == 0);
 
     const uint64_t bimodalTableSize = 1ULL << logTagTableSizes[0];
@@ -160,6 +154,7 @@ TAGEBase::init()
     tableTags = new int [nHistoryTables+1];
     initialized = true;
 }
+
 
 void
 TAGEBase::initFoldedHistories(ThreadHistory & history)
