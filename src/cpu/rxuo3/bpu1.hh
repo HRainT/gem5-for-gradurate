@@ -103,6 +103,7 @@ class Bpu1
     /** process Insts.
      */
     void processInsts(ThreadID tid);
+    bool sr_on;
 
   private:
     /** Updates overall bpu1 status based on all of the threads' statuses. */

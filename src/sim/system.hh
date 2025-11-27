@@ -324,6 +324,7 @@ class System : public SimObject, public PCEventScope
     Addr loopendPC() const { return _loopendPC; }
     unsigned ucWidth() const { return _ucWidth; }
     std::string ucRP() const { return _uc_rp; }
+    bool sr() const { return _sr; }
     unsigned bpuDelay() const { return _bpu_delay; }
     unsigned fdivNums() const { return _fdiv_nums; }
     unsigned fdivDelay() const { return _fdiv_delay; }
@@ -444,6 +445,7 @@ class System : public SimObject, public PCEventScope
     const bool _use_rotating;
     const bool _ideal_rotating;
     const std::string _uc_rp;
+    bool _sr;
     const Addr _loopPC;
     const Addr _loopstartPC;
     const Addr _loopendPC;

@@ -193,6 +193,7 @@ System::System(const Params &p)
       _use_rotating(p.useRotating),
       _ideal_rotating(p.idealRotating),
       _uc_rp(p.ucRP),
+      _sr(p.sr),
       _loopPC(p.loopPC),
       _SpecificPC(p.SpecificPC),
       _loopstartPC(p.loopstartPC),

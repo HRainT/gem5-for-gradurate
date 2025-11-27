@@ -363,7 +363,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
 
 bool
 BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
-                   PCStateBase &pc, ThreadID tid, bool & pred_weak, int & pred_ctr, unsigned &BTBdelay)
+                   PCStateBase &pc, ThreadID tid, bool & pred_weak, int & pred_ctr, unsigned &BTBdelay, bool sr_on)
 {
     // See if branch predictor predicts taken.
     // If so, get its target addr either from the BTB, L2BTB or the RAS.
@@ -389,7 +389,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
         uncondBranch(tid, pc.instAddr(), bp_history);
     } else {
         ++stats.condPredicted;
-        pred_taken = lookup(tid, pc.instAddr(), bp_history, pred_weak, pred_ctr, inst);
+        pred_taken = lookup(tid, pc.instAddr(), bp_history, pred_weak, pred_ctr, inst, sr_on);
 
         DPRINTF(Branch, "[tid:%i] [sn:%llu] "
                 "Branch predictor predicted %i for PC %s\n",

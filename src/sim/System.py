@@ -183,6 +183,8 @@ class System(SimObject):
 
     ucRP = Param.String("lru", "uop cache replace policy")
 
+    sr = Param.Bool(False, "Enable SR predictor")
+
     BPUDelay = Param.Unsigned(2, "BPU delay in fetch")
 
     FdivNums = Param.Unsigned(2, "Number of float fdiv/fsqrt")

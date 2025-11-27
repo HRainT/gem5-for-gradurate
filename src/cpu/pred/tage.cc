@@ -43,6 +43,7 @@
 #include "base/trace.hh"
 #include "debug/Fetch.hh"
 #include "debug/Tage.hh"
+#include "sim/system.hh"
 
 namespace gem5
 {
@@ -104,9 +105,13 @@ TAGE::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b)
 }
 
 bool
-TAGE::lookup(ThreadID tid, Addr branch_pc, void* &bp_history, bool & pred_weak, int & pred_ctr, const StaticInstPtr &inst)
+TAGE::lookup(ThreadID tid, Addr branch_pc, void* &bp_history, bool & pred_weak, int & pred_ctr, const StaticInstPtr &inst, bool sr_on)
 {
-    bool retval = predict(tid, branch_pc, true, bp_history, inst);
+    bool retval;
+    if (sr_on) 
+        retval = predict(tid, branch_pc, true, bp_history, inst);
+    else
+        retval = predict(tid, branch_pc, true, bp_history);
 
     TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
 

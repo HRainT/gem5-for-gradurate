@@ -329,6 +329,9 @@ else:
 if args.uc_replace_policy:
     system.ucRP = args.uc_replace_policy
     
+if hasattr(args, "sr"):
+    system.sr = args.sr
+    
 if args.rotating:
     system.useRotating = True
 else:

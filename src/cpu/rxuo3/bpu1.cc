@@ -31,7 +31,8 @@ Bpu1::Bpu1(CPU *_cpu, const BaseRxuO3CPUParams &params)
       bpu0ToBpu1Delay(params.bpu0ToBpu1Delay),
       bpu1Width(params.bpu1Width),
       numThreads(params.numThreads),
-      stats(_cpu)
+      stats(_cpu), 
+      sr_on(params.system->sr())
 {
     if (bpu1Width > MaxWidth)
         fatal("bpu1Width (%d) is larger than compiled limit (%d),\n"
@@ -756,7 +757,7 @@ Bpu1::lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &next_pc)
         // inst->staticInst->setRegCtr(i,cpu->reg_ctr[i]);
     }
     predict_taken = branchPred->predict(inst->staticInst, inst->seqNum,
-                                        next_pc, tid, inst->pred_weak, inst->pred_ctr, L2BTBDelay);
+                                        next_pc, tid, inst->pred_weak, inst->pred_ctr, L2BTBDelay, sr_on);
 
     if (inst->isNonSpeculative() && inst->isReturn() && inst->isControl()) predict_taken = false;
 

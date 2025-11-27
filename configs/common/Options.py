@@ -913,7 +913,12 @@ def addCommonOptions(parser, default_isa: Optional[ISA] = None):
         action="store_true",
         help="whether to use ideal rotating",
     )
-
+    parser.add_argument(
+        "--sr",
+        action="store_true",
+        default=False,
+        help="Enable SR predictor",
+    )
 
 def addSEOptions(parser):
     # Benchmark options
