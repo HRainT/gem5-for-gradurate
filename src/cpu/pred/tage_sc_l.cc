@@ -356,6 +356,54 @@ TAGE_SC_L_TAGE::extraAltCalc(TAGEBase::BranchInfo* bi)
 }
 
 bool
+TAGE_SC_L::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b, const StaticInstPtr & inst)
+{
+    TageSCLBranchInfo *bi = new TageSCLBranchInfo(*tage,
+                                                  *statisticalCorrector,
+                                                  *loopPredictor);
+    b = (void*)(bi);
+
+    bool pred_taken = tage->tagePredict(tid, branch_pc, cond_branch,
+                                        bi->tageBranchInfo);
+    pred_taken = loopPredictor->loopPredict(tid, branch_pc, cond_branch,
+                                            bi->lpBranchInfo, pred_taken,
+                                            instShiftAmt);
+
+    if (bi->lpBranchInfo->loopPredUsed) {
+        bi->tageBranchInfo->provider = LOOP;
+    }
+
+    TAGE_SC_L_TAGE::BranchInfo* tage_scl_bi =
+        static_cast<TAGE_SC_L_TAGE::BranchInfo *>(bi->tageBranchInfo);
+
+    // Copy the confidences computed by TAGE
+    bi->scBranchInfo->lowConf = tage_scl_bi->lowConf;
+    bi->scBranchInfo->highConf = tage_scl_bi->highConf;
+    bi->scBranchInfo->altConf = tage_scl_bi->altConf;
+    bi->scBranchInfo->medConf = tage_scl_bi->medConf;
+
+    bool use_tage_ctr = bi->tageBranchInfo->hitBank > 0;
+    int8_t tage_ctr = use_tage_ctr ?
+        tage->getCtr(tage_scl_bi->hitBank, tage_scl_bi->hitBankIndex) : 0;
+    bool bias = (bi->tageBranchInfo->longestMatchPred !=
+                 bi->tageBranchInfo->altTaken);
+
+    pred_taken = statisticalCorrector->scPredict(tid, branch_pc, cond_branch,
+            bi->scBranchInfo, pred_taken, bias, use_tage_ctr, tage_ctr,
+            tage->getTageCtrBits(), bi->tageBranchInfo->hitBank,
+            bi->tageBranchInfo->altBank, tage->getPathHist(tid), inst);
+
+    if (bi->scBranchInfo->usedScPred) {
+        bi->tageBranchInfo->provider = SC;
+    }
+
+    // record final prediction
+    bi->lpBranchInfo->predTaken = pred_taken;
+
+    return pred_taken;
+}
+
+bool
 TAGE_SC_L::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b)
 {
     TageSCLBranchInfo *bi = new TageSCLBranchInfo(*tage,

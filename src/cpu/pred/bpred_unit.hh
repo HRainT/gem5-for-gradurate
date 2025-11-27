@@ -142,7 +142,7 @@ class BPredUnit : public SimObject
 
     // virtual bool lookup(ThreadID tid, Addr instPC, void * &bp_history, bool & pred_weak) = 0;
 
-    virtual bool lookup(ThreadID tid, Addr instPC, void * &bp_history, bool & pred_weak, int & pred_ctr) {
+    virtual bool lookup(ThreadID tid, Addr instPC, void * &bp_history, bool & pred_weak, int & pred_ctr, const StaticInstPtr &inst) {
         return true;
     };
 

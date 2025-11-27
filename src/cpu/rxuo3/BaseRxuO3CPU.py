@@ -331,7 +331,7 @@ class BaseRxuO3CPU(BaseCPU):
         TournamentBP(), "Branch Predictor"
     )
 
-    branchPredTAGE = Param.BranchPredictor(TAGE(), "Branch Predictor")
+    branchPredTAGE = Param.BranchPredictor(TAGE_SC_L_64KB(), "Branch Predictor")
 
     branchPredLocalBP = Param.BranchPredictor(
         LocalBP(), "LocalBP Branch Predictor"

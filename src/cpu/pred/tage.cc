@@ -104,9 +104,9 @@ TAGE::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b)
 }
 
 bool
-TAGE::lookup(ThreadID tid, Addr branch_pc, void* &bp_history, bool & pred_weak, int & pred_ctr)
+TAGE::lookup(ThreadID tid, Addr branch_pc, void* &bp_history, bool & pred_weak, int & pred_ctr, const StaticInstPtr &inst)
 {
-    bool retval = predict(tid, branch_pc, true, bp_history);
+    bool retval = predict(tid, branch_pc, true, bp_history, inst);
 
     TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
 

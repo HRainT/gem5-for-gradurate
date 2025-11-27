@@ -33,8 +33,7 @@ common_args = [
     "--warmup-insts-no-switch=20000000",
     "--maxinsts=40000000",
     "--rotating",
-    "--rxu-rename",
-    "--bp-type=DecoupledBPUWithFTB"
+    "--rxu-rename"
 ]
 
 

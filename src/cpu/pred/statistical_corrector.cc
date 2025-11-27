@@ -42,6 +42,7 @@
 #include "cpu/pred/statistical_corrector.hh"
 
 #include "params/StatisticalCorrector.hh"
+#include "debug/NewTage.hh"
 
 namespace gem5
 {
@@ -79,7 +80,7 @@ StatisticalCorrector::StatisticalCorrector(
     initGEHLTable(lnb, lm, lgehl, logLnb, wl, p.lWeightInitValue);
     initGEHLTable(bwnb, bwm, bwgehl, logBwnb, wbw, p.bwWeightInitValue);
     initGEHLTable(inb, im, igehl, logInb, wi, p.iWeightInitValue);
-
+    wr.resize(1 << logSizeUps, 7);
     updateThreshold = 35 << 3;
 
     pUpdateThreshold.resize(1 << logSizeUp, p.initialUpdateThresholdValue);
@@ -230,6 +231,72 @@ bool
 StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
                      BranchInfo* bi, bool prev_pred_taken, bool bias_bit,
                      bool use_conf_ctr, int8_t conf_ctr, unsigned conf_bits,
+                     int hitBank, int altBank, int64_t phist, const StaticInstPtr & inst, int init_lsum)
+{
+    bool pred_taken = prev_pred_taken;
+    if (cond_branch) {
+
+        bi->predBeforeSC = prev_pred_taken;
+
+        // first calc/update the confidences from the TAGE prediction
+        if (use_conf_ctr) {
+            bi->lowConf = (abs(2 * conf_ctr + 1) == 1);
+            bi->medConf = (abs(2 * conf_ctr + 1) == 5);
+            bi->highConf = (abs(2 * conf_ctr + 1) >= (1<<conf_bits) - 1);
+        }
+
+        int lsum = init_lsum;
+        DPRINTF(NewTage, "pc %lx SC Begin;\n", branch_pc);
+        int8_t ctr = bias[getIndBias(branch_pc, bi, bias_bit)];
+        lsum += (2 * ctr + 1);
+        ctr = biasSK[getIndBiasSK(branch_pc, bi)];
+        lsum += (2 * ctr + 1);
+        ctr = biasBank[getIndBiasBank(branch_pc, bi, hitBank, altBank)];
+        lsum += (2 * ctr + 1);
+
+        lsum = (1 + (wb[getIndUpds(branch_pc)] >= 0)) * lsum;
+        DPRINTF(NewTage, "pc %lx, bias:%d\n", branch_pc, lsum);
+        int thres = gPredictions(tid, branch_pc, bi, lsum, phist,inst);
+        DPRINTF(NewTage, "pc %lx, highConf:%d, medConf:%d, lowConf:%d, firstH:%d, secondH:%d\n", branch_pc, bi->highConf, bi->medConf, bi->lowConf, firstH, secondH);
+        // These will be needed at update time
+        bi->lsum = lsum;
+        bi->thres = thres;
+
+        bool scPred = (lsum >= 0);
+
+        if (pred_taken != scPred) {
+            bool useScPred = true;
+            //Choser uses TAGE confidence and |LSUM|
+            if (bi->highConf) {
+                if (abs (lsum) < (thres / 4)) {
+                    useScPred = false;
+                } else if (abs (lsum) < (thres / 2)) {
+                    useScPred = (secondH < 0);
+                }
+            }
+
+            if (bi->medConf) {
+                if (abs (lsum) < (thres / 4)) {
+                    useScPred = (firstH < 0);
+                }
+            }
+
+            bi->usedScPred = useScPred;
+            if (useScPred) {
+                pred_taken = scPred;
+                bi->scPred = scPred;
+            }
+        }
+        DPRINTF(NewTage, "pc %lx Final Pred; taken = %d, useScPred = %d\n", branch_pc, pred_taken, bi->usedScPred);
+    }
+
+    return pred_taken;
+}
+
+bool
+StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
+                     BranchInfo* bi, bool prev_pred_taken, bool bias_bit,
+                     bool use_conf_ctr, int8_t conf_ctr, unsigned conf_bits,
                      int hitBank, int altBank, int64_t phist, int init_lsum)
 {
     bool pred_taken = prev_pred_taken;
@@ -245,16 +312,16 @@ StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
         }
 
         int lsum = init_lsum;
-
+        DPRINTF(NewTage, "pc %lx SC Begin;\n", branch_pc);
         int8_t ctr = bias[getIndBias(branch_pc, bi, bias_bit)];
         lsum += (2 * ctr + 1);
         ctr = biasSK[getIndBiasSK(branch_pc, bi)];
         lsum += (2 * ctr + 1);
         ctr = biasBank[getIndBiasBank(branch_pc, bi, hitBank, altBank)];
         lsum += (2 * ctr + 1);
-
+        
         lsum = (1 + (wb[getIndUpds(branch_pc)] >= 0)) * lsum;
-
+        DPRINTF(NewTage, "pc %lx, bias:%d\n", branch_pc, lsum);
         int thres = gPredictions(tid, branch_pc, bi, lsum, phist);
 
         // These will be needed at update time

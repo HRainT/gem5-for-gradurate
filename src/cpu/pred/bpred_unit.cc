@@ -389,7 +389,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
         uncondBranch(tid, pc.instAddr(), bp_history);
     } else {
         ++stats.condPredicted;
-        pred_taken = lookup(tid, pc.instAddr(), bp_history, pred_weak, pred_ctr);
+        pred_taken = lookup(tid, pc.instAddr(), bp_history, pred_weak, pred_ctr, inst);
 
         DPRINTF(Branch, "[tid:%i] [sn:%llu] "
                 "Branch predictor predicted %i for PC %s\n",
