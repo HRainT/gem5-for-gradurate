@@ -1003,6 +1003,23 @@ Bpu0::processInsts(ThreadID tid)
             inst->seqNum = cpu->getAndIncrementInstSeq(incrementVector, incrementNum);
             incrementVector = false;
 
+            if(inst->numDestRegs() > 0 && !inst->destRegIdx(0).isZeroReg()){
+                for(int i=0; i<32; i++){
+                    if(!cpu->regtable[i])
+                        continue;
+                    else if(cpu->reg_ctr[i] == 255){
+                        cpu->regtable[i] = false;
+                        cpu->reg_ctr[i] = 0;
+                    }
+                    else{
+                        ++cpu->reg_ctr[i];
+                    }
+                }
+                cpu->regtable[inst->destRegIdx(0)] = false;
+                cpu->reg_ctr[inst->destRegIdx(0)] = 0;
+                cpu->RegSnMap[inst->destRegIdx(0)] = inst->seqNum;
+            }
+
             if (inst->isSplitMacro()) {
                 incrementVector = true;
                 incrementNum = 200;
@@ -1304,6 +1321,23 @@ Bpu0::buildInst(ThreadID tid, StaticInstPtr staticInst,
 #endif
 
     waitSendInsts[tid].push_back(instruction);
+
+    if(instruction->numDestRegs() > 0 && !instruction->destRegIdx(0).isZeroReg()){
+    for(int i=0; i<32; i++){
+        if(!cpu->regtable[i])
+            continue;
+        else if(cpu->reg_ctr[i] == 255){
+            cpu->regtable[i] = false;
+            cpu->reg_ctr[i] = 0;
+        }
+        else{
+            ++cpu->reg_ctr[i];
+        }
+    }
+    cpu->regtable[instruction->destRegIdx(0)] = false;
+    cpu->reg_ctr[instruction->destRegIdx(0)] = 0;
+    cpu->RegSnMap[instruction->destRegIdx(0)] = instruction->seqNum;
+}
 
     return instruction;
 }

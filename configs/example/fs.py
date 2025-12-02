@@ -563,5 +563,10 @@ else:
 if args.uc_replace_policy:
     test_sys.ucRP = args.uc_replace_policy
 
+if args.sr:
+    test_sys.sr = True
+else:
+    test_sys.sr = False
+
 Simulation.setWorkCountOptions(test_sys, args)
 Simulation.run(args, root, test_sys, FutureClass)

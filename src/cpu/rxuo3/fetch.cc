@@ -1722,22 +1722,7 @@ Fetch::fetch(bool &status_change)
 
             DynInstPtr instruction = buildInst(
                     tid, staticInst, curMacroop, this_pc, *next_pc, true);
-            if(instruction->numDestRegs() > 0 && !instruction->destRegIdx(0).isZeroReg()){
-                for(int i=0; i<32; i++){
-                    if(!cpu->regtable[i])
-                        continue;
-                    else if(cpu->reg_ctr[i] == 255){
-                        cpu->regtable[i] = false;
-                        cpu->reg_ctr[i] = 0;
-                    }
-                    else{
-                        ++cpu->reg_ctr[i];
-                    }
-                }
-                cpu->regtable[instruction->destRegIdx(0)] = false;
-                cpu->reg_ctr[instruction->destRegIdx(0)] = 0;
-                cpu->RegSnMap[instruction->destRegIdx(0)] = instruction->seqNum;
-            }
+
             assert(numInst < fetchWidth);
             DPRINTF(RxuFetch, "[tid:%i] Fetch queue entry  instructions asm is %s \n",tid,instruction->staticInst->disassemble(instruction->getPC()));
             fetchQueue[tid].push_back(instruction);
