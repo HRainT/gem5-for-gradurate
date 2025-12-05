@@ -43,6 +43,9 @@
 #include "debug/NewTage.hh"
 #include <random>  
 #include <iostream>
+#include "debug/Fetch.hh"
+#include "debug/Tage.hh"
+#include "debug/RxuBPU.hh"
 namespace gem5
 {
 
@@ -577,6 +580,18 @@ TAGE_SC_L_TAGE_64KB::gindex_ext(int index, int bank) const
     return index;
 }
 
+// uint16_t
+// TAGE_SC_L_TAGE_64KB::gtag(ThreadID tid, Addr pc, int bank) const
+// {
+//     // very similar to the TAGE implementation, but w/o shifting the pc
+//     const uint8_t * ghr = threadHistory[tid].gHist;
+//     int tag = pc ^
+//               foledGHR ( ghr, histLengths[bank], tagTableTagWidths[bank] ) ^
+//               ( foledGHR ( ghr, histLengths[bank], tagTableTagWidths[bank] - 1 ) << 1 );
+
+//     return (tag & ((1ULL << tagTableTagWidths[bank]) - 1));
+// }
+
 uint16_t
 TAGE_SC_L_TAGE_64KB::gtag(ThreadID tid, Addr pc, int bank) const
 {
@@ -589,6 +604,56 @@ TAGE_SC_L_TAGE_64KB::gtag(ThreadID tid, Addr pc, int bank) const
     return (tag & ((1ULL << tagTableTagWidths[bank]) - 1));
 }
 
+//O3 TAGE
+// void
+// TAGE_SC_L_TAGE_64KB::handleAllocAndUReset(
+//     bool alloc, bool taken, TAGEBase::BranchInfo* bi, int nrand)
+// {
+//     if (! alloc) {
+//         return;
+//     }
+
+//     int penalty = 0;
+//     int numAllocated = 0;
+//     bool maxAllocReached = false;
+
+//     for (int I = calcDep(bi); I < nHistoryTables; I += 2) {
+//         // Handle the 2-way associativity for allocation
+//         for (int j = 0; j < 2; ++j) {
+//             int i = ((j == 0) ? I : (I ^ 1)) + 1;
+//             if (noSkip[i]) {
+//                 if (gtable[i][bi->tableIndices[i]].u == 0) {
+//                     int8_t ctr = gtable[i][bi->tableIndices[i]].ctr;
+//                     if (abs (2 * ctr + 1) <= 3) {
+//                         gtable[i][bi->tableIndices[i]].tag = bi->tableTags[i];
+//                         gtable[i][bi->tableIndices[i]].ctr = taken ? 0 : -1;
+//                         numAllocated++;
+//                         maxAllocReached = (numAllocated == maxNumAlloc);
+//                         I += 2;
+//                         break;
+//                     } else {
+//                         if (gtable[i][bi->tableIndices[i]].ctr > 0) {
+//                             gtable[i][bi->tableIndices[i]].ctr--;
+//                         } else {
+//                             gtable[i][bi->tableIndices[i]].ctr++;
+//                         }
+//                     }
+//                 } else {
+//                     penalty++;
+//                 }
+//             }
+//         }
+//         if (maxAllocReached) {
+//             break;
+//         }
+//     }
+
+//     tCounter += (penalty - 2 * numAllocated);
+
+//     handleUReset();
+// }
+
+// RXU TAGE
 void
 TAGE_SC_L_TAGE_64KB::handleAllocAndUReset(
     bool alloc, bool taken, TAGEBase::BranchInfo* bi, int nrand)
@@ -609,18 +674,19 @@ TAGE_SC_L_TAGE_64KB::handleAllocAndUReset(
                 if (gtable[i][bi->tableIndices[i]].u == 0) {
                     int8_t ctr = gtable[i][bi->tableIndices[i]].ctr;
                     if (abs (2 * ctr + 1) <= 3) {
-                        gtable[i][bi->tableIndices[i]].tag = bi->tableTags[i];
-                        gtable[i][bi->tableIndices[i]].ctr = taken ? 0 : -1;
+                        auto &e = gtable[i][bi->tableIndices[i]];
+                        e.tag = bi->tableTags[i];
+                        e.ctr = taken ? 0 : -1;
+                        e.vld = true;   // NEW: mark as valid for rxu TAGE path
+                        e.u   = 0;      // NEW: reset useful counter on allocation
                         numAllocated++;
                         maxAllocReached = (numAllocated == maxNumAlloc);
                         I += 2;
                         break;
                     } else {
-                        if (gtable[i][bi->tableIndices[i]].ctr > 0) {
-                            gtable[i][bi->tableIndices[i]].ctr--;
-                        } else {
-                            gtable[i][bi->tableIndices[i]].ctr++;
-                        }
+                        auto &e = gtable[i][bi->tableIndices[i]];
+                        if (e.ctr > 0) e.ctr--;
+                        else           e.ctr++;
                     }
                 } else {
                     penalty++;
@@ -636,6 +702,55 @@ TAGE_SC_L_TAGE_64KB::handleAllocAndUReset(
 
     handleUReset();
 }
+
+// void
+// TAGE_SC_L_TAGE_64KB::handleTAGEUpdate(Addr branch_pc, bool taken,
+//                                  TAGEBase::BranchInfo* bi)
+// {
+//     if (bi->hitBank > 0) {
+//         if (abs (2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) == 1) {
+//             if (bi->longestMatchPred != taken) {
+//                 // acts as a protection
+//                 if (bi->altBank > 0) {
+//                     ctrUpdate(gtable[bi->altBank][bi->altBankIndex].ctr, taken,
+//                               tagTableCounterBits);
+//                 }
+//                 if (bi->altBank == 0){
+//                     baseUpdate(branch_pc, taken, bi);
+//                 }
+//             }
+//         }
+
+//         ctrUpdate(gtable[bi->hitBank][bi->hitBankIndex].ctr, taken,
+//                   tagTableCounterBits);
+
+//         //sign changes: no way it can have been useful
+//         if (abs (2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) == 1) {
+//             gtable[bi->hitBank][bi->hitBankIndex].u = 0;
+//         }
+
+//         if (bi->altTaken == taken) {
+//             if (bi->altBank > 0) {
+//                 int8_t ctr = gtable[bi->altBank][bi->altBankIndex].ctr;
+//                 if (abs (2 * ctr + 1) == 7) {
+//                     if (gtable[bi->hitBank][bi->hitBankIndex].u == 1) {
+//                         if (bi->longestMatchPred == taken) {
+//                           gtable[bi->hitBank][bi->hitBankIndex].u = 0;
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     } else {
+//         baseUpdate(branch_pc, taken, bi);
+//     }
+
+//     if ((bi->longestMatchPred != bi->altTaken) &&
+//         (bi->longestMatchPred == taken) &&
+//         (gtable[bi->hitBank][bi->hitBankIndex].u < (1 << tagTableUBits) -1)) {
+//             gtable[bi->hitBank][bi->hitBankIndex].u++;
+//     }
+// }
 
 void
 TAGE_SC_L_TAGE_64KB::handleTAGEUpdate(Addr branch_pc, bool taken,

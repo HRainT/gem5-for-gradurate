@@ -267,7 +267,7 @@ class TAGE_SC_L_TAGE(TAGEBase):
     initialTCounterValue = 1 << 9
     useAltOnNaBits = 5
     # TODO No speculation implemented as of now
-    speculativeHistUpdate = False
+    speculativeHistUpdate = True
 
     # This size does not set the final sizes of the tables (it is just used
     # for some calculations)
@@ -299,7 +299,7 @@ class TAGE_SC_L_TAGE_64KB(TAGE_SC_L_TAGE):
     cxx_class = "gem5::branch_prediction::TAGE_SC_L_TAGE_64KB"
     cxx_header = "cpu/pred/tage_sc_l_64KB.hh"
 
-    nHistoryTables = 12
+    nHistoryTables = 36
 
     minHist = 6
     maxHist = 3000

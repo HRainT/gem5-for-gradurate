@@ -44,7 +44,9 @@
 
 #include "base/random.hh"
 #include "debug/TageSCL.hh"
-
+#include "debug/Fetch.hh"
+#include "debug/Tage.hh"
+#include "debug/RxuBPU.hh"
 namespace gem5
 {
 
@@ -261,31 +263,55 @@ TAGE_SC_L_TAGE::updateHistories(
     ThreadID tid, Addr branch_pc, bool taken, TAGEBase::BranchInfo* b,
     bool speculative, const StaticInstPtr &inst, Addr target)
 {
+    // 允许推测性更新
     if (speculative != speculativeHistUpdate) {
         return;
     }
-    // speculation is not implemented
-    assert(! speculative);
 
     ThreadHistory& tHist = threadHistory[tid];
 
-    int brtype = inst->isDirectCtrl() ? 0 : 2;
-    if (! inst->isUncondCtrl()) {
-        ++brtype;
-    }
-    updatePathAndGlobalHistory(tHist, brtype, taken, branch_pc, target);
+    if (speculative) {
+        // 简化版 pathbit：仅基于 PC，不依赖 target
+        int pathbit = ((branch_pc ^ (branch_pc >> instShiftAmt) ^
+                        (branch_pc >> (instShiftAmt + 2))) & 127);
 
-    DPRINTF(TageSCL, "Updating global histories with branch:%lx; taken?:%d, "
-            "path Hist: %x; pointer:%d\n", branch_pc, taken, tHist.pathHist,
-            tHist.ptGhist);
+        // 推测更新 1 次（不要执行 SC_L 的多步 brtype 更新）
+        updateGHist(tHist.gHist, taken, tHist.globalHistory, tHist.ptGhist);
+        tHist.pathHist = (tHist.pathHist << 1) ^ pathbit;
+        if (truncatePathHist) {
+            tHist.pathHist &= ((1ULL << pathHistBits) - 1);
+        }
+
+        // 回滚需要这些快照
+        b->ptGhist = tHist.ptGhist;
+        b->pathHist = tHist.pathHist;
+    } else {
+        // 维持原来的提交时更新（SC_L 自定义的 brtype/target 路径）
+        int brtype = inst->isDirectCtrl() ? 0 : 2;
+        if (! inst->isUncondCtrl()) ++brtype;
+        updatePathAndGlobalHistory(tHist, brtype, taken, branch_pc, target);
+        DPRINTF(TageSCL, "Commit update: pc=%lx taken=%d pathHist=%x pt=%d\n",
+                branch_pc, taken, tHist.pathHist, tHist.ptGhist);
+    }
 }
+
 
 void
 TAGE_SC_L_TAGE::squash(ThreadID tid, bool taken, TAGEBase::BranchInfo *bi,
                        Addr target)
 {
-    fatal("Speculation is not implemented");
+    if (!speculativeHistUpdate) return;
+
+    ThreadHistory& tHist = threadHistory[tid];
+    tHist.pathHist = bi->pathHist;
+    tHist.ptGhist  = bi->ptGhist;
+    tHist.gHist    = &(tHist.globalHistory[tHist.ptGhist]);
+    tHist.gHist[0] = (taken ? 1 : 0);
+
+    // 可选：如需在回滚后继续推进 1 步（与 rxu TAGE 相同），在此调用 computeIndices 更新
+    // 本 SC_L 实现不使用 folded histories，通常可忽略
 }
+
 
 void
 TAGE_SC_L_TAGE::adjustAlloc(bool & alloc, bool taken, bool pred_taken)
@@ -396,7 +422,9 @@ TAGE_SC_L::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b, con
     if (bi->scBranchInfo->usedScPred) {
         bi->tageBranchInfo->provider = SC;
     }
-
+    if (tage->isSpeculativeUpdateEnabled()) {
+        tage->updateHistories(tid, branch_pc, pred_taken, bi->tageBranchInfo, true, inst, MaxAddr);
+    }
     // record final prediction
     bi->lpBranchInfo->predTaken = pred_taken;
 
