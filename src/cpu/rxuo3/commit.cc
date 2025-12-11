@@ -1498,10 +1498,6 @@ Commit::commitInsts()
                     } else {
                         dest_val = cpu->getReg(phys_reg, tid);
                     }
-                    if(cpu->regtable[head_inst->destRegIdx(0)] == false && cpu->RegSnMap[head_inst->destRegIdx(0)] == head_inst->seqNum) {
-                        cpu->regtable[head_inst->destRegIdx(0)] = true;
-                        cpu->digestMap[head_inst->destRegIdx(0)] = make_int_digest((uint64_t)dest_val,head_inst->destRegIdx(0));
-                    }
                 }
                 volatile uint64_t high = (uint64_t)(dest_val >> 64);
                 volatile uint64_t low = (uint64_t)dest_val;

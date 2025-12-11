@@ -751,10 +751,13 @@ Bpu1::lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &next_pc)
     }
     DPRINTF(RxuBpu1, "[tid:%i] [sn:%llu] \"%s\" is Control\n",
             tid, inst->seqNum, inst->staticInst->disassemble(inst->pcState().instAddr()));
-    for(int i = 0; i < 32; i++){
-        inst->staticInst->setRegTable(i,cpu->regtable[i]);
-        inst->staticInst->setDigestMap(i, cpu->digestMap[i]);
-        // inst->staticInst->setRegCtr(i,cpu->reg_ctr[i]);
+    for (int i=0; i<32; ++i) {
+        bool vis = cpu->regtable[i];
+        if (vis && cpu->RegSnMap[i] > inst->seqNum) {
+            vis = false; // 未来写入，禁止 SR 使用
+        }
+        inst->staticInst->setRegTable(i, vis);
+        inst->staticInst->setDigestMap(i, vis ? cpu->digestMap[i] : 0);
     }
     predict_taken = branchPred->predict(inst->staticInst, inst->seqNum,
                                         next_pc, tid, inst->pred_weak, inst->pred_ctr, L2BTBDelay, sr_on);

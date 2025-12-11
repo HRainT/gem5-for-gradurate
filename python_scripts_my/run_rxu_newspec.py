@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 # 配置部分
 base_dir = "/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1"  # 根目录
-output_base_dir = "/Data2/yutong.han/graduate/1201_o3_tage_nospeculative"  # 输出基础目录
+output_base_dir = "/Data2/yutong.han/graduate/1210_rxu_tage_sc_l_sr_speculative"  # 输出基础目录
 gem5_exec = "/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/build/RISCV/gem5.opt"
 config_file = "/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/configs/example/fs.py"
 gcpt_restorer = "/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_vector/dir/gcpt_restore/build/gcpt.bin"
@@ -18,7 +18,7 @@ common_args = [
     "--caches", "--cacheline_size=64", "--l1i_size=128kB", "--l1i_assoc=8", "--l1d_size=128kB", "--l1d_assoc=8",
     "--l2cache", "--l2_size=2MB", "--l2_assoc=16",
     "--mem-size=12GB",
-    "--cpu-type=O3CPU",
+    "--cpu-type=RxuO3CPU",
     "--l1d-hwp-type=XSCompositePrefetcher",
     "--short-stride-thres=0",
     "--l1-to-l2-pf-hint",
@@ -33,7 +33,8 @@ common_args = [
     "--warmup-insts-no-switch=20000000",
     "--maxinsts=40000000",
     "--rotating",
-    "--rxu-rename"
+    "--rxu-rename",
+    "--sr"
 ]
 
 

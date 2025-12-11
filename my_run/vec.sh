@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mode=9
+mode=10
 if [ $1 ]; then
     mode=$1
 fi
@@ -209,11 +209,11 @@ elif [ $mode = 8 ]; then
     --rxu-rename
 elif [ $mode = 9 ]; then
     time \
-    build/RISCV/gem5.opt \
+    build/RISCV/gem5.fast \
     --outdir=out/test \
-    --stats-file stats.txt \
+    --stats-file stats_v4.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1/473.astar/BigLakes/93/_93_0.013591_memory_.gz \
+    --generic-rv-cpt=/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1/473.astar/rivers/28315/_28315_0.062681_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=RxuO3CPU \
@@ -243,17 +243,15 @@ elif [ $mode = 9 ]; then
     --warmup-insts-no-switch=20000000 \
     --maxinsts=40000000 \
     --rotating \
-    --rxu-rename
+    --rxu-rename \
+    --sr
 elif [ $mode = 10 ]; then
     time \
-    build/RISCV/gem5.opt \
-    --outdir=out/gcc/scilab/1049 \
-    --debug-flag RxuO3CPUAll \
-    --debug-file debug-rxu-2.log \
-    --debug-start 0 \
-    --stats-file stats.txt \
+    build/RISCV/gem5.fast \
+    --outdir=out/test \
+    --stats-file stats_standard.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_GV_Zba_Zbb/403.gcc/scilab/1049/_1049_0.027778_memory_.gz \
+    --generic-rv-cpt=/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1/473.astar/rivers/28315/_28315_0.062681_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=RxuO3CPU \
@@ -283,7 +281,7 @@ elif [ $mode = 10 ]; then
     --warmup-insts-no-switch=20000000 \
     --maxinsts=40000000 \
     --rotating \
-    --rxu-rename
+    --rxu-rename 
 elif [ $mode = 11 ]; then
     time \
     build/RISCV/gem5.opt \

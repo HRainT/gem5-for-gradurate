@@ -235,10 +235,11 @@ TAGE_SC_L_64KB_StatisticalCorrector::sRPredict(ThreadID tid, Addr pc, BranchInfo
     else{
         result = 0;
     }
-    // result = result >> 2;
+    result = result >> 2;
     bi->pre_result = result;
-    result = Scale * result;
-    // bi->weight = (wr[getIndUpds(pc)] >= 0) ? 2 : 1;
+    // result = Scale * result;
+    bi->weight = (wr[getIndUpds(pc)] >= 0) ? 2 : 1;
+    result = (1 + (wr[getIndUpds(pc)] >= 0)) * result;
     bi->result = result;
     return result;
 }
@@ -475,11 +476,11 @@ void
 TAGE_SC_L_64KB_StatisticalCorrector::rUpdates(ThreadID tid, Addr pc, bool taken, BranchInfo* bi, int64_t phist, std::vector<int8_t> & w)
 {
     DPRINTF(NewTage, "pc %lx Update; taken = %d\n", pc, taken);
-    // int xsum = bi->lsum - ((wr[getIndUpds(pc)] >= 0)) * bi->pre_result;
-    // if ((xsum + bi->pre_result >= 0) != (xsum >= 0)) {
-    //     ctrUpdate(wr[getIndUpds(pc)], ((bi->pre_result >= 0) == taken),
-    //               extraWeightsWidth);
-    // }
+    int xsum = bi->lsum - ((wr[getIndUpds(pc)] >= 0)) * bi->pre_result;
+    if ((xsum + bi->pre_result >= 0) != (xsum >= 0)) {
+        ctrUpdate(wr[getIndUpds(pc)], ((bi->pre_result >= 0) == taken),
+                  extraWeightsWidth);
+    }
     
     // int lsum_w1 = bi->lsum - bi->result + 1 * bi->pre_result;
     // int lsum_w2 = bi->lsum - bi->result + 2 * bi->pre_result;

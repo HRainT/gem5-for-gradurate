@@ -1007,7 +1007,7 @@ Bpu0::processInsts(ThreadID tid)
                 for(int i=0; i<32; i++){
                     if(!cpu->regtable[i])
                         continue;
-                    else if(cpu->reg_ctr[i] == 255){
+                    else if(cpu->reg_ctr[i] == 1023){
                         cpu->regtable[i] = false;
                         cpu->reg_ctr[i] = 0;
                     }

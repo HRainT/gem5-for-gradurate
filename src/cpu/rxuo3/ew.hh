@@ -57,6 +57,36 @@ class EW
         virtual const char *description() const;
         void setFreeFU() { freeFU = true; }
     };
+    
+  static inline uint64_t mix64(uint64_t x) {
+    x += 0x9e3779b97f4a7c15ull;
+    x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ull;
+    x = (x ^ (x >> 27)) * 0x94d049bb133111ebull;
+    x ^= x >> 31;
+    return x;
+  }
+  static inline int clz64(uint64_t x){ return x? __builtin_clzll(x) : 64; }
+  static inline int ctz64(uint64_t x){ return x? __builtin_ctzll(x) : 64; }
+
+  uint16_t make_int_digest(uint64_t v, int reg_id){
+      uint64_t sign = v >> 63;
+      uint64_t clz6 = std::min(63, clz64(v)) & 0x3F;   // 6b
+      uint64_t ctz6 = std::min(63, ctz64(v)) & 0x3F;   // 6b
+      uint64_t pop4 = (__builtin_popcountll(v & 0xFFu) & 0xF); // 4b
+      uint64_t low12 = v & 0xFFFu;
+
+      uint64_t feat = (sign << 63)
+                    ^ (clz6 << 48) ^ (ctz6 << 40) ^ (pop4 << 32)
+                    ^ (low12 << 16) ^ (uint64_t(reg_id) << 8) ^ (v & 0xFF);
+      uint64_t h = mix64(feat) ^ mix64(v ^ (uint64_t(reg_id) * 0x9e3779b97f4a7c15ull));
+      return (h ^ (h >> 12)) & 0xFFF; // 12-bit
+  }
+
+  // uint16_t make_int_digest(uint64_t v) {
+  //   return (v & 0xFFF) |          // 低位12位（地址/计数器）
+  //          (std::min(63, ctz64(v)) << 12); // 尾部零计数（对齐特征）
+  // }
+
 
       /** Load/Store DC1-DC2 event class. */
     class LoadStoreLatency : public Event
