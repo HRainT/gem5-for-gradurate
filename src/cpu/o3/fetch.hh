@@ -546,6 +546,8 @@ class Fetch
          * the pipeline.
          */
         statistics::Scalar idleCycles;
+        /**Number of instructions to decode each cycle. */
+        statistics::Distribution fetchOutInsts;
         /** Total number of cycles spent blocked. */
         statistics::Scalar blockedCycles;
         /** Total number of cycles spent in any other state. */

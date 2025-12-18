@@ -169,6 +169,8 @@ Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
              "Number of cycles fetch has spent waiting for tlb"),
     ADD_STAT(idleCycles, statistics::units::Cycle::get(),
              "Number of cycles fetch was idle"),
+    ADD_STAT(fetchOutInsts, statistics::units::Count::get(),
+    "Number of instructions to ibuffer each cycle"),
     ADD_STAT(blockedCycles, statistics::units::Cycle::get(),
              "Number of cycles fetch has spent blocked"),
     ADD_STAT(miscStallCycles, statistics::units::Cycle::get(),
@@ -206,6 +208,11 @@ Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
             .prereq(tlbCycles);
         idleCycles
             .prereq(idleCycles);
+        fetchOutInsts
+            .init(/* base value */ 0,
+              /* last value */ fetch->fetchWidth,
+              /* bucket size */ 1)
+            .flags(statistics::pdf);
         blockedCycles
             .prereq(blockedCycles);
         cacheLines
@@ -909,6 +916,8 @@ Fetch::tick()
         DPRINTF(Activity, "Activity this cycle.\n");
         cpu->activityThisCycle();
     }
+
+    fetchStats.fetchOutInsts.sample(insts_to_decode);
 
     // Reset the number of the instruction we've fetched.
     numInst = 0;

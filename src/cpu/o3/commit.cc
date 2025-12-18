@@ -981,16 +981,41 @@ Commit::commitInsts()
                     RegIndex idx = phys_reg->index();
                     dest_val = cpu->getReg(phys_reg, tid);
 
+                } else if (head_inst->numDestRegs() == 0 &&
+                           head_inst->staticInst->isStore() &&
+                           !head_inst->srcRegIdx(head_inst->numSrcRegs() - 1).isZeroReg()) {
+                    PhysRegIdPtr phys_reg = head_inst->renamedSrcIdx(head_inst->numSrcRegs() - 1);
+                    dest_val = cpu->getReg(phys_reg, tid);
                 }
                 volatile uint64_t high = (uint64_t)(dest_val >> 64);
                 volatile uint64_t low = (uint64_t)dest_val;
-                DPRINTF(CommitInsts,
-                        "[sn:%d], 0x%.8x, 0x%.16lx_%.16lx,  %s\n",
-                        head_inst->seqNum,
-                        head_inst->pcState().instAddr(),
-                        high,
-                        low,
-                        head_inst->staticInst->disassemble(head_inst->pcState().instAddr()));
+                if (head_inst->isLoad() && !head_inst->srcRegIdx(0).isZeroReg()) {
+                    PhysRegIdPtr phys_reg = head_inst->renamedSrcIdx(0);
+                    DPRINTF(CommitInsts,
+                            "[sn:%d], 0x%.8x, 0x%.16lx_%.16lx,  %s,  0x%.8x, 0x%.8x\n",
+                            head_inst->seqNum,
+                            head_inst->pcState().instAddr(),
+                            high,
+                            low,
+                            head_inst->staticInst->disassemble(head_inst->pcState().instAddr()), head_inst->effAddr, head_inst->physEffAddr);
+                } else if (head_inst->isStore() && !head_inst->srcRegIdx(0).isZeroReg()) {
+                    PhysRegIdPtr phys_reg = head_inst->renamedSrcIdx(0);
+                    DPRINTF(CommitInsts,
+                            "[sn:%d], 0x%.8x, 0x%.16lx_%.16lx,  %s,  0x%.8x, 0x%.8x\n",
+                            head_inst->seqNum,
+                            head_inst->pcState().instAddr(),
+                            high,
+                            low,
+                            head_inst->staticInst->disassemble(head_inst->pcState().instAddr()), head_inst->effAddr, head_inst->physEffAddr);
+                } else {
+                    DPRINTF(CommitInsts,
+                            "[sn:%d], 0x%.8x, 0x%.16lx_%.16lx,  %s\n",
+                            head_inst->seqNum,
+                            head_inst->pcState().instAddr(),
+                            high,
+                            low,
+                            head_inst->staticInst->disassemble(head_inst->pcState().instAddr()));
+                }
 
                 ++num_committed;
                 cpu->commitStats[tid]
