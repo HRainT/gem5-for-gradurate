@@ -163,12 +163,9 @@ int CTX  = 64;     // 每寄存器 64 个上下文槽
 uint64_t UT_SALT[3] = {
     0x243F6A8885A308D3ull, 0x13198A2E03707344ull, 0xA4093822299F31D0ull
 };
-// 计算单个 UT 索引（t ∈ {0,1,2}）
+
 uint32_t ut_index1(int t, uint64_t pc, int reg_id) {
-    // ctx 只由 PC + 盐 生成（不混入 reg_id，便于每寄存器分块）
-    uint64_t h = mix64(pc ^ UT_SALT[t]);
-    uint32_t ctx = h & (CTX - 1); // 0..63
-    return uint32_t(reg_id) * CTX + ctx; // 0..(NREG*CTX-1)
+    return reg_id * 8 + ((pc ^ (pc >> (2 * t))) % 8);
 }
 // 用法示例：Utable[t][ ut_index(t, pc, reg_id) ]
 
@@ -209,9 +206,9 @@ uint64_t base_key(uint64_t pc, int reg_id, uint16_t digest12) {
 int wt_bank(int reg_id) {
     return reg_id & (NBANK - 1);
 }
-uint32_t wt_index1(uint64_t pc, int reg_id, uint16_t digest12) {
+uint32_t wt_index1(uint64_t pr, int reg_id, uint16_t digest12) {
     int bank = wt_bank(reg_id);
-    uint64_t k = base_key(pc, reg_id, digest12);
+    uint64_t k = base_key(pr, reg_id, digest12);
     uint64_t h = mix64(k ^ WT_SALT1 ^ BANK_SALT1[bank]);
     return h & (WT1_PER_BANK - 1); // 0..4095
 }
@@ -237,17 +234,17 @@ uint32_t wt_index3(uint64_t pc, int reg_id, uint16_t digest12) {
             struct UTEntry
             {
                 int16_t u;
-                UTEntry() :u{-8} { }
+                UTEntry() :u{0} { }
             };
             struct WTEntry
             {
                 int8_t weight = 0;
                 WTEntry() : weight(0) { }
             };
-            inline static UTEntry Utable[3][2048] = {};
-            inline static WTEntry Wtable0[8][8192] = {};
-            inline static WTEntry Wtable1[8][4096] = {};
-            inline static WTEntry Wtable2[8][2048] = {};
+            inline static UTEntry Utable[3][256] = {};
+            inline static WTEntry Wtable0[8][512] = {};
+            inline static WTEntry Wtable1[8][256] = {};
+            inline static WTEntry Wtable2[8][128] = {};
             static void WtableUpdate(uint32_t i1, uint32_t i2, uint32_t i3, int i, bool taken){
                 if(RunLts::Wtable0[i][i1].weight < 31 && taken)
                     RunLts::Wtable0[i][i1].weight++;
@@ -263,17 +260,6 @@ uint32_t wt_index3(uint64_t pc, int reg_id, uint16_t digest12) {
                     RunLts::Wtable2[i][i3].weight--;    
             }
     };
-    struct UTEntry
-    {
-        int16_t u[4];
-        UTEntry() :u{0,0,0,0} { }
-    };
-    struct WTEntry
-    {
-    int8_t weight = 0;
-    WTEntry() : weight(0) { }
-    };
-    UTEntry Utable[8][256];
 
     static constexpr int WT_layers = 3; // 举例：3 层 GEHL
     // 每层大小（按层 i）

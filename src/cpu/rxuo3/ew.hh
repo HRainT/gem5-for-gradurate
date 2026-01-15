@@ -68,19 +68,49 @@ class EW
   static inline int clz64(uint64_t x){ return x? __builtin_clzll(x) : 64; }
   static inline int ctz64(uint64_t x){ return x? __builtin_ctzll(x) : 64; }
 
-  uint16_t make_int_digest(uint64_t v, int reg_id){
-      uint64_t sign = v >> 63;
-      uint64_t clz6 = std::min(63, clz64(v)) & 0x3F;   // 6b
-      uint64_t ctz6 = std::min(63, ctz64(v)) & 0x3F;   // 6b
-      uint64_t pop4 = (__builtin_popcountll(v & 0xFFu) & 0xF); // 4b
-      uint64_t low12 = v & 0xFFFu;
+  // uint16_t make_int_digest(uint64_t v, int reg_id){
+  //     uint64_t sign = v >> 63;
+  //     uint64_t clz6 = std::min(63, clz64(v)) & 0x3F;   // 6b
+  //     uint64_t ctz6 = std::min(63, ctz64(v)) & 0x3F;   // 6b
+  //     uint64_t pop4 = (__builtin_popcountll(v & 0xFFu) & 0xF); // 4b
+  //     uint64_t low12 = v & 0xFFFu;
 
-      uint64_t feat = (sign << 63)
-                    ^ (clz6 << 48) ^ (ctz6 << 40) ^ (pop4 << 32)
-                    ^ (low12 << 16) ^ (uint64_t(reg_id) << 8) ^ (v & 0xFF);
-      uint64_t h = mix64(feat) ^ mix64(v ^ (uint64_t(reg_id) * 0x9e3779b97f4a7c15ull));
-      return (h ^ (h >> 12)) & 0xFFF; // 12-bit
-  }
+  //     uint64_t feat = (sign << 63)
+  //                   ^ (clz6 << 48) ^ (ctz6 << 40) ^ (pop4 << 32)
+  //                   ^ (low12 << 16) ^ (uint64_t(reg_id) << 8) ^ (v & 0xFF);
+  //     uint64_t h = mix64(feat) ^ mix64(v ^ (uint64_t(reg_id) * 0x9e3779b97f4a7c15ull));
+  //     return (h ^ (h >> 12)) & 0xFFF; // 12-bit
+  // }
+  // 辅助函数：计算 Digest
+uint16_t make_int_digest(uint64_t value,int reg_num) {
+    uint64_t hash = 0;
+    
+    // 假设 0-31 为 Int (RISC-V)
+    if (reg_num < 32) {
+        int msb_one = 0, msb_zero = 0;
+        int lsb_one = 0, lsb_zero = 0;
+        
+        // 查找位位置的简化逻辑 (可以用 __builtin_ctzll / __builtin_clzll 优化)
+        for (int i = 0; i < 64; ++i) { if (!((value >> i) & 1)) { lsb_one = i; break; } }
+        for (int i = 0; i < 64; ++i) { if ((value >> i) & 1)  { lsb_zero = i; break; } }
+        for (int i = 63; i >= 0; --i) { if (!((value >> i) & 1)) { msb_one = 63 - i; break; } }
+        for (int i = 63; i >= 0; --i) { if ((value >> i) & 1)  { msb_zero = 63 - i; break; } }
+        
+        hash = (lsb_one ^ lsb_zero) ^ ((msb_one ^ msb_zero) << 3) ^ (value << 6);
+    } 
+    // 如果你要支持 FP (32-63)
+    else if (reg_num < 64) {
+        if ((value >> 16) == 0) hash = value >> 13;      // Pseudo-FP16
+        else if ((value >> 32) == 0) hash = value >> 26; // FP32
+        else hash = value >> 55;                         // FP64
+    }
+    // 如果你要支持 Flag (64)
+    else if (reg_num == 64) {
+        hash = (value << 8) ^ (value << 4) ^ value;
+    }
+
+    return (uint16_t)(hash & 0xFFF); // 12-bit Digest
+}
 
   // uint16_t make_int_digest(uint64_t v) {
   //   return (v & 0xFFF) |          // 低位12位（地址/计数器）

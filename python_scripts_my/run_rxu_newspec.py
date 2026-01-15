@@ -5,11 +5,11 @@ from concurrent.futures import ThreadPoolExecutor
 
 # 配置部分
 base_dir = "/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1"  # 根目录
-output_base_dir = "/Data2/yutong.han/graduate/1210_rxu_tage_sc_l_sr_speculative"  # 输出基础目录
+output_base_dir = "/Data2/yutong.han/graduate/1230_rxu_tage_sc_l_128L2BTB"  # 输出基础目录
 gem5_exec = "/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/build/RISCV/gem5.opt"
 config_file = "/Data3/yutong.han/My_G5Project/graduate-for-gem5-vector/configs/example/fs.py"
 gcpt_restorer = "/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_vector/dir/gcpt_restore/build/gcpt.bin"
-max_parallel_jobs = 30  # 最大并行任务数
+max_parallel_jobs = 20  # 最大并行任务数
 
 # 通用参数
 common_args = [
@@ -33,8 +33,7 @@ common_args = [
     "--warmup-insts-no-switch=20000000",
     "--maxinsts=40000000",
     "--rotating",
-    "--rxu-rename",
-    "--sr"
+    "--rxu-rename"
 ]
 
 

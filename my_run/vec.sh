@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mode=10
+mode=8
 if [ $1 ]; then
     mode=$1
 fi
@@ -23,9 +23,9 @@ fi
 # kernel=/Data3/hanfu.xing/nexus-am/appsrxu/template/vfwadd_sub/build/vfwadd_sub-riscv64-xs.elf
 # kernel=/Data3/yutong.han/riscv/nexus-am/appsrxu/template/vloxei/build/vloxei-riscv64-xs.elf
 # kernel=/Data3/lian.wang/nexus-am/appsrxu/template/vsoxseg/vsuxseg/build/vsuxseg-riscv64-xs.elf
-kernel=/Data/longting.du/case/dhry/dhrystone_loop500_p670_testcase/dhrystone_loop500_p670_testcase.elf
+kernel=/Data3/hanfu.xing/nexus-am/appsrxu/template/random_mem_test/build/random_mem_test-riscv64-xs.elf
 
-out=./out/decoupled_front
+out=./out/cache/random_mem_test
 gem5=./build/RISCV/gem5.opt
 
 if [ $mode = 1 ]; then
@@ -33,8 +33,8 @@ if [ $mode = 1 ]; then
     $gem5 \
     --outdir=$out  \
     --stats-file stats.txt \
-    --debug-flag RxuO3CPUAll \
-    --debug-file debug.log \
+    --debug-flag CommitInsts \
+    --debug-file trace.log \
     ./configs/example/riscv/fs_linux.py \
     --bare-metal \
     --kernel=$kernel \
@@ -173,10 +173,10 @@ elif [ $mode = 7 ]; then
 elif [ $mode = 8 ]; then
     time \
     build/RISCV/gem5.opt \
-    --outdir=out/gcc/166/1862 \
-    --stats-file stats.txt \
+    --outdir=/Data2/yutong.han/graduate/astar_biglakes_93 \
+    --stats-file rxu_sr_0113.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_GV_Zba_Zbb/403.gcc/scilab/1049/_1049_0.027778_memory_.gz \
+    --generic-rv-cpt=/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1/473.astar/BigLakes/93/_93_0.013591_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=RxuO3CPU \
@@ -206,14 +206,17 @@ elif [ $mode = 8 ]; then
     --warmup-insts-no-switch=20000000 \
     --maxinsts=40000000 \
     --rotating \
-    --rxu-rename
+    --rxu-rename \
+    --sr
 elif [ $mode = 9 ]; then
     time \
-    build/RISCV/gem5.fast \
-    --outdir=out/test \
-    --stats-file stats_v4.txt \
+    build/RISCV/gem5.opt \
+    --outdir=/Data2/yutong.han/graduate/astar_biglakes_93 \
+    --debug-flag SR \
+    --debug-file debug_0104_sr.log \
+    --stats-file rxu_sr.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1/473.astar/rivers/28315/_28315_0.062681_memory_.gz \
+    --generic-rv-cpt=/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1/473.astar/BigLakes/93/_93_0.013591_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=RxuO3CPU \
@@ -247,48 +250,13 @@ elif [ $mode = 9 ]; then
     --sr
 elif [ $mode = 10 ]; then
     time \
-    build/RISCV/gem5.fast \
-    --outdir=out/test \
-    --stats-file stats_standard.txt \
-    configs/example/fs.py \
-    --generic-rv-cpt=/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1/473.astar/rivers/28315/_28315_0.062681_memory_.gz \
-    --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
-    --xiangshan-system \
-    --cpu-type=RxuO3CPU \
-    --mem-size=12GB \
-    --caches \
-    --cacheline_size=64 \
-    --l1i_size=128kB \
-    --l1i_assoc=8 \
-    --l1d_size=128kB \
-    --l1d_assoc=8 \
-    --l2cache \
-    --l2_size=2MB \
-    --l2_assoc=16 \
-    --l1d-hwp-type=XSCompositePrefetcher \
-    --short-stride-thres=0 \
-    --l3cache \
-    --l3_size=32MB \
-    --l3_assoc=16 \
-    --l1-to-l2-pf-hint \
-    --l2-hwp-type=WorkerPrefetcher \
-    --l2-to-l3-pf-hint \
-    --l3-hwp-type=WorkerPrefetcher \
-    --cpu-clock=2GHz \
-    --TAGE \
-    --uop-cache \
-    --mem-type=DDR5_8400_4x8 \
-    --warmup-insts-no-switch=20000000 \
-    --maxinsts=40000000 \
-    --rotating \
-    --rxu-rename 
-elif [ $mode = 11 ]; then
-    time \
     build/RISCV/gem5.opt \
-    --outdir=out/473.astar/rivers/7395 \
-    --stats-file stats.txt \
+    --outdir=out/473.astar/BigLakes/11757 \
+    --debug-flag NewTage \
+    --debug-file debug_0917_newtagesc.log \
+    --stats-file stats_0917_newtagesc.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data3/xiaohan.zhang/workspace/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/rivers/7395/_7395_0.051197_memory_.gz \
+    --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/11757/_11757_0.066769_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=O3CPU \
@@ -319,6 +287,45 @@ elif [ $mode = 11 ]; then
     --maxinsts=40000000 \
     --rotating \
     --rxu-rename
+elif [ $mode = 11 ]; then
+    time \
+    build/RISCV/gem5.opt \
+    --outdir=out/473.astar/rivers/7395 \
+    --debug-start=2610232500 \
+    --debug-end=2610453500 \
+    --debug-flag O3CPUAll,Branch,Tage \
+    --debug-file debug.log \
+    --stats-file stats.txt \
+    configs/example/fs.py \
+    --generic-rv-cpt=/Data2/xiaohan.zhang/SPECint2006_NEMU_G_Zicond_Zba_Zbb/473.astar/BigLakes/397/_397_0.008642_memory_.gz \
+    --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
+    --xiangshan-system \
+    --cpu-type=O3CPU \
+    --mem-size=12GB \
+    --caches \
+    --cacheline_size=64 \
+    --l1i_size=128kB \
+    --l1i_assoc=8 \
+    --l1d_size=128kB \
+    --l1d_assoc=8 \
+    --l2cache \
+    --l2_size=2MB \
+    --l2_assoc=16 \
+    --l1d-hwp-type=XSCompositePrefetcher \
+    --short-stride-thres=0 \
+    --l3cache \
+    --l3_size=32MB \
+    --l3_assoc=16 \
+    --l1-to-l2-pf-hint \
+    --l2-hwp-type=WorkerPrefetcher \
+    --l2-to-l3-pf-hint \
+    --l3-hwp-type=WorkerPrefetcher \
+    --cpu-clock=2GHz \
+    --TAGE \
+    --mem-type=DDR5_8400_4x8 \
+    --warmup-insts-no-switch=20000000 \
+    --maxinsts=40000000 \
+    --rotating 
 else
     echo "Invalid mode."
 fi

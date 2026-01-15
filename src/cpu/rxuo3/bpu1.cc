@@ -421,6 +421,13 @@ Bpu1::checkSignalsAndUpdate(ThreadID tid)
 
         if (fromCommit->commitInfo[tid].mispredictInst &&
             fromCommit->commitInfo[tid].mispredictInst->isControl()) {
+            if(sr_on){
+                for(int i=0; i<32; i++){
+                    cpu->regtable[i] = fromCommit->commitInfo[tid].mispredictInst->staticInst->regtable[i];
+                    cpu->RegSnMap[i] = fromCommit->commitInfo[tid].mispredictInst->staticInst->RegSnMap[i];
+                    cpu->digestMap[i] = fromCommit->commitInfo[tid].mispredictInst->staticInst->digestMap[i];
+                }
+            }
             branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
                     *fromCommit->commitInfo[tid].pc,
                     fromCommit->commitInfo[tid].branchTaken, tid);
@@ -756,6 +763,7 @@ Bpu1::lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &next_pc)
         if (vis && cpu->RegSnMap[i] > inst->seqNum) {
             vis = false; // 未来写入，禁止 SR 使用
         }
+        inst->staticInst->setRegSnMap(i, cpu->RegSnMap[i]);
         inst->staticInst->setRegTable(i, vis);
         inst->staticInst->setDigestMap(i, vis ? cpu->digestMap[i] : 0);
     }

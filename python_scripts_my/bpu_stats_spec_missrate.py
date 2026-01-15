@@ -4,7 +4,7 @@ import sys
 from collections import defaultdict
 
 def parse_stats_file(file_path):
-    """解析stats.txt文件，提取所需数据"""
+    """解析stats.txt文件,提取所需数据"""
     data = {}
     patterns = {
         'decode': r'^system\.cpu\.bpu1MissDecodeCount\s+(\d+)',
