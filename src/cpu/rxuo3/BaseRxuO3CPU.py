@@ -191,7 +191,7 @@ class BaseRxuO3CPU(BaseCPU):
     # commit params
     dispipe0ToROBDelay = Param.Cycles(2, "Dispipe0 to reorder buffer delay")
     commitWidth = Param.Unsigned(8, "Commit width")
-    squashWidth = Param.Unsigned(1024, "Squash width")
+    squashWidth = Param.Unsigned(8, "Squash width")
     trapLatency = Param.Cycles(13, "Trap latency")
     fetchTrapLatency = Param.Cycles(1, "Fetch trap latency")
 

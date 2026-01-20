@@ -135,7 +135,12 @@ IBandLB::IBandLBStats::IBandLBStats(CPU *cpu)
     //   ADD_STAT(loopBufferFullEvents, statistics::units::Count::get(),
     //            "Number of times that the loopBuffer is full"),
       ADD_STAT(fromBpu1Insts, statistics::units::Count::get(),
-               "Number of instructions from bpu1")
+               "Number of instructions from bpu1"),
+      ADD_STAT(toDecodeInsts, statistics::units::Count::get(),
+               "Number of instructions from fetch"),
+      ADD_STAT(frontBandwidth, statistics::units::Rate<
+                  statistics::units::Count, statistics::units::Count>::get(),
+                "Stat for uop cache hit rate")
     //   ADD_STAT(fromLBInsts, statistics::units::Count::get(),
     //            "Number of instructions from LoopBuffer"),
     //   ADD_STAT(loopBufferActive, statistics::units::Count::get(),
@@ -152,6 +157,9 @@ IBandLB::IBandLBStats::IBandLBStats(CPU *cpu)
     fromBpu1Insts.prereq(fromBpu1Insts);
     // fromLBInsts.prereq(fromLBInsts);
     // loopBufferActive.prereq(loopBufferActive);
+    frontBandwidth
+        .precision(6);
+    frontBandwidth = toDecodeInsts / (cpu->baseStats.numCycles);
 }
 
 void
@@ -382,7 +390,7 @@ IBandLB::SendInsts(ThreadID tid)
         ++(toDecode->size);
         ++toDecodeIndex;
         ++stats.IBandLBedInsts;
-
+        ++stats.toDecodeInsts;
 #if TRACING_ON
         if (debug::RxuO3PipeView) {
             inst->IBandLBTick = curTick() - inst->fetchTick;

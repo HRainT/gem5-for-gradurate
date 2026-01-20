@@ -328,6 +328,10 @@ private:
         // statistics::Scalar fromLBInsts;
         // /** Stat for active times of LoopBuffer. */
         // statistics::Scalar loopBufferActive;
+        /** Stat for total number of instructions from Fetch. */
+        statistics::Scalar toDecodeInsts;
+        /** Stat for uop cache hit rate. */
+        statistics::Formula frontBandwidth;
     } stats;
 };
 

@@ -123,7 +123,8 @@ class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
     int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo* bi,
                      int & lsum, int64_t phist) override;
     int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo* bi,
-                     int & lsum, int64_t phist,const StaticInstPtr &inst) override;
+                     int & lsum, int64_t phist,const StaticInstPtr &inst,
+                    const std::map<RegIndex, uint64_t> &RegSnMap, const bool *regtable, const std::map<RegIndex, uint16_t> &digestMap) override;
     int gIndexLogsSubstr(int nbr, int i) override;
 
     void scHistoryUpdate(Addr branch_pc, const StaticInstPtr &inst, bool taken,
@@ -131,7 +132,8 @@ class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
 
     void gUpdates(ThreadID tid, Addr pc, bool taken, BranchInfo* bi,
             int64_t phist) override;
-    int sRPredict(ThreadID tid, Addr pc, BranchInfo* bi, const StaticInstPtr & inst);
+    int sRPredict(ThreadID tid, Addr pc, BranchInfo* bi, const StaticInstPtr & inst,
+                const std::map<RegIndex, uint64_t> &RegSnMap, const bool *regtable, const std::map<RegIndex, uint16_t> &digestMap);
     void rUpdates( ThreadID tid, Addr pc, bool taken, BranchInfo* bi, int64_t phist, std::vector<int8_t> & w);
     // static inline uint64_t mixBankSalt(int bank) {
     //     // Knuth/黄金分割常数的 64 位版本，作为 bank 盐值

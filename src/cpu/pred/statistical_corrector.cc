@@ -231,7 +231,9 @@ bool
 StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
                      BranchInfo* bi, bool prev_pred_taken, bool bias_bit,
                      bool use_conf_ctr, int8_t conf_ctr, unsigned conf_bits,
-                     int hitBank, int altBank, int64_t phist, const StaticInstPtr & inst, int init_lsum)
+                     int hitBank, int altBank, int64_t phist, const StaticInstPtr & inst, 
+                    const std::map<RegIndex, uint64_t> &RegSnMap, const bool *regtable, const std::map<RegIndex, uint16_t> &digestMap,
+                    int init_lsum)
 {
     bool pred_taken = prev_pred_taken;
     if (cond_branch) {
@@ -256,7 +258,8 @@ StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
 
         lsum = (1 + (wb[getIndUpds(branch_pc)] >= 0)) * lsum;
         DPRINTF(NewTage, "pc %lx, bias:%d\n", branch_pc, lsum);
-        int thres = gPredictions(tid, branch_pc, bi, lsum, phist,inst);
+        int thres = gPredictions(tid, branch_pc, bi, lsum, phist,inst,
+                                RegSnMap, regtable, digestMap);
         DPRINTF(NewTage, "pc %lx, highConf:%d, medConf:%d, lowConf:%d, firstH:%d, secondH:%d\n", branch_pc, bi->highConf, bi->medConf, bi->lowConf, firstH, secondH);
         // These will be needed at update time
         bi->lsum = lsum;

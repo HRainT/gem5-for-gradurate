@@ -423,9 +423,11 @@ Bpu1::checkSignalsAndUpdate(ThreadID tid)
             fromCommit->commitInfo[tid].mispredictInst->isControl()) {
             if(sr_on){
                 for(int i=0; i<32; i++){
-                    cpu->regtable[i] = fromCommit->commitInfo[tid].mispredictInst->staticInst->regtable[i];
-                    cpu->RegSnMap[i] = fromCommit->commitInfo[tid].mispredictInst->staticInst->RegSnMap[i];
-                    cpu->digestMap[i] = fromCommit->commitInfo[tid].mispredictInst->staticInst->digestMap[i];
+                    if(fromCommit->commitInfo[tid].doneSeqNum < cpu->RegSnMap[i]){
+                    cpu->regtable[i] = fromCommit->commitInfo[tid].mispredictInst->regtable[i];
+                    cpu->RegSnMap[i] = fromCommit->commitInfo[tid].mispredictInst->RegSnMap[i];
+                    cpu->digestMap[i] = fromCommit->commitInfo[tid].mispredictInst->digestMap[i];
+                    }
                 }
             }
             branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
@@ -763,12 +765,13 @@ Bpu1::lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &next_pc)
         if (vis && cpu->RegSnMap[i] > inst->seqNum) {
             vis = false; // 未来写入，禁止 SR 使用
         }
-        inst->staticInst->setRegSnMap(i, cpu->RegSnMap[i]);
-        inst->staticInst->setRegTable(i, vis);
-        inst->staticInst->setDigestMap(i, vis ? cpu->digestMap[i] : 0);
+        inst->setRegSnMap(i, cpu->RegSnMap[i]);
+        inst->setRegTable(i, vis);
+        inst->setDigestMap(i, vis ? cpu->digestMap[i] : 0);
     }
     predict_taken = branchPred->predict(inst->staticInst, inst->seqNum,
-                                        next_pc, tid, inst->pred_weak, inst->pred_ctr, L2BTBDelay, sr_on);
+                                        next_pc, tid, inst->pred_weak, inst->pred_ctr, L2BTBDelay, sr_on,
+                                        cpu->RegSnMap, cpu->regtable, cpu->digestMap);
 
     if (inst->isNonSpeculative() && inst->isReturn() && inst->isControl()) predict_taken = false;
 

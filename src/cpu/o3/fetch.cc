@@ -194,7 +194,12 @@ Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
              "Number of instructions fetched each cycle (Total)"),
     ADD_STAT(idleRate, statistics::units::Ratio::get(),
              "Ratio of cycles fetch was idle",
-             idleCycles / cpu->baseStats.numCycles)
+             idleCycles / cpu->baseStats.numCycles),
+    ADD_STAT(toDecodeInsts, statistics::units::Count::get(),
+               "Number of instructions from fetch"),
+    ADD_STAT(frontBandwidth, statistics::units::Rate<
+                  statistics::units::Count, statistics::units::Count>::get(),
+                "Stat for uop cache hit rate")
 {
         predictedBranches
             .prereq(predictedBranches);
@@ -233,6 +238,9 @@ Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
             .flags(statistics::pdf);
         idleRate
             .prereq(idleRate);
+        frontBandwidth
+        .precision(6);
+        frontBandwidth = toDecodeInsts / (cpu->baseStats.numCycles);
 }
 void
 Fetch::setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer)
@@ -896,6 +904,7 @@ Fetch::tick()
             fetchQueue[tid].pop_front();
             insts_to_decode++;
             available_insts--;
+            ++fetchStats.toDecodeInsts;
         }
 
         tid_itr++;

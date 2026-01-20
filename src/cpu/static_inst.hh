@@ -109,15 +109,12 @@ class StaticInst : public RefCounted, public StaticInstFlags
     uint32_t _numFields;
     uint32_t _numMicroops;
     bool useBranchNet = false;
-    bool regtable[32]; 
-    uint64_t RegSnMap[32];
     // uint32_t reg_ctr[32]
     /** For mask index vload/store */
     mutable bool vElemMask = false;
 
     /** Eliminate differences of RxuO3 and O3 commint insts log. */
     mutable bool canPrintLog = true;
-    std::map<RegIndex, uint16_t> digestMap;
   private:
     /// See srcRegIdx().
     RegIdArrayPtr _srcRegIdxPtr = nullptr;
@@ -167,9 +164,6 @@ class StaticInst : public RefCounted, public StaticInstFlags
     /// instruction property flags.  See StaticInst::Flags for descriptions
     /// of the individual flags.
     //@{
-    void setRegTable(int regid,bool valid){regtable[regid] = valid;}
-    void setDigestMap(int regid,uint16_t digest){digestMap[regid] = digest;}
-    void setRegSnMap(int regid,uint64_t sn){RegSnMap[regid] = sn;}
 
     // void setRegCtr(int regid,int ctr){reg_ctr[regid] = ctr;}
     void setRenamedDestIdx(PhysRegIdPtr destIdx) {_destIdx = destIdx;}

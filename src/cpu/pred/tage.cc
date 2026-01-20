@@ -105,11 +105,12 @@ TAGE::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b)
 }
 
 bool
-TAGE::lookup(ThreadID tid, Addr branch_pc, void* &bp_history, bool & pred_weak, int & pred_ctr, const StaticInstPtr &inst, bool sr_on)
+TAGE::lookup(ThreadID tid, Addr branch_pc, void* &bp_history, bool & pred_weak, int & pred_ctr, const StaticInstPtr &inst, bool sr_on,
+                    std::map<RegIndex, uint64_t> &RegSnMap, bool *regtable, std::map<RegIndex, uint16_t> &digestMap)
 {
     bool retval;
     if (sr_on) 
-        retval = predict(tid, branch_pc, true, bp_history, inst);
+        retval = predict(tid, branch_pc, true, bp_history, inst, RegSnMap, regtable, digestMap);
     else
         retval = predict(tid, branch_pc, true, bp_history);
 

@@ -382,7 +382,8 @@ TAGE_SC_L_TAGE::extraAltCalc(TAGEBase::BranchInfo* bi)
 }
 
 bool
-TAGE_SC_L::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b, const StaticInstPtr & inst)
+TAGE_SC_L::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b, const StaticInstPtr & inst,
+                   const std::map<RegIndex, uint64_t> &RegSnMap, const bool *regtable, const std::map<RegIndex, uint16_t> &digestMap)
 {
     TageSCLBranchInfo *bi = new TageSCLBranchInfo(*tage,
                                                   *statisticalCorrector,

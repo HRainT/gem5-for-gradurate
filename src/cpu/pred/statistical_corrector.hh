@@ -250,7 +250,9 @@ class StatisticalCorrector : public SimObject
         ThreadID tid, Addr branch_pc, bool cond_branch, BranchInfo* bi,
         bool prev_pred_taken, bool bias_bit, bool use_conf_ctr,
         int8_t conf_ctr, unsigned conf_bits, int hitBank, int altBank,
-        int64_t phist, const StaticInstPtr & inst, int init_lsum = 0);
+        int64_t phist, const StaticInstPtr & inst, 
+        const std::map<RegIndex, uint64_t> &RegSnMap, const bool *regtable, const std::map<RegIndex, uint16_t> &digestMap,
+        int init_lsum = 0);
     virtual unsigned getIndBias(Addr branch_pc, BranchInfo* bi, bool b) const;
 
     virtual unsigned getIndBiasSK(Addr branch_pc, BranchInfo* bi) const;
@@ -264,7 +266,8 @@ class StatisticalCorrector : public SimObject
     virtual int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo* bi,
         int & lsum, int64_t phist) = 0;
     virtual int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo* bi,
-        int & lsum, int64_t phist, const StaticInstPtr &inst){ return 0; }
+        int & lsum, int64_t phist, const StaticInstPtr &inst,
+        const std::map<RegIndex, uint64_t> &RegSnMap, const bool *regtable, const std::map<RegIndex, uint16_t> &digestMap ){ return 0; }
     int64_t gIndex(Addr branch_pc, int64_t bhist, int logs, int nbr, int i);
     virtual int gIndexLogsSubstr(int nbr, int i) = 0;
 

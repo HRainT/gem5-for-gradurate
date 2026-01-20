@@ -91,7 +91,8 @@ class BPredUnit : public SimObject
                  PCStateBase &pc, ThreadID tid);
 
     bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
-                 PCStateBase &pc, ThreadID tid, bool & pred_weak, int & pred_ctr, unsigned &BTBdelay, bool sr_on);
+                 PCStateBase &pc, ThreadID tid, bool & pred_weak, int & pred_ctr, unsigned &BTBdelay, 
+                 bool sr_on, std::map<RegIndex, uint64_t> &RegSnMap, bool *regtable, std::map<RegIndex, uint16_t> &digestMap);
     // @todo: Rename this function.
     virtual void uncondBranch(ThreadID tid, Addr pc, void * &bp_history) = 0;
 
@@ -141,7 +142,8 @@ class BPredUnit : public SimObject
 
     // virtual bool lookup(ThreadID tid, Addr instPC, void * &bp_history, bool & pred_weak) = 0;
 
-    virtual bool lookup(ThreadID tid, Addr instPC, void * &bp_history, bool & pred_weak, int & pred_ctr, const StaticInstPtr &inst, bool sr_on) {
+    virtual bool lookup(ThreadID tid, Addr instPC, void * &bp_history, bool & pred_weak, int & pred_ctr, const StaticInstPtr &inst, bool sr_on,
+                        std::map<RegIndex, uint64_t> &RegSnMap, bool *regtable, std::map<RegIndex, uint16_t> &digestMap) {
         return true;
     };
 

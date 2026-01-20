@@ -575,6 +575,10 @@ class Fetch
         statistics::Distribution nisnDist;
         /** Rate of how often fetch was idle. */
         statistics::Formula idleRate;
+        /** Stat for total number of instructions from Fetch. */
+        statistics::Scalar toDecodeInsts;
+        /** Stat for uop cache hit rate. */
+        statistics::Formula frontBandwidth;
     } fetchStats;
 };
 

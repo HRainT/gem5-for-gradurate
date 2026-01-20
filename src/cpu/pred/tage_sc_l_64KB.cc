@@ -166,7 +166,8 @@ TAGE_SC_L_64KB_StatisticalCorrector::getIndBiasBank(Addr branch_pc,
 // }
 
 int
-TAGE_SC_L_64KB_StatisticalCorrector::sRPredict(ThreadID tid, Addr pc, BranchInfo* bi, const StaticInstPtr & inst){
+TAGE_SC_L_64KB_StatisticalCorrector::sRPredict(ThreadID tid, Addr pc, BranchInfo* bi, const StaticInstPtr & inst,
+                                                const std::map<RegIndex, uint64_t> &RegSnMap, const bool *regtable, const std::map<RegIndex, uint16_t> &digestMap){
     uint32_t ut_index[8];
     RegIndex regid[8];
     uint16_t Digest[8];
@@ -184,7 +185,7 @@ TAGE_SC_L_64KB_StatisticalCorrector::sRPredict(ThreadID tid, Addr pc, BranchInfo
     if(use_reg_pred){
         for(int i = 0; i < 8; i++) {
             for(int j = 0; j < 4; j++) {
-                if(inst->regtable[i*4 + j] != 0) {
+                if(regtable[i*4 + j] != 0) {
                     bi->ut_valid[i][j] = true;
                     int reg_id = i*4 + j; 
                     // size_t idx1 = reg_id * 8 + ((pc ^ (pc >> 2)) % 8);
@@ -194,10 +195,21 @@ TAGE_SC_L_64KB_StatisticalCorrector::sRPredict(ThreadID tid, Addr pc, BranchInfo
                     uint32_t idx2 = ut_index1(2, pc, reg_id);
                     uint32_t idx3 = ut_index1(3, pc, reg_id);
                     u_reg[reg_id] = RunLts::Utable[0][idx1].u + RunLts::Utable[1][idx2].u + RunLts::Utable[2][idx3].u;
-                    bi->digest[reg_id] = inst->digestMap[reg_id];
+                    auto it = digestMap.find(reg_id);
+                    if (it != digestMap.end()) {
+                        bi->digest[reg_id] = it->second;
+                    } else {
+                        assert(false && "Digest not found for reg_id");
+                    }
                     if(u_reg[reg_id] >= u[i]) {
+                        DPRINTF(SR, "pc %lx, reg_id %d, u_reg %d\n", pc, reg_id, u_reg[reg_id]);
                         u[i] = u_reg[reg_id];
-                        Digest[i] = inst->digestMap[reg_id];
+                        auto it = digestMap.find(reg_id);
+                        if (it != digestMap.end()) {
+                            Digest[i] = it->second;
+                        } else {
+                            assert(false && "Digest not found for reg_id"); 
+                        }
                         bi->ut_j[i] = j;
                         bi->ut_index1[i][0] = idx1;
                         bi->ut_index1[i][1] = idx2;
@@ -247,7 +259,8 @@ TAGE_SC_L_64KB_StatisticalCorrector::sRPredict(ThreadID tid, Addr pc, BranchInfo
 
 int
 TAGE_SC_L_64KB_StatisticalCorrector::gPredictions(ThreadID tid, Addr branch_pc,
-        BranchInfo* bi, int & lsum, int64_t pathHist, const StaticInstPtr &inst)
+        BranchInfo* bi, int & lsum, int64_t pathHist, const StaticInstPtr &inst,
+        const std::map<RegIndex, uint64_t> &RegSnMap, const bool *regtable, const std::map<RegIndex, uint16_t> &digestMap)
 {
     SC_64KB_ThreadHistory *sh =
         static_cast<SC_64KB_ThreadHistory *>(scHistory);
@@ -293,8 +306,9 @@ TAGE_SC_L_64KB_StatisticalCorrector::gPredictions(ThreadID tid, Addr branch_pc,
         branch_pc, sh->imliCount, im, igehl, inb, logInb, wi);
     DPRINTF(NewTage, "pc %lx, wi:%d\n", branch_pc, trans);
     lsum += trans;
-
-    trans = sRPredict(tid, branch_pc, bi, inst);
+    DPRINTF(SR, "Begin SR:pc %lx, LSUM:%d\n", branch_pc, lsum);
+    trans = sRPredict(tid, branch_pc, bi, inst,
+                      RegSnMap, regtable, digestMap);
     DPRINTF(NewTage, "pc %lx, SR:%d\n", branch_pc, trans);
     DPRINTF(SR, "pc %lx, SR:%d\n", branch_pc, trans);
     lsum += trans;
