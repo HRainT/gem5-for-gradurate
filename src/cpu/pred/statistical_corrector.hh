@@ -292,7 +292,12 @@ class StatisticalCorrector : public SimObject
 
     virtual void gUpdates( ThreadID tid, Addr pc, bool taken, BranchInfo* bi,
         int64_t phist) = 0;
-
+    void SRUpdate(
+        Addr branch_pc, bool taken, BranchInfo* bi, int64_t phist);
+    virtual void rUpdates( ThreadID tid, Addr pc, bool taken, BranchInfo* bi, int64_t phist, std::vector<int8_t> & w)
+    {
+        return;
+    }
     void init() override;
     void updateStats(bool taken, BranchInfo *bi);
 

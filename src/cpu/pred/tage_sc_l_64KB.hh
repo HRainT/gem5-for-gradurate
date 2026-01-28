@@ -134,7 +134,7 @@ class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
             int64_t phist) override;
     int sRPredict(ThreadID tid, Addr pc, BranchInfo* bi, const StaticInstPtr & inst,
                 const std::map<RegIndex, uint64_t> &RegSnMap, const bool *regtable, const std::map<RegIndex, uint16_t> &digestMap);
-    void rUpdates( ThreadID tid, Addr pc, bool taken, BranchInfo* bi, int64_t phist, std::vector<int8_t> & w);
+    void rUpdates( ThreadID tid, Addr pc, bool taken, BranchInfo* bi, int64_t phist, std::vector<int8_t> & w) override;
     // static inline uint64_t mixBankSalt(int bank) {
     //     // Knuth/黄金分割常数的 64 位版本，作为 bank 盐值
     //     return 0x9E3779B97F4A7C15ULL * (uint64_t)(bank + 1);

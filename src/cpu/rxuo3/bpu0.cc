@@ -135,7 +135,39 @@ Bpu0::Bpu0Stats::Bpu0Stats(CPU *cpu)
                "Rate of L0BTB can't send a cacheline due to stall/squash"),
       ADD_STAT(bubbleCount, "Distribution of number of bubble detected by bpu0"),
       ADD_STAT(bubbleInstsCount, "Distribution of number of bubble insts detected by bpu0"),
-
+      ADD_STAT(UseReg0Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg1Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg2Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg3Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg4Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg5Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg6Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg7Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg8Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg9Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg10Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg11Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg12Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg13Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg14Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg15Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg16Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg17Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg18Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg19Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg20Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg21Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg22Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg23Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg24Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg25Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg26Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg27Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg28Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg29Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg30Count, "Distribution of number of bubble detected by bpu0"),
+        ADD_STAT(UseReg31Count, "Distribution of number of bubble detected by bpu0"),
+    
       ADD_STAT(Return_cam_missInsts, statistics::units::Count::get(),
                "Number of missing return instructions handled by Return_cam"),
       ADD_STAT(correctByBpu, statistics::units::Count::get(),
@@ -195,6 +227,104 @@ Bpu0::Bpu0Stats::Bpu0Stats(CPU *cpu)
     bubbleInstsCount
         .init(0, 1000, 1)
         .flags(statistics::nozero);
+
+    UseReg0Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg1Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg2Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg3Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg4Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg5Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg6Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg7Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg8Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg9Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg10Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg11Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg12Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg13Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg14Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg15Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg16Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg17Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg18Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg19Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg20Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg21Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg22Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg23Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg24Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg25Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg26Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg27Count   
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg28Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg29Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg30Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+    UseReg31Count
+        .init(0, 1024, 128)
+        .flags(statistics::nozero);
+
 
     Return_cam_missInsts.prereq(Return_cam_missInsts);
 
@@ -1004,6 +1134,7 @@ Bpu0::processInsts(ThreadID tid)
             incrementVector = false;
 
             if(inst->numDestRegs() > 0 && !inst->destRegIdx(0).isZeroReg()){
+                statRegCount(inst->destRegIdx(0), curTick()/500);
                 for(int i=0; i<32; i++){
                     if(!cpu->regtable[i])
                         continue;
@@ -1340,6 +1471,51 @@ Bpu0::buildInst(ThreadID tid, StaticInstPtr staticInst,
 }
 
     return instruction;
+}
+
+void
+Bpu0::statRegCount(uint8_t regNum, Tick cycle)
+{
+    // 1. 安全检查：确保寄存器号在 0-31 范围内
+    if (regNum >= 32) {
+        return;
+    }
+
+    // 2. 映射表：将索引 regNum 映射到对应的分布统计对象地址
+    // 使用 static 只需初始化一次，提高效率
+    static statistics::Distribution* distMap[32] = {
+        &stats.UseReg0Count,  &stats.UseReg1Count,  &stats.UseReg2Count,  &stats.UseReg3Count,
+        &stats.UseReg4Count,  &stats.UseReg5Count,  &stats.UseReg6Count,  &stats.UseReg7Count,
+        &stats.UseReg8Count,  &stats.UseReg9Count,  &stats.UseReg10Count, &stats.UseReg11Count,
+        &stats.UseReg12Count, &stats.UseReg13Count, &stats.UseReg14Count, &stats.UseReg15Count,
+        &stats.UseReg16Count, &stats.UseReg17Count, &stats.UseReg18Count, &stats.UseReg19Count,
+        &stats.UseReg20Count, &stats.UseReg21Count, &stats.UseReg22Count, &stats.UseReg23Count,
+        &stats.UseReg24Count, &stats.UseReg25Count, &stats.UseReg26Count, &stats.UseReg27Count,
+        &stats.UseReg28Count, &stats.UseReg29Count, &stats.UseReg30Count, &stats.UseReg31Count
+    };
+
+    // 3. 计算时间间隔 (bubbles)
+    // 获取该寄存器上一次被写入的时间
+    Tick lastWriteCycle = useReg_ctr[regNum];
+    
+    // 如果是第一次写入（lastWriteCycle为0），通常间隔即为当前cycle（或者视需求决定是否忽略第一次）
+    // 这里按照通常逻辑计算差值
+    Tick bubbles = 0;
+    if (cycle >= lastWriteCycle) {
+        bubbles = cycle - lastWriteCycle;
+    } else {
+        // 防止 cycle 回绕或异常情况
+        bubbles = 0; 
+    }
+
+    // 4. 进行采样统计
+    // 通过映射表找到对应的对象并调用 sample
+    if (distMap[regNum] != nullptr) {
+        distMap[regNum]->sample(bubbles);
+    }
+
+    // 5. 更新该寄存器的最后写入时间为当前时间
+    useReg_ctr[regNum] = cycle;
 }
 
 } // namespace rxuo3

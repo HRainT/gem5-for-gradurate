@@ -59,9 +59,8 @@ class Bpu0
   public:
     /** Per-thread status. */
     bool incrementVector = false;
-    
+    uint64_t useReg_ctr[32] = {0};
     int incrementNum = 0;
-
   public:
     /** Bpu0 constructor. */
     Bpu0(CPU *_cpu, const BaseRxuO3CPUParams &params);
@@ -113,6 +112,7 @@ class Bpu0
     /** process Insts.
      */
     void processInsts(ThreadID tid);
+    void statRegCount(uint8_t regNum, Tick cycle);
 
   private:
     /** Updates overall bpu0 status based on all of the threads' statuses. */
@@ -734,6 +734,39 @@ class Bpu0
         statistics::Distribution bubbleCount;
         /** Distribution of number of bubble insts detected by bpu0. */
         statistics::Distribution bubbleInstsCount;
+        //reg use count
+        statistics::Distribution UseReg0Count;
+        statistics::Distribution UseReg1Count;
+        statistics::Distribution UseReg2Count;
+        statistics::Distribution UseReg3Count;
+        statistics::Distribution UseReg4Count;
+        statistics::Distribution UseReg5Count;
+        statistics::Distribution UseReg6Count;
+        statistics::Distribution UseReg7Count;
+        statistics::Distribution UseReg8Count;
+        statistics::Distribution UseReg9Count;
+        statistics::Distribution UseReg10Count;
+        statistics::Distribution UseReg11Count;
+        statistics::Distribution UseReg12Count;
+        statistics::Distribution UseReg13Count;
+        statistics::Distribution UseReg14Count;
+        statistics::Distribution UseReg15Count;
+        statistics::Distribution UseReg16Count;
+        statistics::Distribution UseReg17Count;
+        statistics::Distribution UseReg18Count;
+        statistics::Distribution UseReg19Count;
+        statistics::Distribution UseReg20Count;
+        statistics::Distribution UseReg21Count;
+        statistics::Distribution UseReg22Count;
+        statistics::Distribution UseReg23Count;
+        statistics::Distribution UseReg24Count;
+        statistics::Distribution UseReg25Count;
+        statistics::Distribution UseReg26Count;
+        statistics::Distribution UseReg27Count;
+        statistics::Distribution UseReg28Count;
+        statistics::Distribution UseReg29Count;
+        statistics::Distribution UseReg30Count;
+        statistics::Distribution UseReg31Count;
 
         /** Number of missing return instructions handled by Return_cam. */
         statistics::Scalar Return_cam_missInsts;

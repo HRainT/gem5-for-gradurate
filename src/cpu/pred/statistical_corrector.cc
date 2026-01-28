@@ -449,6 +449,12 @@ StatisticalCorrector::condBranchUpdate(ThreadID tid, Addr branch_pc,
     }
 }
 
+void 
+StatisticalCorrector::SRUpdate(Addr branch_pc, bool taken, BranchInfo* bi, int64_t phist)
+{
+    rUpdates(0, branch_pc, taken, bi, phist, wr);
+}
+
 void
 StatisticalCorrector::updateStats(bool taken, BranchInfo *bi)
 {

@@ -14,7 +14,7 @@ GROUP1_KEYS = [
     "system.cpu.commit.commitSquashedInsts",
 ]
 GROUP2_KEYS = [
-    "system.cpu.fetch.toDecodeInsts",
+    "system.cpu.IBandLB.toDecodeInsts",
     "system.cpu.numCycles",
 ]
 
@@ -90,9 +90,9 @@ def compute_metrics(row: Dict[str, float]) -> Dict[str, Optional[float]]:
     # recover rate = commitSquashedInsts / 40000000
     recover_rate = safe_div(row["system.cpu.commit.commitSquashedInsts"], 40000000.0)
 
-    # frontbandwidth = toDecodeInsts / numCycles
+    # frontbandwidth = system.cpu.IBandLB.toDecodeInsts / numCycles
     frontbandwidth = safe_div(
-        row["system.cpu.fetch.toDecodeInsts"], 
+        row["system.cpu.IBandLB.toDecodeInsts"], 
         row["system.cpu.numCycles"]
     )
 
@@ -109,9 +109,9 @@ def compute_category_metrics(category_vals: Dict[str, float], num_in_category: i
         40000000.0 * num_in_category
     )
     
-    # 分类的frontbandwidth = 分类内所有benchmark的toDecodeInsts累加 / 分类内所有benchmark的numCycles累加
+    # 分类的frontbandwidth = 分类内所有benchmark的system.cpu.IBandLB.toDecodeInsts累加 / 分类内所有benchmark的numCycles累加
     category_frontbandwidth = safe_div(
-        category_vals["system.cpu.fetch.toDecodeInsts"],
+        category_vals["system.cpu.IBandLB.toDecodeInsts"],
         category_vals["system.cpu.numCycles"]
     )
     

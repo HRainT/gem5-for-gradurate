@@ -172,9 +172,9 @@ elif [ $mode = 7 ]; then
     --rxu-rename
 elif [ $mode = 8 ]; then
     time \
-    build/RISCV/gem5.fast \
+    build/RISCV/gem5.opt \
     --outdir=/Data2/yutong.han/graduate/astar_biglakes_93 \
-    --stats-file rxu_sr_0118.txt \
+    --stats-file rxu_sr_0128_fixbug.txt \
     configs/example/fs.py \
     --generic-rv-cpt=/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1/473.astar/BigLakes/93/_93_0.013591_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \

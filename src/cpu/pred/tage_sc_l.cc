@@ -418,14 +418,14 @@ TAGE_SC_L::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b, con
     pred_taken = statisticalCorrector->scPredict(tid, branch_pc, cond_branch,
             bi->scBranchInfo, pred_taken, bias, use_tage_ctr, tage_ctr,
             tage->getTageCtrBits(), bi->tageBranchInfo->hitBank,
-            bi->tageBranchInfo->altBank, tage->getPathHist(tid), inst);
+            bi->tageBranchInfo->altBank, tage->getPathHist(tid), inst, RegSnMap, regtable, digestMap);
 
     if (bi->scBranchInfo->usedScPred) {
         bi->tageBranchInfo->provider = SC;
     }
-    if (tage->isSpeculativeUpdateEnabled()) {
-        tage->updateHistories(tid, branch_pc, pred_taken, bi->tageBranchInfo, true, inst, MaxAddr);
-    }
+    // if (tage->isSpeculativeUpdateEnabled()) {
+    //     tage->updateHistories(tid, branch_pc, pred_taken, bi->tageBranchInfo, true, inst, MaxAddr);
+    // }
     // record final prediction
     bi->lpBranchInfo->predTaken = pred_taken;
 
@@ -495,6 +495,8 @@ TAGE_SC_L::update(ThreadID tid, Addr branch_pc, bool taken, void *bp_history,
             // This restores the global history, then update it
             // and recomputes the folded histories.
             tage->squash(tid, taken, tage_bi, corrTarget);
+            statisticalCorrector->SRUpdate(branch_pc, taken, bi->scBranchInfo,
+                                        tage->getPathHist(tid));
             if (bi->tageBranchInfo->condBranch) {
                 loopPredictor->squashLoop(bi->lpBranchInfo);
             }
