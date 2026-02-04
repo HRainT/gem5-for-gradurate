@@ -179,6 +179,11 @@ StatisticalCorrector::getIndUpds(Addr branch_pc) const
 {
     return ((branch_pc ^ (branch_pc >>2)) & ((1 << (logSizeUps)) - 1));
 }
+unsigned
+StatisticalCorrector::WR_getIndUpds(Addr branch_pc) const
+{
+    return ((branch_pc ^ (branch_pc >>2)) & ((1 << (12)) - 1));
+}
 
 int64_t
 StatisticalCorrector::gIndex(Addr branch_pc, int64_t bhist, int logs, int nbr,
@@ -248,7 +253,7 @@ StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
         }
 
         int lsum = init_lsum;
-        DPRINTF(NewTage, "pc %lx SC Begin;\n", branch_pc);
+        // DPRINTF(NewTage, "pc %lx SC Begin;\n", branch_pc);
         int8_t ctr = bias[getIndBias(branch_pc, bi, bias_bit)];
         lsum += (2 * ctr + 1);
         ctr = biasSK[getIndBiasSK(branch_pc, bi)];
@@ -257,10 +262,10 @@ StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
         lsum += (2 * ctr + 1);
 
         lsum = (1 + (wb[getIndUpds(branch_pc)] >= 0)) * lsum;
-        DPRINTF(NewTage, "pc %lx, bias:%d\n", branch_pc, lsum);
+        // DPRINTF(NewTage, "pc %lx, bias:%d\n", branch_pc, lsum);
         int thres = gPredictions(tid, branch_pc, bi, lsum, phist,inst,
                                 RegSnMap, regtable, digestMap);
-        DPRINTF(NewTage, "pc %lx, highConf:%d, medConf:%d, lowConf:%d, firstH:%d, secondH:%d\n", branch_pc, bi->highConf, bi->medConf, bi->lowConf, firstH, secondH);
+        // DPRINTF(NewTage, "pc %lx, highConf:%d, medConf:%d, lowConf:%d, firstH:%d, secondH:%d\n", branch_pc, bi->highConf, bi->medConf, bi->lowConf, firstH, secondH);
         // These will be needed at update time
         bi->lsum = lsum;
         bi->thres = thres;
@@ -282,15 +287,24 @@ StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
                 if (abs (lsum) < (thres / 4)) {
                     useScPred = (firstH < 0);
                 }
+                // if(abs(lsum) < (thres / 6)){
+                //     useScPred = false;
+                //     pred_taken = bi->result > 0;
+                // }
             }
-
+            // if(bi->lowConf){
+            //     if(abs(lsum) < (thres /4)){
+            //         useScPred = false;
+            //         pred_taken = bi->result > 0;
+            //     }
+            // }
             bi->usedScPred = useScPred;
             if (useScPred) {
                 pred_taken = scPred;
                 bi->scPred = scPred;
             }
         }
-        DPRINTF(NewTage, "pc %lx Final Pred; taken = %d, useScPred = %d\n", branch_pc, pred_taken, bi->usedScPred);
+        // DPRINTF(NewTage, "pc %lx Pred; pred_taken = %d, sr_pred = %d, wr = %d\n", branch_pc, pred_taken, bi->result, bi->weight);
     }
 
     return pred_taken;
@@ -315,7 +329,7 @@ StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
         }
 
         int lsum = init_lsum;
-        DPRINTF(NewTage, "pc %lx SC Begin;\n", branch_pc);
+        // DPRINTF(NewTage, "pc %lx SC Begin;\n", branch_pc);
         int8_t ctr = bias[getIndBias(branch_pc, bi, bias_bit)];
         lsum += (2 * ctr + 1);
         ctr = biasSK[getIndBiasSK(branch_pc, bi)];
@@ -324,7 +338,7 @@ StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
         lsum += (2 * ctr + 1);
         
         lsum = (1 + (wb[getIndUpds(branch_pc)] >= 0)) * lsum;
-        DPRINTF(NewTage, "pc %lx, bias:%d\n", branch_pc, lsum);
+        // DPRINTF(NewTage, "pc %lx, bias:%d\n", branch_pc, lsum);
         int thres = gPredictions(tid, branch_pc, bi, lsum, phist);
 
         // These will be needed at update time

@@ -167,7 +167,7 @@ uint64_t UT_SALT[3] = {
 };
 
 uint32_t ut_index1(int t, uint64_t pc, int reg_id) {
-    return reg_id * 8 + ((pc ^ (pc >> (2 * t))) % 8);
+    return reg_id * 16 + ((pc ^ (pc >> (2 * t))) % 16);
 }
 // 用法示例：Utable[t][ ut_index(t, pc, reg_id) ]
 
@@ -236,30 +236,25 @@ uint32_t wt_index3(uint64_t pc, int reg_id, uint16_t digest12) {
             struct UTEntry
             {
                 int16_t u;
-                UTEntry() :u{0} { }
+                UTEntry() :u{-4} { }
             };
             struct WTEntry
             {
                 int8_t weight = 0;
                 WTEntry() : weight(0) { }
             };
-            inline static UTEntry Utable[3][256] = {};
-            inline static WTEntry Wtable0[8][512] = {};
-            inline static WTEntry Wtable1[8][256] = {};
-            inline static WTEntry Wtable2[8][128] = {};
-            static void WtableUpdate(uint32_t i1, uint32_t i2, uint32_t i3, int i, bool taken){
+            inline static UTEntry Utable[4][496] = {};
+            inline static WTEntry Wtable0[4][1024] = {};
+            inline static WTEntry Wtable1[4][512] = {};
+            static void WtableUpdate(uint32_t i1, uint32_t i2 , int i, bool taken){
                 if(RunLts::Wtable0[i][i1].weight < 31 && taken)
                     RunLts::Wtable0[i][i1].weight++;
                 if(RunLts::Wtable1[i][i2].weight < 31 && taken)
-                    RunLts::Wtable1[i][i2].weight++;
-                if(RunLts::Wtable2[i][i3].weight < 31 && taken)
-                    RunLts::Wtable2[i][i3].weight++;                    
+                    RunLts::Wtable1[i][i2].weight++;               
                 if(RunLts::Wtable0[i][i1].weight > -32 && !taken)
                     RunLts::Wtable0[i][i1].weight--;
                 if(RunLts::Wtable1[i][i2].weight > -32 && !taken)
                     RunLts::Wtable1[i][i2].weight--;
-                if(RunLts::Wtable2[i][i3].weight > -32 && !taken)
-                    RunLts::Wtable2[i][i3].weight--;    
             }
     };
 

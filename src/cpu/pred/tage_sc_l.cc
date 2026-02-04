@@ -47,6 +47,7 @@
 #include "debug/Fetch.hh"
 #include "debug/Tage.hh"
 #include "debug/RxuBPU.hh"
+#include "debug/NewTage.hh"
 namespace gem5
 {
 
@@ -423,6 +424,7 @@ TAGE_SC_L::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b, con
     if (bi->scBranchInfo->usedScPred) {
         bi->tageBranchInfo->provider = SC;
     }
+    bi->scBranchInfo->final_pred = pred_taken;
     // if (tage->isSpeculativeUpdateEnabled()) {
     //     tage->updateHistories(tid, branch_pc, pred_taken, bi->tageBranchInfo, true, inst, MaxAddr);
     // }
@@ -489,7 +491,8 @@ TAGE_SC_L::update(ThreadID tid, Addr branch_pc, bool taken, void *bp_history,
     TageSCLBranchInfo* bi = static_cast<TageSCLBranchInfo*>(bp_history);
     TAGE_SC_L_TAGE::BranchInfo* tage_bi =
         static_cast<TAGE_SC_L_TAGE::BranchInfo *>(bi->tageBranchInfo);
-
+    DPRINTF(NewTage, "pc %lx final_pred = %d, sr_pred = %d, wr = %d, result = %d\n", branch_pc, bi->scBranchInfo->final_pred,
+             bi->scBranchInfo->result, bi->scBranchInfo->real_wr, taken);
     if (squashed) {
         if (tage->isSpeculativeUpdateEnabled()) {
             // This restores the global history, then update it

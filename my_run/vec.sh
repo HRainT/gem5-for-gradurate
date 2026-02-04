@@ -172,11 +172,11 @@ elif [ $mode = 7 ]; then
     --rxu-rename
 elif [ $mode = 8 ]; then
     time \
-    build/RISCV/gem5.opt \
-    --outdir=/Data2/yutong.han/graduate/astar_biglakes_93 \
-    --stats-file rxu_sr_0128_fixbug.txt \
+    build/RISCV/gem5.fast \
+    --outdir=/Data2/yutong.han/graduate/gcc_expr_5107 \
+    --stats-file rxu_sr_0204.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1/473.astar/BigLakes/93/_93_0.013591_memory_.gz \
+    --generic-rv-cpt=/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1/403.gcc/expr/5107/_5107_0.045350_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=RxuO3CPU \
@@ -211,12 +211,12 @@ elif [ $mode = 8 ]; then
 elif [ $mode = 9 ]; then
     time \
     build/RISCV/gem5.opt \
-    --outdir=/Data2/yutong.han/graduate/astar_biglakes_93 \
-    --debug-flag SR \
-    --debug-file debug_0104_sr.log \
+    --outdir=/Data2/yutong.han/graduate/gcc_expr_5107 \
+    --debug-flag NewTage \
+    --debug-file debug_0203_sr.log \
     --stats-file rxu_sr.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1/473.astar/BigLakes/93/_93_0.013591_memory_.gz \
+    --generic-rv-cpt=/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1/403.gcc/expr/5107/_5107_0.045350_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=RxuO3CPU \

@@ -218,18 +218,20 @@ class StatisticalCorrector : public SimObject
         int thres;
         bool predBeforeSC;
         bool usedScPred;
-        int8_t pre_result = 0;
+        int16_t pre_result = 0;
         int16_t weight = 0;
-        int8_t result = 0;
-        uint32_t ut_index[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-        bool ut_valid[8][4] = {0, 0, 0, 0, 0, 0, 0, 0};
-        bool ut_bank_vld[8] = {false, false, false, false, false, false, false, false};
-        uint32_t wt_index[8][3] = {0, 0, 0, 0, 0, 0, 0, 0};
-        int8_t wt_ctr[8][3] = {0, 0, 0, 0, 0, 0, 0, 0};
-        int16_t per_bank[8] = {0, 0, 0, 0, 0, 0, 0, 0}; 
-        uint8_t ut_j[8] = {0, 0, 0, 0, 0, 0, 0, 0}; 
+        int8_t real_wr= 0 ;
+        int16_t result = 0;
+        int16_t final_pred = 0;
+        uint32_t ut_index[4] = {0, 0, 0, 0};
+        bool ut_valid[32] = {0};
+        bool ut_bank_vld[4] = {false, false, false, false};
+        uint32_t wt_index[4][3] = {0, 0, 0, 0, 0, 0, 0, 0};
+        int8_t wt_ctr[4][3] = {0, 0, 0, 0, 0, 0};
+        int16_t per_bank[4] = {0};
+        uint8_t ut_bestreg[4] = {0}; 
 
-        uint32_t ut_index1[8][3] = {0, 0, 0, 0, 0, 0, 0, 0};
+        uint32_t ut_index1[4][4] = {0};
         uint32_t wt_index1[8][3] = {0, 0, 0, 0, 0, 0, 0, 0};
         uint16_t digest[32] = {0};
     };
@@ -262,6 +264,7 @@ class StatisticalCorrector : public SimObject
 
     virtual unsigned getIndUpd(Addr branch_pc) const;
     unsigned getIndUpds(Addr branch_pc) const;
+    unsigned WR_getIndUpds(Addr branch_pc) const;
 
     virtual int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo* bi,
         int & lsum, int64_t phist) = 0;

@@ -1317,7 +1317,9 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
     }
 
     updateComInstStats(head_inst);
-
+    if (head_inst->isControl() && head_inst->mispredicted()) {
+        cpu->baseStats.bpu1MissCommitCount++;
+    } 
     if (head_inst->staticInst->disassemble(head_inst->pcState().instAddr()) 
             == "jal zero, 0") {
         exitSimLoop("reached instruction: jal zero, 0");
@@ -1439,7 +1441,10 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     }
     cpu->commitStats[tid]->numOps++;
     cpu->curMicroCommitInsts++;
-
+    if (inst->isControl() && !inst->isReturn() && !inst->isCall()) {
+        stats.retiredBranchInsts++;
+        cpu->baseStats.retiredBranchInsts++;
+    }
     // To match the old model, don't count nops and instruction
     // prefetches towards the total commit count.
     if (!inst->isNop() && !inst->isInstPrefetch()) {

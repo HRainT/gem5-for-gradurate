@@ -501,6 +501,7 @@ class Commit
         statistics::Scalar vsetivliVtypeChangedNum;
         statistics::Scalar vsetvliVtypeChangedNum;
         statistics::Scalar vsetvlVtypeChangedNum;
+        statistics::Scalar retiredBranchInsts;
     } stats;
 };
 
