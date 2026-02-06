@@ -178,7 +178,8 @@ TAGE_SC_L_64KB_StatisticalCorrector::sRPredict(ThreadID tid, Addr pc, BranchInfo
     // result = result * 3;
     bi->pre_result = result;
     // result = Scale * result;
-    bi->weight = (wr[getIndUpds(pc)] >= 0) ? 2 : 1;
+    bi->weight = (wr[getIndUpds(pc)] >= 0) ? (wr[getIndUpds(pc)] >= 8?(wr[getIndUpds(pc)] >= 16? 2:1):0):
+                                         (wr[getIndUpds(pc)] <= -8?(wr[getIndUpds(pc)] <= -16? -2:-1):0);
     bi->real_wr = wr[getIndUpds(pc)];
     result = (1 + (wr[getIndUpds(pc)] >= 0)) * result;
     bi->result = result;
@@ -247,7 +248,7 @@ TAGE_SC_L_64KB_StatisticalCorrector::gPredictions(ThreadID tid, Addr branch_pc,
       + (ws[getIndUpds(branch_pc)] >= 0) + (wt[getIndUpds(branch_pc)] >= 0)
       + (wl[getIndUpds(branch_pc)] >= 0) + (wbw[getIndUpds(branch_pc)] >= 0)
       + (wi[getIndUpds(branch_pc)] >= 0)
-      + (wr[getIndUpds(branch_pc)] >= 0)
+    //   + (wr[getIndUpds(branch_pc)] >= 0)
     );
     // DPRINTF(NewTage, "pc %lx End; tage pred:%d, lsum:%d, thres:%d\n", branch_pc, bi->predBeforeSC, lsum, thres);
     return thres;
@@ -360,10 +361,8 @@ TAGE_SC_L_64KB_StatisticalCorrector::rUpdates(ThreadID tid, Addr pc, bool taken,
 {
     // DPRINTF(NewTage, "pc %lx Update; taken = %d\n", pc, taken);
     int xsum = bi->lsum - bi->result;
-    if ((bi->lsum >= 0) != (xsum >= 0)) {
-        ctrUpdate(wr[getIndUpds(pc)], ((bi->result >= 0) == taken),
+    ctrUpdate(wr[getIndUpds(pc)], ((bi->result >= 0) == taken),
                   extraWeightsWidth);
-    }
     
     // int lsum_w1 = bi->lsum - bi->result + 1 * bi->pre_result;
     // int lsum_w2 = bi->lsum - bi->result + 2 * bi->pre_result;

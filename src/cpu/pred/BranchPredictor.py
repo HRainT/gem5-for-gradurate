@@ -88,9 +88,9 @@ class BranchPredictor(SimObject):
     BTBWays = Param.Unsigned(1, "Number of BTB ways")
     BTBBanks = Param.Unsigned(16, "Number of BTB banks")
 
-    L2BTBEntries = Param.Unsigned(128, "Number of L2BTB entries")
+    L2BTBEntries = Param.Unsigned(1, "Number of L2BTB entries")
     L2BTBWays = Param.Unsigned(1, "Number of L2BTB ways")
-    L2BTBBanks = Param.Unsigned(16, "Number of L2BTB banks")
+    L2BTBBanks = Param.Unsigned(1, "Number of L2BTB banks")
 
     BTBTagSize = Param.Unsigned(16, "Size of the BTB tags, in bits")
     RASSize = Param.Unsigned(16, "RAS size")

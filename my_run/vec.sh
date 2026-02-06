@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mode=8
+mode=10
 if [ $1 ]; then
     mode=$1
 fi
@@ -173,10 +173,10 @@ elif [ $mode = 7 ]; then
 elif [ $mode = 8 ]; then
     time \
     build/RISCV/gem5.fast \
-    --outdir=/Data2/yutong.han/graduate/gcc_expr_5107 \
-    --stats-file rxu_sr_0204.txt \
+    --outdir=/Data2/yutong.han/graduate/gcc_expr_3734 \
+    --stats-file rxu_sr_0205.txt \
     configs/example/fs.py \
-    --generic-rv-cpt=/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1/403.gcc/expr/5107/_5107_0.045350_memory_.gz \
+    --generic-rv-cpt=/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1/403.gcc/expr/3734/_3734_0.004401_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
     --xiangshan-system \
     --cpu-type=RxuO3CPU \
@@ -252,7 +252,7 @@ elif [ $mode = 10 ]; then
     time \
     build/RISCV/gem5.opt \
     --outdir=/Data2/yutong.han/graduate/astar_biglakes_93 \
-    --stats-file stats_0116_o3_align_rxu.txt \
+    --stats-file stats_0206_o3_align_rxu.txt \
     configs/example/fs.py \
     --generic-rv-cpt=/Data2/xiaohan.zhang/spec06_NEMU_GZ_V0.1/473.astar/BigLakes/93/_93_0.013591_memory_.gz \
     --gcpt-restorer=/Data3/suwei.ye/workspace/nexus-am/appsrxu/template/simpoint_case/spec2006_xssimpoint_timer/dir/gcpt_restore/build/gcpt.bin \
