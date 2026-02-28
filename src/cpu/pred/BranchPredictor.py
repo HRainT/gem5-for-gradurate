@@ -267,7 +267,7 @@ class TAGE_SC_L_TAGE(TAGEBase):
     initialTCounterValue = 1 << 9
     useAltOnNaBits = 5
     # TODO No speculation implemented as of now
-    speculativeHistUpdate = True
+    speculativeHistUpdate = False
 
     # This size does not set the final sizes of the tables (it is just used
     # for some calculations)
