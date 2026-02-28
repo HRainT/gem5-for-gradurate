@@ -165,6 +165,7 @@ class StatisticalCorrector : public SimObject
     std::vector<int> im;
     std::vector<int8_t> * igehl;
     std::vector<int8_t> wi;
+    std::vector<int8_t> wr;
 
     std::vector<int8_t> bias;
     std::vector<int8_t> biasSK;
@@ -216,6 +217,23 @@ class StatisticalCorrector : public SimObject
         int thres;
         bool predBeforeSC;
         bool usedScPred;
+
+        int16_t pre_result = 0;
+        int16_t weight = 0;
+        int8_t real_wr= 0 ;
+        int16_t result = 0;
+        int16_t final_pred = 0;
+        uint32_t ut_index[4] = {0, 0, 0, 0};
+        bool ut_valid[32] = {0};
+        bool ut_bank_vld[4] = {false, false, false, false};
+        uint32_t wt_index[4][3] = {0, 0, 0, 0, 0, 0, 0, 0};
+        int8_t wt_ctr[4][3] = {0, 0, 0, 0, 0, 0};
+        int16_t per_bank[4] = {0};
+        uint8_t ut_bestreg[4] = {0}; 
+
+        uint32_t ut_index1[4][4] = {0};
+        uint32_t wt_index1[8][3] = {0, 0, 0, 0, 0, 0, 0, 0};
+        uint16_t digest[32] = {0};
     };
 
     StatisticalCorrector(const StatisticalCorrectorParams &p);
@@ -230,7 +248,13 @@ class StatisticalCorrector : public SimObject
         bool prev_pred_taken, bool bias_bit, bool use_conf_ctr,
         int8_t conf_ctr, unsigned conf_bits, int hitBank, int altBank,
         int64_t phist, int init_lsum = 0);
-
+    virtual bool scPredict(
+        ThreadID tid, Addr branch_pc, bool cond_branch, BranchInfo* bi,
+        bool prev_pred_taken, bool bias_bit, bool use_conf_ctr,
+        int8_t conf_ctr, unsigned conf_bits, int hitBank, int altBank,
+        int64_t phist,
+        const std::map<RegIndex, uint64_t> &RegSnMap, const std::vector<bool> &regtable, const std::map<RegIndex, uint16_t> &digestMap,
+        int init_lsum = 0);
     virtual unsigned getIndBias(Addr branch_pc, BranchInfo* bi, bool b) const;
 
     virtual unsigned getIndBiasSK(Addr branch_pc, BranchInfo* bi) const;
@@ -243,6 +267,12 @@ class StatisticalCorrector : public SimObject
 
     virtual int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo* bi,
         int & lsum, int64_t phist) = 0;
+    virtual int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo* bi,
+        int & lsum, int64_t phist,const std::map<RegIndex, uint64_t> &RegSnMap,
+        const std::vector<bool> &regtable, const std::map<RegIndex, uint16_t> &digestMap)
+        {
+            return 0;
+        };
 
     int64_t gIndex(Addr branch_pc, int64_t bhist, int logs, int nbr, int i);
 
@@ -269,7 +299,12 @@ class StatisticalCorrector : public SimObject
 
     virtual void gUpdates( ThreadID tid, Addr pc, bool taken, BranchInfo* bi,
         int64_t phist) = 0;
-
+    void SRUpdate(
+        Addr branch_pc, bool taken, BranchInfo* bi, int64_t phist);
+    virtual void rUpdates( ThreadID tid, Addr pc, bool taken, BranchInfo* bi, int64_t phist, std::vector<int8_t> & w)
+    {
+        return;
+    }
     void init() override;
     void updateStats(bool taken, BranchInfo *bi);
 

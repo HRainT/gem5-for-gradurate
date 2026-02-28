@@ -94,6 +94,17 @@ class SimpleBTB(BranchTargetBuffer):
         Parent.instShiftAmt, "Number of bits to shift instructions by"
     )
 
+class NewBTB(BranchTargetBuffer):
+    type = "NewBTB"
+    cxx_class = "gem5::branch_prediction::NewBTB"
+    cxx_header = "cpu/pred/new_btb.hh"
+
+    numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
+    BTBEntries = Param.Unsigned(4096, "Number of BTB entries")
+    BTBWays = Param.Unsigned(1, "Number of BTB ways")
+    BTBBanks = Param.Unsigned(16, "Number of BTB banks")
+    instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
+    BTBTagSize = Param.Unsigned(16, "Size of the BTB tags, in bits")
 
 class IndirectPredictor(SimObject):
     type = "IndirectPredictor"

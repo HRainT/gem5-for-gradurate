@@ -125,6 +125,17 @@ TAGE::lookup(ThreadID tid, Addr pc, void* &bp_history)
     return retval;
 }
 
+bool
+TAGE::lookup(ThreadID tid, Addr pc, void* &bp_history, 
+    std::map<RegIndex, uint64_t> &RegSnMap, std::vector<bool> &regtable, std::map<RegIndex, uint16_t> &digestMap)
+{
+    bool retval = predict(tid, pc, true, bp_history, RegSnMap, regtable, digestMap);
+
+    DPRINTF(Tage, "Lookup branch: %lx; predict:%d\n", pc, retval);
+
+    return retval;
+}
+
 void
 TAGE::updateHistories(ThreadID tid, Addr pc, bool uncond,
                          bool taken, Addr target, void * &bp_history)

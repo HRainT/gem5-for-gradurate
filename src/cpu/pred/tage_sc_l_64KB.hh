@@ -122,7 +122,9 @@ class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
 
     int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo* bi,
                      int & lsum, int64_t phist) override;
-
+    int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo* bi,
+                     int & lsum, int64_t phist, const std::map<RegIndex, uint64_t> &RegSnMap,
+                     const std::vector<bool> &regtable, const std::map<RegIndex, uint16_t> &digestMap) override;
     int gIndexLogsSubstr(int nbr, int i) override;
 
     void scHistoryUpdate(Addr branch_pc, const StaticInstPtr &inst, bool taken,
@@ -130,6 +132,40 @@ class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
 
     void gUpdates(ThreadID tid, Addr pc, bool taken, BranchInfo* bi,
             int64_t phist) override;
+    int sRPredict(ThreadID tid, Addr pc, BranchInfo* bi, 
+                const std::map<RegIndex, uint64_t> &RegSnMap, const std::vector<bool> &regtable, const std::map<RegIndex, uint16_t> &digestMap);
+    void rUpdates(ThreadID tid, Addr pc, bool taken, BranchInfo* bi, int64_t phist, std::vector<int8_t> & w) override;
+    uint32_t ut_index1(int t, uint64_t pc, int reg_id) {
+        return reg_id * 16 + ((pc ^ (pc >> (2 * t))) % 16);
+    }
+
+    class RunLts{
+        public:
+            struct UTEntry
+            {
+                int16_t u;
+                UTEntry() :u{-4} { }
+            };
+            struct WTEntry
+            {
+                int8_t weight = 0;
+                WTEntry() : weight(0) { }
+            };
+            inline static UTEntry Utable[4][496] = {};
+            inline static WTEntry Wtable0[4][1024] = {};
+            inline static WTEntry Wtable1[4][512] = {};
+            static void WtableUpdate(uint32_t i1, uint32_t i2 , int i, bool taken){
+                if(RunLts::Wtable0[i][i1].weight < 31 && taken)
+                    RunLts::Wtable0[i][i1].weight++;
+                if(RunLts::Wtable1[i][i2].weight < 31 && taken)
+                    RunLts::Wtable1[i][i2].weight++;               
+                if(RunLts::Wtable0[i][i1].weight > -32 && !taken)
+                    RunLts::Wtable0[i][i1].weight--;
+                if(RunLts::Wtable1[i][i2].weight > -32 && !taken)
+                    RunLts::Wtable1[i][i2].weight--;
+            }
+    };
+
 };
 
 class TAGE_SC_L_64KB : public TAGE_SC_L

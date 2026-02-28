@@ -1237,7 +1237,15 @@ IEW::executeInsts()
         }
 
         updateExeInstStats(inst);
-
+        if (inst->numDestRegs() > 0 && !inst->destRegIdx(0).isZeroReg()){
+            PhysRegIdPtr phys_reg = inst->renamedDestIdx(0);
+            volatile __uint128_t dest_val = 0;
+            dest_val = cpu->getReg(phys_reg, 0);
+            if(cpu->regtable[inst->destRegIdx(0)] == false && cpu->RegSnMap[inst->destRegIdx(0)] == inst->seqNum) {
+                cpu->regtable[inst->destRegIdx(0)] = true;
+                cpu->digestMap[inst->destRegIdx(0)] = make_int_digest((uint64_t)dest_val, inst->destRegIdx(0));
+            } 
+        }
         // Check if branch prediction was correct, if not then we need
         // to tell commit to squash in flight instructions.  Only
         // handle this if there hasn't already been something that

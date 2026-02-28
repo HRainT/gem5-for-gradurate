@@ -81,6 +81,7 @@ class Fetch
     /**
      * IcachePort class for instruction fetch.
      */
+    bool sr = true;
     class IcachePort : public RequestPort
     {
       protected:
@@ -577,6 +578,10 @@ class Fetch
         statistics::Distribution nisnDist;
         /** Rate of how often fetch was idle. */
         statistics::Formula idleRate;
+        /** Stat for total number of instructions from Fetch. */
+        statistics::Scalar toDecodeInsts;
+        /** Stat for uop cache hit rate. */
+        statistics::Formula frontBandwidth;
     } fetchStats;
 };
 

@@ -188,7 +188,7 @@ class BaseO3CPU(BaseCPU):
     smtCommitPolicy = Param.CommitPolicy("RoundRobin", "SMT Commit Policy")
 
     branchPred = Param.BranchPredictor(
-        TournamentBP(numThreads=Parent.numThreads), "Branch Predictor"
+        TAGE_SC_L_64KB(numThreads=Parent.numThreads), "Branch Predictor"
     )
     needsTSO = Param.Bool(False, "Enable TSO Memory model")
 

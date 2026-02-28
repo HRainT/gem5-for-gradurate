@@ -196,7 +196,12 @@ Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
              "Number of instructions fetched each cycle (Total)"),
     ADD_STAT(idleRate, statistics::units::Ratio::get(),
              "Ratio of cycles fetch was idle",
-             idleCycles / cpu->baseStats.numCycles)
+             idleCycles / cpu->baseStats.numCycles),
+    ADD_STAT(toDecodeInsts, statistics::units::Count::get(),
+               "Number of instructions from fetch"),
+    ADD_STAT(frontBandwidth, statistics::units::Rate<
+                  statistics::units::Count, statistics::units::Count>::get(),
+                "Stat for uop cache hit rate")
 {
         predictedBranches
             .prereq(predictedBranches);
@@ -240,6 +245,9 @@ Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
             .flags(statistics::pdf);
         idleRate
             .prereq(idleRate);
+        frontBandwidth
+        .precision(6);
+        frontBandwidth = toDecodeInsts / (cpu->baseStats.numCycles);
 }
 void
 Fetch::setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer)
@@ -505,6 +513,21 @@ Fetch::lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &next_pc)
     }
 
     ThreadID tid = inst->threadNumber;
+    std::vector<bool> vis(32, true);
+    for (int i=0; i<32; ++i) {
+        vis[i] = cpu->regtable[i];
+        if (vis[i] && cpu->RegSnMap[i] > inst->seqNum) {
+            vis[i] = false; // 未来写入，禁止 SR 使用
+        }
+        inst->setRegSnMap(i, cpu->RegSnMap[i]);
+        inst->setRegTable(i, vis[i]);
+        inst->setDigestMap(i, vis[i] ? cpu->digestMap[i] : 0);
+    }
+    if(sr)
+    predict_taken = branchPred->predict(inst->staticInst, inst->seqNum,
+                                        next_pc, tid,
+                                        cpu->RegSnMap, vis, cpu->digestMap);
+    else
     predict_taken = branchPred->predict(inst->staticInst, inst->seqNum,
                                         next_pc, tid);
 
@@ -903,6 +926,7 @@ Fetch::tick()
             fetchQueue[tid].pop_front();
             insts_to_decode++;
             available_insts--;
+            ++fetchStats.toDecodeInsts;
         }
 
         tid_itr++;
@@ -952,6 +976,15 @@ Fetch::checkSignalsAndUpdate(ThreadID tid)
         // invalid state we generated in after sequence number
         if (fromCommit->commitInfo[tid].mispredictInst &&
             fromCommit->commitInfo[tid].mispredictInst->isControl()) {
+            if(sr){
+                for(int i=0; i<32; i++){
+                    if(fromCommit->commitInfo[tid].doneSeqNum < cpu->RegSnMap[i]){
+                    cpu->regtable[i] = fromCommit->commitInfo[tid].mispredictInst->regtable[i];
+                    cpu->RegSnMap[i] = fromCommit->commitInfo[tid].mispredictInst->RegSnMap[i];
+                    cpu->digestMap[i] = fromCommit->commitInfo[tid].mispredictInst->digestMap[i];
+                    }
+                }
+            }
             branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
                     *fromCommit->commitInfo[tid].pc,
                     fromCommit->commitInfo[tid].branchTaken, tid);
@@ -1270,7 +1303,22 @@ Fetch::fetch(bool &status_change)
 #endif
 
             set(next_pc, this_pc);
-
+            if(instruction->numDestRegs() > 0 && !instruction->destRegIdx(0).isZeroReg()){
+                for(int i=0; i<32; i++){
+                    if(!cpu->regtable[i])
+                        continue;
+                    else if(cpu->reg_ctr[i] == 1023){
+                        cpu->regtable[i] = false;
+                        cpu->reg_ctr[i] = 0;
+                    }
+                    else{
+                        ++cpu->reg_ctr[i];
+                    }
+                }
+                cpu->regtable[instruction->destRegIdx(0)] = false;
+                cpu->reg_ctr[instruction->destRegIdx(0)] = 0;
+                cpu->RegSnMap[instruction->destRegIdx(0)] = instruction->seqNum;
+            }
             // If we're branching after this instruction, quit fetching
             // from the same block.
             predictedBranch |= this_pc.branching();

@@ -40,6 +40,8 @@
  */
 
 #include "cpu/pred/tage_sc_l_64KB.hh"
+#include <random>  
+#include <iostream>
 
 namespace gem5
 {
@@ -96,6 +98,90 @@ TAGE_SC_L_64KB_StatisticalCorrector::getIndBiasBank(Addr branch_pc,
 }
 
 int
+TAGE_SC_L_64KB_StatisticalCorrector::sRPredict(ThreadID tid, Addr pc, BranchInfo* bi, const std::map<RegIndex, uint64_t> &RegSnMap, 
+                                                const std::vector<bool> &regtable, const std::map<RegIndex, uint16_t> &digestMap){
+    uint32_t ut_index[8];
+    RegIndex regid[8];
+    uint16_t Digest[4];
+    int16_t u_reg[32] = {0};
+    int16_t u[4] = {0,0,0,0};
+    int cnt[4] = {7,8,8,8};
+    uint32_t wt_index[4][3];
+    int16_t result = 0;
+    int8_t hit_ctr = 0;
+    int8_t alt_ctr = 0;
+    int16_t per_bank[4] = {0,0,0,0};
+    bool use_reg_pred = true;
+    if(use_reg_pred){
+        for(int bank = 0; bank < 4; bank++) {
+            for(int reg_id = bank; reg_id < 32; reg_id += 4) {
+                if (reg_id == 0) continue;
+                if(regtable[reg_id]) {
+                    bi->ut_valid[reg_id] = true;
+                    uint32_t idx1 = ut_index1(1, pc, reg_id);
+                    uint32_t idx2 = ut_index1(2, pc, reg_id);
+                    uint32_t idx3 = ut_index1(3, pc, reg_id);
+                    uint32_t idx4 = ut_index1(4, pc, reg_id);
+                    u_reg[reg_id] = RunLts::Utable[0][idx1].u + RunLts::Utable[1][idx2].u + RunLts::Utable[2][idx3].u + RunLts::Utable[3][idx4].u;
+                    auto it = digestMap.find(reg_id);
+                    if (it != digestMap.end()) {
+                        bi->digest[reg_id] = it->second;
+                    } else {
+                        assert(false && "Digest not found for reg_id");
+                    }
+                    if(u_reg[reg_id] >= u[bank]) {
+                        u[bank] = u_reg[reg_id];
+                        auto it = digestMap.find(reg_id);
+                        if (it != digestMap.end()) {
+                            Digest[bank] = it->second;
+                        } else {
+                            assert(false && "Digest not found for reg_id"); 
+                        }
+                        bi->ut_bestreg[bank] = reg_id;
+                        bi->ut_index1[bank][0] = idx1;
+                        bi->ut_index1[bank][1] = idx2;
+                        bi->ut_index1[bank][2] = idx3;
+                        bi->ut_index1[bank][3] = idx4;
+                    }
+                    else{
+                        cnt[bank]--;
+                    }
+                }
+                else{
+                    cnt[bank]--;
+                }
+            }
+            if(cnt[bank]){
+                bi->ut_bank_vld[bank] = true;
+                uint32_t hash_base = (pc ^ Digest[bank] ^ (bi->ut_bestreg[bank] << 4));
+                uint32_t idx0 = (hash_base ^ (hash_base >> 10)) & 0x3FF;
+                uint32_t idx1 = (hash_base ^ (hash_base >> 7))  & 0x1FF;
+                bi->wt_index1[bank][0] = idx0;
+                bi->wt_index1[bank][1] = idx1;
+                per_bank[bank] = RunLts::Wtable0[bank][idx0].weight + RunLts::Wtable1[bank][idx1].weight;
+                bi->per_bank[bank] = per_bank[bank];
+                result += per_bank[bank];
+            }
+            else{
+                bi->ut_bank_vld[bank] = false;
+            }
+        }
+    }
+    else{
+        result = 0;
+    }
+    // result = result * 3;
+    bi->pre_result = result;
+    // result = Scale * result;
+    // bi->weight = (wr[getIndUpds(pc)] >= 0) ? 2:(wr[getIndUpds(pc)]<= -8)? 0:1;
+    bi->weight = (wr[getIndUpds(pc)] >= 0) ? 2:1;
+    bi->real_wr = wr[getIndUpds(pc)];
+    result =  bi->weight * result;
+    bi->result = result;
+    return result;
+}
+
+int
 TAGE_SC_L_64KB_StatisticalCorrector::gPredictions(ThreadID tid, Addr branch_pc,
         BranchInfo* bi, int & lsum, int64_t pathHist)
 {
@@ -127,6 +213,51 @@ TAGE_SC_L_64KB_StatisticalCorrector::gPredictions(ThreadID tid, Addr branch_pc,
 
     lsum += gPredict(
         branch_pc, sh->imliCount, im, igehl, inb, logInb, wi);
+
+    int thres = (updateThreshold>>3) + pUpdateThreshold[getIndUpd(branch_pc)]
+      + 12*((wb[getIndUpds(branch_pc)] >= 0) + (wp[getIndUpds(branch_pc)] >= 0)
+      + (ws[getIndUpds(branch_pc)] >= 0) + (wt[getIndUpds(branch_pc)] >= 0)
+      + (wl[getIndUpds(branch_pc)] >= 0) + (wbw[getIndUpds(branch_pc)] >= 0)
+      + (wi[getIndUpds(branch_pc)] >= 0));
+
+    return thres;
+}
+
+int
+TAGE_SC_L_64KB_StatisticalCorrector::gPredictions(ThreadID tid, Addr branch_pc,
+        BranchInfo* bi, int & lsum, int64_t pathHist, const std::map<RegIndex, uint64_t> &RegSnMap,
+        const std::vector<bool> &regtable, const std::map<RegIndex, uint16_t> &digestMap)
+{
+    SC_64KB_ThreadHistory *sh =
+        static_cast<SC_64KB_ThreadHistory *>(scHistory);
+
+    lsum += gPredict(
+        (branch_pc << 1) + bi->predBeforeSC, sh->bwHist, bwm,
+        bwgehl, bwnb, logBwnb, wbw);
+
+    lsum += gPredict(
+        branch_pc, pathHist, pm, pgehl, pnb, logPnb, wp);
+
+    lsum += gPredict(
+        branch_pc, sh->getLocalHistory(1, branch_pc), lm,
+        lgehl, lnb, logLnb, wl);
+
+    lsum += gPredict(
+        branch_pc, sh->getLocalHistory(2, branch_pc), sm,
+        sgehl, snb, logSnb, ws);
+
+    lsum += gPredict(
+        branch_pc, sh->getLocalHistory(3, branch_pc), tm,
+        tgehl, tnb, logTnb, wt);
+
+    lsum += gPredict(
+        branch_pc, sh->imHist[scHistory->imliCount], imm,
+        imgehl, imnb, logImnb, wim);
+
+    lsum += gPredict(
+        branch_pc, sh->imliCount, im, igehl, inb, logInb, wi);
+    
+    lsum += sRPredict(tid, branch_pc, bi, RegSnMap, regtable, digestMap);
 
     int thres = (updateThreshold>>3) + pUpdateThreshold[getIndUpd(branch_pc)]
       + 12*((wb[getIndUpds(branch_pc)] >= 0) + (wp[getIndUpds(branch_pc)] >= 0)
@@ -194,6 +325,112 @@ TAGE_SC_L_64KB_StatisticalCorrector::gUpdates(ThreadID tid, Addr pc,
 
     gUpdate(pc, taken, sh->imliCount, im,
             igehl, inb, logInb, wi, bi);
+    rUpdates(tid, pc, taken, bi, phist, wr);
+}
+
+void
+TAGE_SC_L_64KB_StatisticalCorrector::rUpdates(ThreadID tid, Addr pc, bool taken, BranchInfo* bi, int64_t phist, std::vector<int8_t> & w)
+{
+    // DPRINTF(NewTage, "pc %lx Update; taken = %d\n", pc, taken);
+    int xsum = bi->lsum - bi->result;
+    // if ((bi->lsum >= 0) != (xsum >= 0)) 
+        ctrUpdate(wr[getIndUpds(pc)], ((bi->result >= 0) == taken),
+                  extraWeightsWidth);
+    
+    // int lsum_w1 = bi->lsum - bi->result + 1 * bi->pre_result;
+    // int lsum_w2 = bi->lsum - bi->result + 2 * bi->pre_result;
+    // if ((lsum_w1 >= 0) != (lsum_w2 >= 0)) {
+    //     ctrUpdate(wr[getIndUpds(pc)], ((bi->pre_result >= 0) == taken), extraWeightsWidth);
+    // }
+    for(int i = 0; i < 4; i++){
+        if(!bi->ut_bank_vld[i]){
+            std::vector<int> valid_indices;
+            for(int j = i; j < 32; j += 4){
+                if(!bi->ut_valid[j]){
+                    continue;
+                }
+                else{
+                    valid_indices.push_back(j);
+                }
+            }
+            if(valid_indices.size() == 0){
+                continue;
+            }
+            static std::random_device rd;
+            static std::mt19937 gen(rd());
+            std::uniform_int_distribution<size_t> dist(0, valid_indices.size() - 1);      
+            size_t random_index = dist(gen);
+            uint8_t reg_id = valid_indices[random_index];    
+
+            uint32_t hash_base = (pc ^ bi->digest[reg_id] ^ (reg_id << 4));
+            uint32_t i0 = (hash_base ^ (hash_base >> 10)) & 0x3FF;
+            uint32_t i1 = (hash_base ^ (hash_base >> 7))  & 0x1FF;
+            int bank_scaled = RunLts::Wtable0[i][i0].weight + RunLts::Wtable1[i][i1].weight;
+            RunLts::WtableUpdate(i0, i1, i, taken);
+            
+            // uint8_t idx1 = (uint8_t)(reg_id * 8 + ((pc ^ (pc >> 2)) & 7));
+            // uint8_t idx2 = (uint8_t)(reg_id * 8 + ((pc ^ (pc >> 4)) & 7));
+            // uint8_t idx3 = (uint8_t)(reg_id * 8 + ((pc ^ (pc >> 6)) & 7));
+            uint32_t idx1 = ut_index1(1, pc, reg_id);
+            uint32_t idx2 = ut_index1(2, pc, reg_id);
+            uint32_t idx3 = ut_index1(3, pc, reg_id);            
+            uint32_t idx4 = ut_index1(4, pc, reg_id);
+            int c = bank_scaled;
+            int ut = RunLts::Utable[0][idx1].u + RunLts::Utable[1][idx2].u + RunLts::Utable[2][idx3].u + RunLts::Utable[3][idx4].u;
+            int XSUM = bi->lsum + c * bi->weight;
+            if((bi->lsum >= 0) != (XSUM >= 0)){
+                if((c >= 0) == taken){
+                    if(RunLts::Utable[0][idx1].u <31)
+                        RunLts::Utable[0][idx1].u += 1;
+                    if(RunLts::Utable[1][idx2].u <31)
+                        RunLts::Utable[1][idx2].u += 1;
+                    if(RunLts::Utable[2][idx3].u <31)
+                        RunLts::Utable[2][idx3].u += 1;
+                    if(RunLts::Utable[3][idx4].u <31)
+                        RunLts::Utable[3][idx4].u += 1;
+                }
+                else{
+                    if(RunLts::Utable[0][idx1].u > -32)
+                        RunLts::Utable[0][idx1].u -= 1;
+                    if(RunLts::Utable[1][idx2].u > -32)
+                        RunLts::Utable[1][idx2].u -= 1;
+                    if(RunLts::Utable[2][idx3].u > -32)
+                        RunLts::Utable[2][idx3].u -= 1;
+                    if(RunLts::Utable[3][idx4].u > -32)
+                        RunLts::Utable[3][idx4].u -= 1;
+                }
+            }
+        }
+        else{
+            RunLts::WtableUpdate(bi->wt_index1[i][0], bi->wt_index1[i][1],i, taken);
+            int c = bi->per_bank[i];
+            int XSUM = bi->lsum - c * bi->weight;
+            if((bi->lsum >= 0) != (XSUM >= 0)){
+                uint8_t reg_id = bi->ut_bestreg[i];
+                if((c >= 0) == taken){
+                    if(RunLts::Utable[0][bi->ut_index1[i][0]].u < 31)
+                        RunLts::Utable[0][bi->ut_index1[i][0]].u += 1;
+                    if(RunLts::Utable[1][bi->ut_index1[i][1]].u < 31)
+                        RunLts::Utable[1][bi->ut_index1[i][1]].u += 1;
+                    if(RunLts::Utable[2][bi->ut_index1[i][2]].u < 31)
+                        RunLts::Utable[2][bi->ut_index1[i][2]].u += 1;
+                    if(RunLts::Utable[3][bi->ut_index1[i][3]].u < 31)
+                        RunLts::Utable[3][bi->ut_index1[i][3]].u += 1;
+                }
+                else{
+                    if(RunLts::Utable[0][bi->ut_index1[i][0]].u > -32)
+                        RunLts::Utable[0][bi->ut_index1[i][0]].u -= 1;
+                    if(RunLts::Utable[1][bi->ut_index1[i][1]].u > -32)
+                        RunLts::Utable[1][bi->ut_index1[i][1]].u -= 1;
+                    if(RunLts::Utable[2][bi->ut_index1[i][2]].u > -32)
+                        RunLts::Utable[2][bi->ut_index1[i][2]].u -= 1;
+                    if(RunLts::Utable[3][bi->ut_index1[i][3]].u > -32)
+                        RunLts::Utable[3][bi->ut_index1[i][3]].u -= 1;
+                }         
+            }
+        }
+    }
+    return;
 }
 
 int

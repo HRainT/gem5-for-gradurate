@@ -176,10 +176,12 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
      * necessary as modern front-end does not have a
      * chance to detect a branch without a BTB hit.
      */
-    stats.BTBLookups++;
+    if(hist->predTaken)
+        stats.BTBLookups++;
     const PCStateBase * btb_target = btb->lookup(tid, pc.instAddr(), brType);
     if (btb_target) {
-        stats.BTBHits++;
+        if(hist->predTaken)
+            stats.BTBHits++;
         hist->btbHit = true;
 
         if (hist->predTaken) {
@@ -330,6 +332,240 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     return hist->predTaken;
 }
 
+bool
+BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
+                   PCStateBase &pc, ThreadID tid, std::map<RegIndex, uint64_t> &RegSnMap,  std::vector<bool> &regtable, std::map<RegIndex, uint16_t> &digestMap)
+{
+    /** Perform the prediction. */
+    PredictorHistory* bpu_history = nullptr;
+    bool taken  = predict(inst, seqNum, pc, tid, bpu_history, RegSnMap, regtable, digestMap);
+    assert(bpu_history!=nullptr);
+
+    /** Push the record into the history buffer */
+    predHist[tid].push_front(bpu_history);
+
+    DPRINTF(Branch, "[tid:%i] [sn:%llu] History entry added. "
+            "predHist.size(): %i\n", tid, seqNum, predHist[tid].size());
+
+    return taken;
+}
+
+bool
+BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
+                   PCStateBase &pc, ThreadID tid, PredictorHistory* &hist, 
+                   std::map<RegIndex, uint64_t> &RegSnMap,  std::vector<bool> &regtable, std::map<RegIndex, uint16_t> &digestMap)
+{
+    assert(hist == nullptr);
+
+
+    // See if branch predictor predicts taken.
+    // If so, get its target addr either from the BTB or the RAS.
+    // Save off branch stuff into `hist` so we can correct the predictor
+    // if prediction was wrong.
+
+    BranchType brType = getBranchType(inst);
+    hist = new PredictorHistory(tid, seqNum, pc.instAddr(), inst);
+
+    stats.lookups[tid][brType]++;
+    ppBranches->notify(1);
+
+
+    /* -----------------------------------------------
+     * Get branch direction
+     * -----------------------------------------------
+     * Lookup the direction predictor for every
+     * conditional branch. For unconditional branches
+     * the direction is always taken
+     */
+
+    if (inst->isUncondCtrl()) {
+        // Unconditional branches -----
+        hist->condPred = true;
+    } else {
+        // Conditional branches -------
+        ++stats.condPredicted;
+
+        hist->condPred = lookup(tid, pc.instAddr(), hist->bpHistory, RegSnMap, regtable, digestMap);
+
+        if (hist->condPred) {
+            ++stats.condPredictedTaken;
+        }
+    }
+    hist->predTaken = hist->condPred;
+
+    DPRINTF(Branch,
+            "[tid:%i, sn:%llu] Branch predictor predicted %i for PC:%#x %s\n",
+            tid, seqNum, hist->condPred, hist->pc, toString(brType));
+
+
+    // The direction is done now get the target address
+    // from BTB, RAS or indirect predictor.
+    hist->targetProvider = TargetProvider::NoTarget;
+
+    /* -----------------------------------------------
+     * Branch Target Buffer (BTB)
+     * -----------------------------------------------
+     * First check for a BTB hit. This will be done
+     * regardless of whether the RAS or the indirect
+     * predictor provide the final target. That is
+     * necessary as modern front-end does not have a
+     * chance to detect a branch without a BTB hit.
+     */
+    if(hist->predTaken)
+        stats.BTBLookups++;
+    const PCStateBase * btb_target = btb->lookup(tid, pc.instAddr(), brType);
+    if (btb_target) {
+        if(hist->predTaken)
+            stats.BTBHits++;
+        hist->btbHit = true;
+
+        if (hist->predTaken) {
+            hist->targetProvider = TargetProvider::BTB;
+            set(hist->target, btb_target);
+        }
+    }
+
+    DPRINTF(Branch, "[tid:%i, sn:%llu] PC:%#x BTB:%s\n",
+            tid, seqNum, hist->pc,  (hist->btbHit) ? "hit" : "miss");
+
+
+    // In a high performance CPU there is no other way than a BTB hit
+    // to know about a branch instruction. In that case consolidate
+    // indirect and RAS predictor only if there was a BTB it.
+    // For low end CPUs predecoding might be used to identify branches.
+    const bool branch_detected = (hist->btbHit || !requiresBTBHit);
+
+
+    /* -----------------------------------------------
+     * Return Address Stack (RAS)
+     * -----------------------------------------------
+     * Perform RAS operations for calls and returns.
+     * Calls: push their RETURN address onto
+     *    the RAS.
+     * Return: pop the the return address from the
+     *    top of the RAS.
+     */
+    if (ras && branch_detected) {
+        if (inst->isCall()) {
+            // In case of a call build the return address and
+            // push it to the RAS.
+            auto return_addr = inst->buildRetPC(pc, pc);
+            ras->push(tid, *return_addr, hist->rasHistory);
+
+            DPRINTF(Branch, "[tid:%i] [sn:%llu] Instr. %s was "
+                    "a call, push return address %s onto the RAS\n",
+                    tid, seqNum, pc, *return_addr);
+
+        }
+        else if (inst->isReturn()) {
+
+            // If it's a return from a function call, then look up the
+            // RETURN address in the RAS.
+            const PCStateBase *return_addr = ras->pop(tid, hist->rasHistory);
+            if (return_addr) {
+
+                // Set the target to the return address
+                set(hist->target, *return_addr);
+                hist->targetProvider = TargetProvider::RAS;
+
+                DPRINTF(Branch, "[tid:%i] [sn:%llu] Instr. %s is a "
+                        "return, RAS poped return addr: %s\n",
+                        tid, seqNum, pc, *hist->target);
+            }
+        }
+    }
+
+
+    /* -----------------------------------------------
+     *  Indirect Predictor
+     * -----------------------------------------------
+     * For indirect branches/calls check the indirect
+     * predictor if one is available. Not for returns.
+     * Note that depending on the implementation a
+     * indirect predictor might only return a target
+     * for an indirect branch with a changing target.
+     * As most indirect branches have a static target
+     * using the target from the BTB is the optimal
+     * to save space in the indirect predictor itself.
+     */
+    if (iPred && hist->predTaken && branch_detected &&
+        inst->isIndirectCtrl() && !inst->isReturn()) {
+
+        ++stats.indirectLookups;
+
+        const PCStateBase *itarget = iPred->lookup(tid, seqNum,
+                                            pc.instAddr(),
+                                    hist->indirectHistory);
+
+        if (itarget) {
+            // Indirect predictor hit
+            ++stats.indirectHits;
+            hist->targetProvider = TargetProvider::Indirect;
+            set(hist->target, *itarget);
+
+            DPRINTF(Branch,
+                    "[tid:%i, sn:%llu] Instruction %s predicted "
+                    "indirect target is %s\n",
+                    tid, seqNum, pc, *hist->target);
+        } else {
+            ++stats.indirectMisses;
+            DPRINTF(Branch,
+                    "[tid:%i, sn:%llu] PC:%#x no indirect target\n",
+                    tid, seqNum, pc.instAddr());
+        }
+    }
+
+
+    /** ----------------------------------------------
+     * Fallthrough
+     * -----------------------------------------------
+     * All the target predictors did their job.
+     * If there is no target its either not taken or
+     * a BTB miss. In that case we just fallthrough.
+     * */
+    if (hist->targetProvider == TargetProvider::NoTarget) {
+        set(hist->target, pc);
+        inst->advancePC(*hist->target);
+        hist->predTaken = false;
+    }
+    stats.targetProvider[tid][hist->targetProvider]++;
+
+    // The actual prediction is done.
+    // For now the BPU assume its correct. The update
+    // functions will correct the branch if needed.
+    // If prediction and actual direction are the same
+    // at commit the prediction was correct.
+    hist->actuallyTaken = hist->predTaken;
+    set(pc, *hist->target);
+
+    DPRINTF(Branch, "%s(tid:%i, sn:%i, PC:%#x, %s) -> taken:%i, target:%s "
+            "provider:%s\n", __func__, tid, seqNum, hist->pc,
+            toString(brType), hist->predTaken, *hist->target,
+            enums::TargetProviderStrings[hist->targetProvider]);
+
+
+    /** ----------------------------------------------
+     * Speculative history update
+     * -----------------------------------------------
+     * Now that the prediction is done the predictor
+     * may update its histories speculative. (local
+     * and global path). A later squash will revert
+     * the history update if needed.
+     * The actual prediction tables will updated once
+     * we know the correct direction.
+     **/
+    updateHistories(tid, hist->pc, hist->uncond, hist->predTaken,
+                    hist->target->instAddr(), hist->bpHistory);
+
+
+    if (iPred) {
+        // Update the indirect predictor with the direction prediction
+        iPred->update(tid, seqNum, hist->pc, false, hist->predTaken,
+                      *hist->target, brType, hist->indirectHistory);
+    }
+
+    return hist->predTaken;
+}
 
 void
 BPredUnit::update(const InstSeqNum &done_sn, ThreadID tid)
@@ -591,10 +827,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                         hist->seqNum, hist->pc, hist->target->instAddr());
 
             stats.BTBUpdates++;
-            btb->update(tid, hist->pc,
-                            *hist->target,
-                            hist->type,
-                            hist->inst);
+            btb->update(tid, hist->pc, corr_target);
             btb->incorrectTarget(hist->pc, hist->type);
         }
 

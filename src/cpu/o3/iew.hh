@@ -236,6 +236,32 @@ class IEW
         ldstQueue.setLastRetiredHtmUid(tid, htmUid);
     }
 
+  uint16_t make_int_digest(uint64_t value, int reg_num) {
+      // 1. 低位保留 (Low Entropy Preservation)
+      // 循环计数器、小常数、对齐的指针通常在低 8 位变化最剧烈
+      // 直接保留低 8 位，不进行压缩
+      uint16_t low_part = value & 0xFF;
+
+      // 2. 高位折叠 (High Entropy Folding)
+      // 对于 64 位大数或指针，高位包含符号信息和页地址
+      // 使用异或折叠 (XOR Fold) + 移位来压缩 [63:8] 这 56 位
+      // 选取的移位常数 (11, 23, 37) 为质数，避免位模式的周期性抵消
+      uint64_t upper = value >> 8;
+      uint16_t folded_high = (upper ^ (upper >> 11) ^ (upper >> 23) ^ (upper >> 37)) & 0xFF;
+
+      // 3. 组合 (Combine)
+      // 高 8 位是折叠后的特征，低 8 位是精确值
+      uint16_t raw_digest = (folded_high << 8) | low_part;
+
+      // 4. 寄存器 ID 混淆 (Register ID Decorrelation)
+      // 这是与 RUNLTS 的重要区别点。
+      // RUNLTS 的 Digest 仅取决于 Value 。
+      // 我们将 reg_num 混合进来，使得 x10 (a0) 的 0 和 x2 (sp) 的 0 生成不同的 digest。
+      // 使用简单的乘法哈希常数分散 reg_num 的影响
+      uint16_t reg_salt = (reg_num * 0x9E37) & 0xFFFF; 
+
+      return raw_digest ^ reg_salt;
+  }
   private:
     /** Sends commit proper information for a squash due to a branch
      * mispredict.

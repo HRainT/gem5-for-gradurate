@@ -97,6 +97,8 @@ class BPredUnit : public SimObject
      */
     bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                  PCStateBase &pc, ThreadID tid);
+    bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
+                 PCStateBase &pc, ThreadID tid, std::map<RegIndex, uint64_t> &RegSnMap,  std::vector<bool> &regtable, std::map<RegIndex, uint16_t> &digestMap);
 
     /**
      * Tells the branch predictor to commit any updates until the given
@@ -144,6 +146,10 @@ class BPredUnit : public SimObject
      * @return Whether the branch is taken or not taken.
      */
     virtual bool lookup(ThreadID tid, Addr pc, void * &bp_history) = 0;
+    virtual bool lookup(ThreadID tid, Addr instPC, void * &bp_history, 
+                        std::map<RegIndex, uint64_t> &RegSnMap, std::vector<bool> &regtable, std::map<RegIndex, uint16_t> &digestMap) {
+        return true;
+    };
 
     /**
      * Ones done with the prediction this function updates the
@@ -346,6 +352,9 @@ class BPredUnit : public SimObject
     */
     bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                PCStateBase &pc, ThreadID tid, PredictorHistory* &bpu_history);
+    bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
+               PCStateBase &pc, ThreadID tid, PredictorHistory* &bpu_history, 
+               std::map<RegIndex, uint64_t> &RegSnMap,  std::vector<bool> &regtable, std::map<RegIndex, uint16_t> &digestMap);
 
     /**
      * Squashes a particular branch instance

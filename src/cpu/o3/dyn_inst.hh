@@ -240,6 +240,13 @@ class DynInst : public ExecContext, public RefCounted
     size_t numSrcs() const { return _numSrcs; }
     size_t numDests() const { return _numDests; }
 
+    bool regtable[32]; 
+    uint64_t RegSnMap[32];
+    std::map<RegIndex, uint16_t> digestMap;
+    void setRegTable(int regid,bool valid){regtable[regid] = valid;}
+    void setDigestMap(int regid,uint16_t digest){digestMap[regid] = digest;}
+    void setRegSnMap(int regid,uint64_t sn){RegSnMap[regid] = sn;}
+    
     // Returns the flattened register index of the idx'th destination
     // register.
     const RegId &

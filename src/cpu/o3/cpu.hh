@@ -491,6 +491,11 @@ class CPU : public BaseCPU
 
     /** Current loop index. */
     unsigned loopIndex;
+    
+    bool regtable[32] = {false}; 
+    std::map<RegIndex, uint16_t> digestMap;
+    std::map<RegIndex, uint64_t> RegSnMap;
+    uint32_t reg_ctr[32] = {0};
 
   private:
     /** The activity recorder; used to tell if the CPU has any

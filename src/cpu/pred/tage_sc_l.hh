@@ -172,6 +172,8 @@ class TAGE_SC_L: public LTAGE
     TAGE_SC_L(const TAGE_SC_LParams &params);
 
     bool predict(ThreadID tid, Addr pc, bool cond_branch, void* &b) override;
+    bool predict(ThreadID tid, Addr pc, bool cond_branch, void* &b, 
+                 std::map<RegIndex, uint64_t> &RegSnMap, std::vector<bool> &regtable, std::map<RegIndex, uint16_t> &digestMap) override;
 
     void update(ThreadID tid, Addr pc, bool taken,
                 void * &bp_history, bool squashed,

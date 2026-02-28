@@ -93,6 +93,12 @@ class TAGE: public BPredUnit
 
     virtual bool predict(ThreadID tid, Addr branch_pc, bool cond_branch,
                          void* &b);
+    virtual bool predict(ThreadID tid, Addr branch_pc, bool cond_branch,
+                         void* &b, std::map<RegIndex, uint64_t> &RegSnMap,
+                         std::vector<bool> &regtable, std::map<RegIndex, uint16_t> &digestMap)
+                         {
+                          return false;
+                         }; 
 
   public:
 
@@ -100,6 +106,8 @@ class TAGE: public BPredUnit
 
     // Base class methods.
     bool lookup(ThreadID tid, Addr pc, void* &bp_history) override;
+    bool lookup(ThreadID tid, Addr instPC, void * &bp_history, 
+                std::map<RegIndex, uint64_t> &RegSnMap, std::vector<bool> &regtable, std::map<RegIndex, uint16_t> &digestMap) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
                          Addr target,  void * &bp_history) override;
     void update(ThreadID tid, Addr pc, bool taken,

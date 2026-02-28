@@ -600,7 +600,16 @@ BaseCPUStats::BaseCPUStats(statistics::Group *parent)
                "IPC: instructions per cycle (1001 - 1500 loop average)"),
       ADD_STAT(ipc1501_2000loop, statistics::units::Rate<
                 statistics::units::Count, statistics::units::Cycle>::get(),
-               "IPC: instructions per cycle (1501 - 2000 loop average)")
+               "IPC: instructions per cycle (1501 - 2000 loop average)"),
+      ADD_STAT(bpu1MissCommitCount, statistics::units::Count::get(),
+               "Number of mispredicted times due to BPU1_miss in commit"),
+      ADD_STAT(bpu1MissDecodeCount, statistics::units::Count::get(),
+               "Number of mispredicted times due to BPU1_miss in decode"),
+      ADD_STAT(retiredBranchInsts, statistics::units::Count::get(),
+               "Number of retired branch insts processed by commit"),
+    ADD_STAT(bpu1MissRate, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Count>::get(),
+               "bpu1MissRate")
 {
     cpi.precision(6);
     cpi = numCycles / numInsts;
@@ -706,6 +715,11 @@ BaseCPUStats::BaseCPUStats(statistics::Group *parent)
     ipc1001_1500loop = numInsts1001_1500loop / numCycles1001_1500loop;
     ipc1501_2000loop.precision(6);
     ipc1501_2000loop = numInsts1501_2000loop / numCycles1501_2000loop;
+    bpu1MissCommitCount.prereq(bpu1MissCommitCount);
+    bpu1MissDecodeCount.prereq(bpu1MissDecodeCount);
+    retiredBranchInsts.prereq(retiredBranchInsts);
+    bpu1MissRate.precision(6);
+    bpu1MissRate = (bpu1MissCommitCount + bpu1MissDecodeCount) / retiredBranchInsts;
 }
 
 void

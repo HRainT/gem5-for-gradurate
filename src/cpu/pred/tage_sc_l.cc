@@ -278,30 +278,67 @@ TAGE_SC_L_TAGE::updateHistories(
     ThreadID tid, Addr branch_pc, bool taken, TAGEBase::BranchInfo* b,
     bool speculative, const StaticInstPtr &inst, Addr target)
 {
+    // 允许推测性更新
     if (speculative != speculativeHistUpdate) {
         return;
     }
-    // speculation is not implemented
-    assert(! speculative);
 
     ThreadHistory& tHist = threadHistory[tid];
 
-    int brtype = inst->isDirectCtrl() ? 0 : 2;
-    if (! inst->isUncondCtrl()) {
-        ++brtype;
-    }
-    updatePathAndGlobalHistory(tHist, brtype, taken, branch_pc, target);
+    if (speculative) {
+        // 简化版 pathbit：仅基于 PC，不依赖 target
+        int pathbit = ((branch_pc ^ (branch_pc >> instShiftAmt) ^
+                        (branch_pc >> (instShiftAmt + 2))) & 127);
 
-    DPRINTF(TageSCL, "Updating global histories with branch:%lx; taken?:%d, "
-            "path Hist: %x; pointer:%d\n", branch_pc, taken, tHist.pathHist,
-            tHist.ptGhist);
+        // 推测更新 1 次（不要执行 SC_L 的多步 brtype 更新）
+        updateGHist(tHist.gHist, taken, tHist.globalHistory, tHist.ptGhist);
+        tHist.pathHist = (tHist.pathHist << 1) + pathbit;
+        tHist.pathHist &= ((1ULL << pathHistBits) - 1);
+
+        // 回滚需要这些快照
+        b->ptGhist = tHist.ptGhist;
+        b->pathHist = tHist.pathHist;
+    for (int i = 1; i <= nHistoryTables; i++)
+    {
+        b->ci[i]  = tHist.computeIndices[i].comp;
+        b->ct0[i] = tHist.computeTags[0][i].comp;
+        b->ct1[i] = tHist.computeTags[1][i].comp;
+        
+        tHist.computeIndices[i].update(tHist.gHist);
+        tHist.computeTags[0][i].update(tHist.gHist);
+        tHist.computeTags[1][i].update(tHist.gHist);
+    }
+    } else {
+        // 维持原来的提交时更新（SC_L 自定义的 brtype/target 路径）
+        int brtype = inst->isDirectCtrl() ? 0 : 2;
+        if (! inst->isUncondCtrl()) ++brtype;
+        updatePathAndGlobalHistory(tHist, brtype, taken, branch_pc, target);
+        DPRINTF(TageSCL, "Commit update: pc=%lx taken=%d pathHist=%x pt=%d\n",
+                branch_pc, taken, tHist.pathHist, tHist.ptGhist);
+    }
 }
 
 void
 TAGE_SC_L_TAGE::squash(ThreadID tid, bool taken, TAGEBase::BranchInfo *bi,
                        Addr target)
 {
-    fatal("Speculation is not implemented");
+    if (!speculativeHistUpdate) return;
+
+    ThreadHistory& tHist = threadHistory[tid];
+    tHist.pathHist = bi->pathHist;
+    tHist.ptGhist  = bi->ptGhist;
+    tHist.gHist    = &(tHist.globalHistory[tHist.ptGhist]);
+    tHist.gHist[0] = (taken ? 1 : 0);
+    for (int i = 1; i <= nHistoryTables; i++) {
+        tHist.computeIndices[i].comp = bi->ci[i];
+        tHist.computeTags[0][i].comp = bi->ct0[i];
+        tHist.computeTags[1][i].comp = bi->ct1[i];
+        tHist.computeIndices[i].update(tHist.gHist);
+        tHist.computeTags[0][i].update(tHist.gHist);
+        tHist.computeTags[1][i].update(tHist.gHist);
+    }
+    // 可选：如需在回滚后继续推进 1 步（与 rxu TAGE 相同），在此调用 computeIndices 更新
+    // 本 SC_L 实现不使用 folded histories，通常可忽略
 }
 
 void
@@ -421,6 +458,55 @@ TAGE_SC_L::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b)
     return pred_taken;
 }
 
+bool
+TAGE_SC_L::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b, 
+                   std::map<RegIndex, uint64_t> &RegSnMap, std::vector<bool> &regtable, std::map<RegIndex, uint16_t> &digestMap)
+{
+    TageSCLBranchInfo *bi = new TageSCLBranchInfo(*tage,
+                                                  *statisticalCorrector,
+                                                  *loopPredictor);
+    b = (void*)(bi);
+
+    bool pred_taken = tage->tagePredict(tid, pc, cond_branch,
+                                        bi->tageBranchInfo);
+    pred_taken = loopPredictor->loopPredict(tid, pc, cond_branch,
+                                            bi->lpBranchInfo, pred_taken,
+                                            instShiftAmt);
+
+    if (bi->lpBranchInfo->loopPredUsed) {
+        bi->tageBranchInfo->provider = LOOP;
+    }
+
+    TAGE_SC_L_TAGE::BranchInfo* tage_scl_bi =
+        static_cast<TAGE_SC_L_TAGE::BranchInfo *>(bi->tageBranchInfo);
+
+    // Copy the confidences computed by TAGE
+    bi->scBranchInfo->lowConf = tage_scl_bi->lowConf;
+    bi->scBranchInfo->highConf = tage_scl_bi->highConf;
+    bi->scBranchInfo->altConf = tage_scl_bi->altConf;
+    bi->scBranchInfo->medConf = tage_scl_bi->medConf;
+
+    bool use_tage_ctr = bi->tageBranchInfo->hitBank > 0;
+    int8_t tage_ctr = use_tage_ctr ?
+        tage->getCtr(tage_scl_bi->hitBank, tage_scl_bi->hitBankIndex) : 0;
+    bool bias = (bi->tageBranchInfo->longestMatchPred !=
+                 bi->tageBranchInfo->altTaken);
+
+    pred_taken = statisticalCorrector->scPredict(tid, pc, cond_branch,
+            bi->scBranchInfo, pred_taken, bias, use_tage_ctr, tage_ctr,
+            tage->getTageCtrBits(), bi->tageBranchInfo->hitBank,
+            bi->tageBranchInfo->altBank, tage->getPathHist(tid), RegSnMap, regtable, digestMap);
+
+    if (bi->scBranchInfo->usedScPred) {
+        bi->tageBranchInfo->provider = SC;
+    }
+
+    // record final prediction
+    bi->lpBranchInfo->predTaken = pred_taken;
+
+    return pred_taken;
+}
+
 void
 TAGE_SC_L::update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
         bool squashed, const StaticInstPtr & inst, Addr target)
@@ -436,6 +522,8 @@ TAGE_SC_L::update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
             // This restores the global history, then update it
             // and recomputes the folded histories.
             tage->squash(tid, taken, tage_bi, target);
+            statisticalCorrector->SRUpdate(pc, taken, bi->scBranchInfo,
+                                        tage->getPathHist(tid));
             if (bi->tageBranchInfo->condBranch) {
                 loopPredictor->squashLoop(bi->lpBranchInfo);
             }

@@ -726,6 +726,10 @@ class BaseCPU : public ClockedObject
         statistics::Formula ipc501_1000loop;
         statistics::Formula ipc1001_1500loop;
         statistics::Formula ipc1501_2000loop;
+        statistics::Scalar bpu1MissCommitCount;
+        statistics::Scalar bpu1MissDecodeCount;
+        statistics::Scalar retiredBranchInsts;
+        statistics::Formula bpu1MissRate;
     } baseStats;
 
   private:
